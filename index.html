@@ -419,7 +419,7 @@ function defaultRegistrationSteps(){
    ...(sub.reviewOptional===true?{reviewOptional:true}:{}),
    ...(sub.compatibility===true?{compatibility:true}:{})
   }));
-  return {name:def.name,subs,clientExtraDays:Math.max(0,Number(model?.clientExtraDays)||0)};
+  return {name:def.name,subs,clientExtraDays:0};
  })
 }
 function registrationStageLabel(step){let n=(step?.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();if(n.includes('estudo preliminar'))return 'Estudo preliminar';if(n.includes('anteprojeto'))return 'Anteprojeto';if(n.includes('executivo'))return 'Projeto executivo';return step?.name||'Etapa'}
