@@ -152,6 +152,28 @@ tbody tr:hover{background:#FCFAF8}
 .project-subtask-buttons button{padding:9px 11px;font-size:12px}
 .project-add-subtask{margin-top:10px}
 @media(max-width:650px){.project-substage{padding:10px}.project-subtask{padding:12px}.project-subtask-controls{gap:10px}.project-subtask-controls label:first-child{flex:1 1 100%}.project-subtask-controls select{width:100%}.project-subtask-buttons{margin-left:0;width:100%}.project-subtask-buttons button{flex:1}.project-subtask-heading{align-items:flex-start}.project-subtask-heading .team-status{margin-top:3px}}
+
+/* Subetapas no projeto: mesma linha compacta do modelo, com responsável por atividade. */
+.project-subpanel-heading{justify-content:space-between;align-items:center;margin-bottom:20px}
+.project-subpanel-intro{flex:1;min-width:240px}
+.project-substage{padding:0;border:0;background:transparent;margin:24px 0 0}
+.project-substage-title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px;padding:0 3px}
+.project-substage-title strong{font-size:15px}
+.project-subrow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:7px 0;padding:12px 13px;background:#fff;border:1px solid #F1E9E3;border-left:3px solid var(--fendi);border-radius:4px}
+.project-subrow-name{min-width:190px;flex:1 1 34%;display:flex;flex-direction:column;gap:4px}
+.project-subrow-name strong{font-size:13px;color:var(--grafite);font-weight:550;line-height:1.4}
+.project-subrow-name .muted{font-size:11px}
+.project-subrow-controls{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex:0 1 auto}
+.project-subrow-controls select{width:185px;min-width:145px;padding:10px 9px;font-size:12px}
+.project-sub-days{display:inline-flex;align-items:center;gap:8px;color:var(--grafite);white-space:nowrap;font-size:12px}
+.project-sub-days input{width:72px;min-width:60px;padding:9px;font-size:13px}
+.project-subrow-controls .secondary{padding:9px 10px;font-size:12px}
+.project-completion{display:grid;place-items:center;flex:none;border:0;border-radius:8px;width:33px;height:34px;font-size:18px;cursor:pointer}
+.project-completion:hover{filter:brightness(.95)}
+.project-remove-sub{font-size:17px!important;min-width:33px}
+.project-add-subtask{margin-top:7px;font-size:13px}
+@media(max-width:1050px){.project-subrow{flex-wrap:wrap;align-items:flex-start}.project-subrow-name{flex-basis:100%}.project-subrow-controls{width:100%;justify-content:flex-start;flex-wrap:wrap}.project-subrow-controls select{flex:1 1 175px;max-width:320px}}
+@media(max-width:520px){.project-subrow{padding:11px 10px}.project-subrow-controls select{max-width:none;width:100%;flex-basis:100%}.project-subrow-controls{gap:6px}.project-subrow-controls .secondary{flex:1 1 auto}.project-sub-days{margin-right:auto}.project-subpanel-heading button{width:100%}}
 </style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
@@ -520,24 +542,35 @@ function subownerOptions(current){
  +opts.map(name=>'<option value="'+esc(name)+'"'+(current===name?' selected':'')+'>'+esc(name)+'</option>').join('');
 }
 function projectSubstepsHTML(p,steps){
- return '<section class="panel"><h3>Subetapas e responsáveis</h3><p class="muted">Escolha uma pessoa para cada atividade. Os prazos internos aparecem na aba Equipe e são calculados em dias úteis dentro do prazo da etapa. Para alterar o prazo contratual, edite a ficha cadastral.</p>'
- +steps.map((step,i)=>{
-   const summary='<div class="project-substage-title"><strong>'+esc(step.name)+'</strong><span class="muted">'+registrationContractDays(step)+' dias úteis previstos</span></div>';
-   const tasks=(step.subs||[]).map((sub,j)=>{
-    const owner=projectSubOwner(p,i,j),due=substepDueDate(p,i,j),isReview=subIsOptionalRevision(step,sub);
-    const waiting=isReview&&!p.schedule?.[i]?.revisionRequested;
-    const completed=sub.completed===true||(sub.completed===undefined&&(isReview?!!p.schedule?.[i]?.revisionCompleted:!!p.schedule?.[i]?.completed));
-    const status=completed?'Concluída':waiting?'Aguardando solicitação':'Em andamento';
-    const when=due?'Prazo interno: '+formatDateBR(due):waiting?'Revisão opcional — ainda não solicitada':'Prazo após gerar cronograma';
-    return '<div class="project-subtask">'
-      +'<div class="project-subtask-heading"><div><strong>'+esc(sub.name||'Subetapa')+'</strong><div class="muted">'+esc(when)+'</div></div><span class="team-status '+(completed?'team-status-good':waiting?'project-subtask-waiting':'team-status-active')+'">'+status+'</span></div>'
-      +'<div class="project-subtask-controls">'
-      +'<label>Responsável <select aria-label="Responsável por '+esc(sub.name)+'" onchange="setProjectSubOwner('+p.id+','+i+','+j+',this.value)">'+subownerOptions(owner)+'</select></label>'
-      +'<label>Estimativa <span class="project-subtask-days"><input aria-label="Dias úteis de '+esc(sub.name)+'" type="number" min="1" value="'+Math.max(1,Math.floor(Number(sub.days)||1))+'" onchange="changeProjectSubDays('+p.id+','+i+','+j+',this.value)"> dias úteis</span></label>'
-      +'<div class="project-subtask-buttons"><button class="secondary" onclick="toggleProjectSubCompleted('+p.id+','+i+','+j+')">'+(completed?'Reabrir':'Concluir')+'</button><button class="secondary" onclick="renameProjectSubstep('+p.id+','+i+','+j+')">Renomear</button><button class="secondary" onclick="removeProjectSubstep('+p.id+','+i+','+j+')">Excluir</button></div></div></div>';
-   }).join('');
-   return '<div class="project-substage">'+summary+tasks+'<button class="secondary project-add-subtask" onclick="addProjectSubstep('+p.id+','+i+')">+ Adicionar subetapa</button></div>';
- }).join('')+'</section>';
+ const header='<section class="panel"><div class="inline project-subpanel-heading">'
+  +'<div class="project-subpanel-intro"><h3 style="margin:0 0 6px">Subetapas e responsáveis</h3>'
+  +'<p class="muted" style="margin:0">Atribua um funcionário em cada subetapa, como no modelo do escritório. As escolhas e alterações valem somente para este projeto.</p></div>'
+  +'<button class="secondary" onclick="syncProjectSubsteps('+p.id+')">Trazer subetapas do modelo</button></div>';
+ const groups=steps.map((step,i)=>{
+  const summary='<div class="project-substage-title"><strong>'+esc(step.name)+'</strong><span class="muted">Prazo contratual: '+registrationContractDays(step)+' dias úteis</span></div>';
+  const rows=(step.subs||[]).map((sub,j)=>{
+   const owner=projectSubOwner(p,i,j),due=substepDueDate(p,i,j),revision=subIsOptionalRevision(step,sub);
+   const waiting=revision&&!p.schedule?.[i]?.revisionRequested;
+   const complete=sub.completed===true||(sub.completed===undefined&&(revision?!!p.schedule?.[i]?.revisionCompleted:!!p.schedule?.[i]?.completed));
+   const today=new Date(),todayISO=iso(today.getFullYear(),today.getMonth()+1,today.getDate());
+   const status=complete?'Concluída':waiting?'Aguardando solicitação':due&&due<todayISO?'Atrasada':'Em andamento';
+   const statusClass=complete?'team-status-good':waiting?'project-subtask-waiting':status==='Atrasada'?'team-status-late':'team-status-active';
+   const dueText=due?'Prazo interno: '+formatDateBR(due):waiting?'Revisão opcional — ainda não solicitada':'Prazo após gerar cronograma';
+   return '<div class="sub project-subrow">'
+    +'<div class="project-subrow-name"><strong>'+esc(sub.name||'Subetapa')+'</strong>'
+    +'<span class="muted">'+esc(dueText)+'</span></div>'
+    +'<div class="inline project-subrow-controls">'
+    +'<select aria-label="Selecionar funcionário para '+esc(sub.name||'Subetapa')+'" title="Funcionário responsável por esta subetapa" onchange="setProjectSubOwner('+p.id+','+i+','+j+',this.value)">'+subownerOptions(owner)+'</select>'
+    +'<span class="project-sub-days"><input aria-label="Dias úteis da subetapa '+esc(sub.name||'')+'" type="number" min="1" value="'+Math.max(1,Math.floor(Number(sub.days)||1))+'" onchange="changeProjectSubDays('+p.id+','+i+','+j+',this.value)"> dias</span>'
+    +'<button class="secondary" onclick="renameProjectSubstep('+p.id+','+i+','+j+')">Editar</button>'
+    +'<button class="secondary" onclick="moveProjectSubstep('+p.id+','+i+','+j+')">Mover</button>'
+    +'<button class="project-completion '+statusClass+'" title="'+(complete?'Reabrir subetapa':'Marcar como concluída')+'" aria-label="'+(complete?'Reabrir':'Concluir')+' '+esc(sub.name)+'" onclick="toggleProjectSubCompleted('+p.id+','+i+','+j+')">'+(complete?'✓':'○')+'</button>'
+    +'<button class="secondary project-remove-sub" aria-label="Excluir '+esc(sub.name)+'" title="Excluir subetapa somente deste projeto" onclick="removeProjectSubstep('+p.id+','+i+','+j+')">×</button>'
+    +'</div></div>';
+  }).join('');
+  return '<div class="project-substage">'+summary+rows+'<button class="secondary project-add-subtask" onclick="addProjectSubstep('+p.id+','+i+')">+ Adicionar subetapa</button></div>';
+ }).join('');
+ return header+groups+'</section>';
 }
 function detail(){let p=selected,steps=p.steps||phases;let schedule=p.schedule||[];el.innerHTML='<section class="panel"><div class="inline"><button class="secondary" onclick="go(\'projetos\')">← Voltar</button><button class="secondary" onclick="editRegistration('+p.id+')">Ver / editar ficha cadastral</button></div><h2>'+esc(p.name)+'</h2><p class="muted">'+esc(p.client)+'</p><div class="inline"><label>Situação <select id="st">'+['Em andamento','Atrasado','Aguardando aprovação','Concluído'].map(s=>'<option '+(p.status===s?'selected':'')+'>'+s+'</option>').join('')+'</select></label>'+dateInputBR('startDate','Início',p.startDate||'')+dateInputBR('officeDate','Prazo do escritório',p.officeDate||'')+dateInputBR('clientDate','Prazo do cliente',p.clientDate||(/^\d{4}-/.test(p.deadline)?p.deadline:''))+'<button class="primary" onclick="updateProject('+p.id+')">Salvar alterações</button></div></section><section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:6px">Manual do cliente</h3><p class="muted">Manual individual em PDF com 16 páginas. Nome, data da capa e prazos são preenchidos automaticamente a partir da ficha do cliente.</p></div></div><div class="inline"><label>Data da capa <input class="br-date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(p.manualCoverDate||iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate())))+'" oninput="maskDateBR(this)" onchange="saveManualCoverDateBR('+p.id+',this)"></label><button class="primary" onclick="generateManualPdf('+p.id+')">Gerar manual PDF</button><button class="secondary" onclick="document.getElementById(\'manualTemplateInput\').click()">Importar/atualizar modelo PDF</button><input type="file" id="manualTemplateInput" accept=".pdf,application/pdf" style="display:none" onchange="importManualTemplate(event,'+p.id+')"></div><div class="muted" style="margin-top:12px;font-size:13px" id="manualTemplateStatus">Verificando modelo...</div></section><section class="panel"><div class="calendar-head"><div><h3>Planejamento e prazos das etapas</h3><p class="muted">Prazos previstos em dias úteis. Ao apresentar o estudo ou anteprojeto, clique em <strong>Solicitar revisão</strong> somente se o cliente pedir alterações. A compatibilização do executivo continua obrigatória.</p></div><div class="inline"><button class="primary" onclick="createSchedule('+p.id+')">Gerar cronograma</button><button class="secondary" onclick="addProjectStep('+p.id+')">+ Entrega avulsa</button></div></div>'+(!schedule.length?'<p class="muted">Nenhum cronograma gerado. Clique em Gerar cronograma para calcular as datas.</p>':'')+((schedule.length&&p.scheduleVersion!==2&&steps.some(registrationHasOptionalReview))?'<div class="reg-warning">Cronograma anterior: clique em <strong>Gerar cronograma</strong> para retirar revisões não solicitadas.</div>':'')+schedule.map((s,i)=>'<div class="phase"><div class="inline"><strong style="flex:1">'+esc(s.name)+'</strong><span class="tag '+(s.completed?'good':'')+'">'+(s.completed?'Concluída':'Pendente')+'</span><button class="secondary" onclick="editProjectStep('+p.id+','+i+')">Editar prazo</button><button class="secondary" onclick="completeProjectStep('+p.id+','+i+')">'+(s.completed?'Reabrir':'Concluir')+'</button>'+(registrationHasOptionalReview(s)?'<button class="secondary" onclick="toggleProjectRevision('+p.id+','+i+')">'+(s.revisionRequested?'Cancelar revisão':'Solicitar revisão')+'</button>':'')+(s.revisionRequested?'<button class="secondary" onclick="completeProjectRevision('+p.id+','+i+')">'+(s.revisionCompleted?'Reabrir revisão':'Concluir revisão')+'</button>':'')+'</div><div class="muted">'+'Prazo da etapa: '+esc(formatDateBR(s.start||''))+' até '+esc(formatDateBR(s.deadline||''))+' · '+s.days+' dias úteis internos · Cliente: '+esc(formatDateBR(s.clientDeadline||s.deadline||''))+(s.contractualDays?' · Prazo previsto: '+s.contractualDays+' dias úteis'+(registrationHasOptionalReview(s)?' · Revisão opcional: '+(s.contractualParts?.secondary||0)+' dias úteis'+(s.revisionRequested?' · Solicitada, entrega em '+esc(formatDateBR(s.revisionDeadline||'A definir')):' · Não solicitada'):s.contractualParts?.secondary>0?' · Compatibilização obrigatória: '+s.contractualParts.secondary+' dias úteis':''):' (+'+(s.clientExtraDays||0)+' dias úteis)')+'</div></div>').join('')+'</section>'+projectSubstepsHTML(p,steps);if(typeof refreshManualTemplateStatus==='function')refreshManualTemplateStatus()}function attentionHTML(entries,today){let visible=entries.filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);if(!visible.length)return '<p class="muted">Nenhuma entrega atrasada ou prevista para os próximos 14 dias.</p>';return '<table><thead><tr><th>Entrega / projeto</th><th>Responsável</th><th>Prazo</th><th>Situação</th></tr></thead><tbody>'+visible.map(e=>'<tr><td><a class="click" onclick="calendarOpen(\''+e.id+'\')">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+esc(e.date.split('-').reverse().join('/'))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')+'</tbody></table>'}
 
@@ -575,6 +608,52 @@ function renameProjectSubstep(id,i,j){
  if(subIsOptionalRevision(p.steps[i],sub))sub.reviewOptional=true;
  if(subIsCompatibility(p.steps[i],sub))sub.compatibility=true;
  sub.name=name.trim();save();render()
+}
+function moveProjectSubstep(id,i,j){
+ const p=projects.find(x=>x.id===id),steps=p?.steps;
+ if(!steps?.[i]?.subs?.[j])return;
+ const selection=prompt('Mover a subetapa para qual etapa?\n'+steps.map((s,k)=>(k+1)+' - '+s.name).join('\n'),String(i+1));
+ if(selection===null)return;
+ if(!/^\d+$/.test(selection.trim())||!steps[Number(selection)-1]){alert('Selecione uma etapa válida.');return}
+ const target=Number(selection)-1;
+ if(target===i){
+  const position=prompt('Nova posição dentro desta etapa (1 a '+steps[i].subs.length+'): ',String(j+1));
+  if(position===null)return;
+  if(!/^\d+$/.test(position.trim())||Number(position)<1||Number(position)>steps[i].subs.length){alert('Informe uma posição válida.');return}
+  const [item]=steps[i].subs.splice(j,1);
+  steps[i].subs.splice(Number(position)-1,0,item);
+ }else{
+  const [item]=steps[i].subs.splice(j,1);
+  steps[target].subs=steps[target].subs||[];
+  steps[target].subs.push(item);
+ }
+ save();render()
+}
+function syncProjectSubsteps(id){
+ const p=projects.find(x=>x.id===id);if(!p)return;
+ if(!confirm('Adicionar as subetapas que faltam, conforme a aba Etapas e modelos? As subetapas existentes e seus responsáveis não serão alterados.'))return;
+ p.steps=p.steps||structuredClone(phases);
+ const normalize=str=>String(str||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+ const model=defaultRegistrationSteps();
+ let added=0;
+ for(let i=0;i<model.length;i++){
+  const source=model[i];
+  let target=p.steps.find(s=>normalize(s.name)===normalize(source.name));
+  if(!target){
+   target=structuredClone(source);p.steps.push(target);added+=(target.subs||[]).length;continue;
+  }
+  target.subs=target.subs||[];
+  const existing=new Set(target.subs.map(s=>normalize(s.name)));
+  for(const sub of source.subs||[]){
+   const key=normalize(sub.name);
+   if(existing.has(key))continue;
+   target.subs.push(structuredClone(sub));
+   existing.add(key);added++;
+  }
+ }
+ if(added)save();
+ render();
+ alert(added?added+' subetapa(s) do modelo adicionada(s) a este projeto. Os responsáveis anteriores foram preservados.':'Este projeto já possui todas as subetapas do modelo.');
 }
 function removeProjectSubstep(id,i,j){
  const p=projects.find(x=>x.id===id),subs=p?.steps?.[i]?.subs;if(!subs?.[j])return;
