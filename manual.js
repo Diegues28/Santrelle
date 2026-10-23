@@ -101,7 +101,7 @@ function manualPatchNumbers(ctx,page,project){
     if(review)replaceNumber(438,581,17,15,Math.max(1,Number(review.days)||1),"rgb(239,235,232)",13);
   }
   if(page===6&&ant)replaceNumber(106,785,23,23,ant.total,"rgb(205,198,195)",19);
-  if(page===7&&exe)replaceNumber(403,674,22,25,exe.total,"rgb(207,199,197)",18);
+  if(page===7&&exe)replaceNumber(400,674,21,25,exe.total,"rgb(207,199,197)",17);
 }
 function manualDrawCover(ctx,project){
   ctx.fillStyle="rgb(239,235,232)";
