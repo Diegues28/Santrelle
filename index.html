@@ -946,7 +946,7 @@ function schedulePreviewHTML(p){
  const pendingRevisions=(draft.steps||[]).filter(s=>registrationHasOptionalReview(s)&&!s.revisionRequested).length;
  return '<div class="sched-preview-backdrop" role="presentation"><section class="sched-preview-modal" role="dialog" aria-modal="true" aria-labelledby="sched-preview-title">'
   +'<div class="sched-preview-top"><div><span class="sched-preview-kicker">CONFERÊNCIA ANTES DE SALVAR</span><h2 id="sched-preview-title">Prévia do cronograma</h2><p class="muted">'+esc(p.name)+' · Nenhuma data será alterada até a sua confirmação.</p></div><button class="sched-preview-close" type="button" aria-label="Cancelar prévia" onclick="closeSchedulePreview()">×</button></div>'
-  +'<div class="sched-preview-inputrow"><label>Data de início desejada <input class="br-date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(initial))+'" oninput="maskDateBR(this);if(this.value.length===10)schedulePreviewSetDate(this.value)" onchange="schedulePreviewSetDate(this.value)"></label>'
+  +'<div class="sched-preview-inputrow"><label>Data de início desejada <input id="scheduleStartInput" class="br-date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(initial))+'" oninput="maskDateBR(this);if(this.value.length===10)schedulePreviewSetDate(this.value)" onchange="schedulePreviewSetDate(this.value)"></label>'
   +'<div><span class="muted">Início efetivo</span><strong>'+formatDateBR(actual)+'</strong></div><div><span class="muted">Última entrega prevista</span><strong>'+formatDateBR(projectEnd)+'</strong></div></div>'
   +(moved?'<div class="sched-preview-notice">A data escolhida ('+formatDateBR(initial)+') é fim de semana ou feriado. O cronograma começa no próximo dia útil: <strong>'+formatDateBR(actual)+'</strong>.</div>':'')
   +'<div class="sched-preview-columns">'+schedulePreviewCalendar(p,draft)+schedulePreviewSummary(draft)+'</div>'
@@ -957,6 +957,12 @@ function schedulePreviewHTML(p){
 function confirmSchedulePreview(){
  const state=schedulePreviewState;
  if(!state)return;
+ const input=document.getElementById('scheduleStartInput');
+ if(input){
+  const typed=parseDateBR(input.value);
+  if(!typed){alert('Informe uma data de início válida no formato DD/MM/AAAA antes de confirmar.');return}
+  if(typed!==state.startDate){schedulePreviewChooseDay(typed);alert('Atualizei a prévia com a data digitada. Confira novamente todas as datas antes de confirmar.');return}
+ }
  const p=projects.find(x=>x.id===state.projectId);
  if(!p){closeSchedulePreview();return}
  let draft;
