@@ -96,23 +96,37 @@ function manualCoverName(project){
   if(line)lines.push(line);
   return lines;
 }
-function manualPatchNumbers(ctx,page,project){
-  const study=manualDays(manualStep(project,"estudo preliminar")),ant=manualDays(manualStep(project,"anteprojeto")),exe=manualDays(manualStep(project,"executivo"));
-  function replaceNumber(x,y,w,h,value,bg,fontSize){
-    if(value==null)return;
-    ctx.fillStyle=bg;ctx.fillRect(x-1,y-1,w+2,h+2);
-    ctx.fillStyle="#88786E";
-    ctx.textBaseline="middle";
-    ctx.font=fontSize+'px Georgia,"Times New Roman",serif';
-    ctx.fillText(String(value),x,y+h/2+1);
+function manualPatchNumbers(ctx,page){
+  // O manual é fixo: nenhum prazo numérico fica impresso neste documento.
+  // As datas e durações de cada cliente ficam exclusivamente no cronograma atualizado.
+  if(page===5){
+    ctx.fillStyle="rgb(239,235,232)";
+    ctx.fillRect(69,578,479,57);
+    ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";
+    ctx.font='13px Georgia,"Times New Roman",serif';
+    ctx.fillText("Quando houver solicitação de alterações, os prazos",75,592,462);
+    ctx.fillText("de reapresentação serão informados no cronograma",75,610,462);
+    ctx.fillText("atualizado, conforme as condições contratuais.",75,628,462);
+    ctx.fillStyle="rgb(239,235,232)";ctx.fillRect(275,744,253,37);
+    ctx.fillStyle="#88786E";ctx.font='15px Georgia,"Times New Roman",serif';
+    ctx.fillText("PRAZO: CONSULTE O CRONOGRAMA",287,768,235);
   }
-  if(page===5&&study){
-    replaceNumber(359,749,25,24,study.total,"rgb(239,235,232)",21);
-    let revisionDays=manualContractParts(manualStep(project,"estudo preliminar")).secondary;
-    if(revisionDays>0)replaceNumber(438,581,17,15,revisionDays,"rgb(239,235,232)",13);
+  if(page===6){
+    ctx.fillStyle="rgb(205,198,195)";ctx.fillRect(39,780,226,34);
+    ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";
+    ctx.font='12px Georgia,"Times New Roman",serif';
+    ctx.fillText("PRAZO: CONSULTE O",44,795,208);
+    ctx.fillText("CRONOGRAMA DO PROJETO",44,809,208);
   }
-  if(page===6&&ant)replaceNumber(106,785,23,23,ant.total,"rgb(205,198,195)",19);
-  if(page===7&&exe)replaceNumber(400,674,21,25,exe.total,"rgb(207,199,197)",17);
+  if(page===7){
+    ctx.fillStyle="rgb(206,197,195)";ctx.fillRect(398,625,143,86);
+    ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";
+    ctx.font='15px Georgia,"Times New Roman",serif';
+    ctx.fillText("PRAZOS",409,650,119);
+    ctx.font='11px Georgia,"Times New Roman",serif';
+    ctx.fillText("CONSULTE O",409,678,119);
+    ctx.fillText("CRONOGRAMA",409,694,119);
+  }
 }
 function manualDrawCover(ctx,project){
   ctx.fillStyle="rgb(239,235,232)";
@@ -129,34 +143,31 @@ function manualDrawCover(ctx,project){
   ctx.fillStyle="#8B7663";ctx.font='12px Georgia,"Times New Roman",serif';
   ctx.fillText(manualDatePt(d),52,793,300);
 }
-function manualDrawSummary(ctx,project){
- const stages=["Levantamento","Estudo preliminar","Anteprojeto","Projeto executivo"];
- const lines=[];
- for(let name of stages){
-   let step=(project.steps||[]).find(x=>x.name?.toLowerCase()===name.toLowerCase());
-   let parts=manualContractParts(step);
-   lines.push({label:name,days:step?parts.main:null});
-   if(name==="Estudo preliminar")lines.push({label:"Revisão do estudo preliminar*",days:step?parts.secondary:null,sub:true});
-   if(name==="Anteprojeto")lines.push({label:"Revisão do anteprojeto*",days:step?parts.secondary:null,sub:true});
-   if(name==="Projeto executivo")lines.push({label:"Compatibilização dos móveis planejados",days:step?parts.secondary:null,sub:true});
- }
- ctx.fillStyle="rgba(250,248,245,0.97)";ctx.fillRect(51,128,489,348);
- ctx.strokeStyle="#CFC3BA";ctx.lineWidth=0.8;ctx.strokeRect(51.5,128.5,488,347);
- ctx.fillStyle="#8B7663";ctx.font='23px Georgia,"Times New Roman",serif';ctx.fillText("PRAZOS CONTRATUAIS",69,167);
- ctx.strokeStyle="#AFA094";ctx.beginPath();ctx.moveTo(69,185);ctx.lineTo(519,185);ctx.stroke();
- ctx.font="10px Arial,sans-serif";ctx.fillStyle="#625245";
- ctx.fillText("ETAPA / ATIVIDADE",69,205);ctx.fillText("DIAS ÚTEIS",433,205);
- for(let i=0;i<lines.length;i++){
-   let r=lines[i],y=228+i*29;
-   ctx.font=(r.sub?"12px":"13px")+' Georgia,"Times New Roman",serif';
-   ctx.fillStyle=r.sub?"#89766A":"#625245";
-   ctx.fillText((r.sub?"  ":"")+r.label,69,y,333);
-   ctx.font="11px Arial,sans-serif";ctx.fillStyle="#625245";ctx.fillText(r.days==null?"A definir":r.days+" dias",435,y);
-   ctx.strokeStyle="#E2D6CB";ctx.beginPath();ctx.moveTo(69,y+8);ctx.lineTo(519,y+8);ctx.stroke();
- }
- ctx.font="10px Arial,sans-serif";ctx.fillStyle="#7C6F65";
- ctx.fillText("* Revisão: prazo aplicado somente se o cliente solicitar alterações.",69,441,459);
- ctx.fillText("Início previsto: "+(project.startDate?manualShortDate(project.startDate):"a definir"),69,460,420);
+function manualDrawSummary(ctx){
+  // Pág. 12: orientar o cliente a consultar o cronograma separado.
+  ctx.fillStyle="rgba(250,248,245,0.99)";ctx.fillRect(48,128,502,693);
+  ctx.strokeStyle="#CFC3BA";ctx.lineWidth=0.8;ctx.strokeRect(51.5,128.5,488,656);
+  ctx.fillStyle="#8B7663";ctx.font='25px Georgia,"Times New Roman",serif';
+  ctx.textBaseline="alphabetic";
+  ctx.fillText("PRAZOS DO PROJETO",72,196,448);
+  ctx.strokeStyle="#AFA094";ctx.beginPath();ctx.moveTo(72,215);ctx.lineTo(512,215);ctx.stroke();
+  ctx.font='17px Georgia,"Times New Roman",serif';ctx.fillStyle="#625245";
+  const lines=[
+    "O cronograma do seu projeto será enviado",
+    "separadamente e atualizado conforme o",
+    "andamento das etapas.",
+    "",
+    "Nele você poderá consultar os prazos",
+    "do escritório, os períodos de análise e",
+    "aprovação e as datas previstas de entrega.",
+    "",
+    "Todos os prazos são considerados em",
+    "dias úteis. As datas futuras poderão ser",
+    "revisadas após cada devolutiva ou aprovação."
+  ];
+  lines.forEach((line,i)=>{if(line)ctx.fillText(line,74,276+i*30,444)});
+  ctx.font='11px Arial,sans-serif';ctx.fillStyle="#7C6F65";
+  ctx.fillText("O cronograma atualizado é o documento de referência para as datas.",74,715,442);
 }
 function manualApplyChanges(canvas,pageNumber,project,pageWidth){
   const ctx=canvas.getContext("2d",{willReadFrequently:false});
