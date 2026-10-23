@@ -197,6 +197,8 @@ tbody tr:hover{background:#FCFAF8}
 .holiday-type-escritorio{background:#EEE6D5;color:#746344}
 .holiday-month-footnote{font-size:12px;color:var(--taupe);margin:14px 0 0;line-height:1.55}
 @media(max-width:700px){.cal-day .cal-holiday{font-size:8px;-webkit-line-clamp:2}.cal-more-mobile{display:inline-block}.holiday-month-overview{padding:12px}.holiday-month-item{grid-template-columns:72px 1fr;gap:5px 8px;padding:8px}.holiday-type{grid-column:2;width:max-content;font-size:10px;padding:4px 7px}.holiday-month-name{font-size:12px}}
+.holiday-month-delete{background:transparent;border:0;padding:4px 3px;color:#8F5B50;text-decoration:underline;text-underline-offset:2px;font-size:11px;cursor:pointer}
+.holiday-month-delete:hover{color:#6E3F37}
 </style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
@@ -444,7 +446,7 @@ function monthHolidayHTML(y,m){
  }
  const labels={nacional:'Nacional',estadual:'Estadual · SP',municipal:'Municipal · Santos',escritorio:'Folga do escritório'};
  return '<div class="holiday-month-overview"><div class="holiday-month-heading"><strong>Feriados e folgas deste mês</strong><span class="muted">'+days.length+' '+(days.length===1?'data':'datas')+'</span></div>'
- +(days.length?'<div class="holiday-month-list">'+days.map(h=>'<div class="holiday-month-item"><span class="holiday-month-date">'+formatDateBR(h.date)+'</span><span class="holiday-month-name">'+esc([h.name,...h.other].join(' / '))+'</span><span class="holiday-type holiday-type-'+h.type+'">'+labels[h.type]+'</span></div>').join('')+'</div>':'<p class="muted" style="margin:10px 0 0">Nenhum feriado ou folga neste mês.</p>')
+ +(days.length?'<div class="holiday-month-list">'+days.map(h=>'<div class="holiday-month-item"><span class="holiday-month-date">'+formatDateBR(h.date)+'</span><span class="holiday-month-name">'+esc([h.name,...h.other].join(' / '))+extraHolidays.map((x,index)=>({x,index})).filter(a=>a.x.date===h.date).map(a=>' <button class="holiday-month-delete" onclick="removeOfficeHoliday('+a.index+')" title="Remover folga do escritório">Remover folga</button>').join('')+'</span><span class="holiday-type holiday-type-'+h.type+'">'+labels[h.type]+'</span></div>').join('')+'</div>':'<p class="muted" style="margin:10px 0 0">Nenhum feriado ou folga neste mês.</p>')
  +'<p class="holiday-month-footnote">Os feriados nacionais, estaduais de São Paulo e municipais de Santos não contam como dias úteis. Carnaval, emendas e outros pontos facultativos só serão descontados quando cadastrados como folga do escritório.</p></div>';
 }
 function calendarHTML(){
@@ -469,7 +471,7 @@ function calendarHTML(){
  const selected=expandedDay?entries.filter(e=>e.date===expandedDay):[];
  return '<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:4px">Calendário de entregas</h3><div class="muted">Prazos internos e entregas · Feriados Brasil, SP e Santos incluídos</div></div>'
  +'<div class="cal-controls"><button class="secondary" onclick="shiftMonth(-1)">‹</button><strong>'+first.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})+'</strong><button class="secondary" onclick="shiftMonth(1)">›</button>'
- +'<select onchange="calendarOwner=this.value;render()">'+owners.map(o=>'<option '+(o===calendarOwner?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select><button class="primary" onclick="addDelivery()">+ Entrega</button><button class="secondary" onclick="addHoliday()">+ Feriado/folga</button></div></div>'
+ +'<select onchange="calendarOwner=this.value;render()">'+owners.map(o=>'<option '+(o===calendarOwner?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select><button class="primary" onclick="addDelivery()">+ Entrega</button><button class="secondary" onclick="addHoliday()">+ Folga do escritório</button></div></div>'
  +'<div class="calendar-grid">'+['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map(x=>'<div class="weekday">'+x+'</div>').join('')+days+'</div>'
  +(expandedDay&&selected.length?'<div class="cal-agenda"><div class="inline"><strong style="flex:1">Atividades de '+formatDateBR(expandedDay)+'</strong><button class="secondary" onclick="toggleCalendarDay(null)">Fechar</button></div><div class="cal-agenda-list">'+selected.map(eventHTML).join('')+'</div></div>':'')
  +'<div class="cal-legend">Feriados e folgas aparecem destacados · Início, prazos internos, entregas ao cliente e atrasos têm cores distintas. Dias não úteis são desconsiderados no cálculo.</div>'
@@ -488,14 +490,29 @@ function addDelivery(){
  deliveries.push({id:Date.now(),name:name.trim(),owner,date,projectId:projects.some(p=>String(p.id)===project)?+project:null,completed:false});
  save();calendarYear=+date.slice(0,4);calendarMonth=+date.slice(5,7)-1;render()
 }
+function invalidateProjectSchedulesForHolidays(){
+ let count=0;
+ for(const p of projects){if(p.schedule?.length){p.holidayCalendarVersion='';count++}}
+ return count
+}
 function addHoliday(){
- let date=promptDateBR('Data do feriado municipal, estadual ou folga');
+ let date=promptDateBR('Data da folga ou ponto facultativo do escritório');
  if(!date)return;
  let name=prompt('Nome da folga do escritório:');if(!name?.trim())return;
  if(extraHolidays.some(x=>x.date===date)&&!confirm('Já existe uma folga nesta data. Deseja cadastrar outra?'))return;
  extraHolidays.push({date,name:name.trim()});
- for(let d of deliveries){if(!d.completed&&!businessDay(d.date))d.date=nextBusiness(d.date)}
- save();render()
+ for(const d of deliveries)if(!d.completed&&!businessDay(d.date))d.date=nextBusiness(d.date);
+ const affected=invalidateProjectSchedulesForHolidays();
+ save();render();
+ if(affected)alert('Folga cadastrada. Para atualizar as datas dos '+affected+' cronogramas existentes, abra cada projeto e clique em Gerar cronograma. Os prazos anteriores foram preservados.')
+}
+function removeOfficeHoliday(index){
+ const item=extraHolidays[index];if(!item)return;
+ if(!confirm('Remover a folga "'+item.name+'" de '+formatDateBR(item.date)+'?'))return;
+ extraHolidays.splice(index,1);
+ const affected=invalidateProjectSchedulesForHolidays();
+ save();render();
+ if(affected)alert('Folga removida. Os cronogramas existentes continuam com as datas antigas até você clicar em Gerar cronograma dentro de cada projeto.')
 }
 function calendarOpen(id){
  let e=calendarEntries().find(x=>x.id===id);if(!e)return;
