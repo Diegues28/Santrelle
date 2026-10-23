@@ -232,8 +232,8 @@ let addressTitle=clientRegistration.constructionAddress.split(',')[0].trim();
 let displayName=addressTitle?name+' · '+addressTitle:name+' · Projeto';
 let startDate=val('startDate'),p=old||{id:Date.now(),status:'Em andamento',schedule:[],deadline:'A definir',owner:'Não definido',phase:'Levantamento'};
 if(startDate&&!businessDay(startDate)){let adjusted=nextBusiness(startDate);if(!confirm('A data de início escolhida não é um dia útil. Usar '+adjusted.split('-').reverse().join('/')+'?'))return;startDate=adjusted}
-let needsRecalculation=!!old&&!!startDate&&(!old.schedule?.length||old.startDate!==startDate||contractChanged);
-if(needsRecalculation&&old.schedule?.length&&!confirm('A alteração dos prazos contratuais ou da data de início recalculará o cronograma. Continuar?'))return;
+let needsRecalculation=!!old&&!!startDate&&(!old.schedule?.length||old.startDate!==startDate||contractChanged||old.scheduleVersion!==2);
+if(needsRecalculation&&old.schedule?.length&&!confirm('Recalcular o cronograma com os prazos atualizados, sem revisões não solicitadas? Os responsáveis e as revisões já solicitadas serão preservados.'))return;
 p.name=displayName;p.client=name;p.clientRegistration=clientRegistration;p.condominium=condominium;
 p.steps=steps;
 if(!old){p.startDate=startDate||'';if(startDate){buildScheduleForRegistration(p,startDate);p.scheduleVersion=2}projects.push(p)}
