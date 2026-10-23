@@ -379,14 +379,27 @@ function newProject(){registrationEditId=null;selected=null;page='cadastro';rend
 function editRegistration(id){if(!projects.some(p=>p.id===id))return;registrationEditId=id;selected=null;page='cadastro';render();window.scrollTo(0,0)}
 function cancelRegistration(){registrationEditId=null;go('projetos')}
 function defaultRegistrationSteps(){
-const find=x=>phases.find(p=>String(p.name).toLowerCase().includes(x));
-const lev=find('levantamento'),stud=find('estudo preliminar'),ant=find('anteprojeto'),exe=find('executivo');
-return [
-{name:'Levantamento',clientExtraDays:lev?.clientExtraDays||0,subs:[{name:'Levantamento',days:lev?Math.max(1,phaseOfficeDays(lev)):2}]},
-{name:'Estudo preliminar',clientExtraDays:stud?.clientExtraDays||0,subs:[{name:'Desenvolvimento do estudo preliminar',days:stud?.subs?.[0]?.days||7},{name:'Revisão',days:stud?.subs?.[1]?.days||3}]},
-{name:'Anteprojeto',clientExtraDays:ant?.clientExtraDays||0,subs:[{name:'Desenvolvimento do anteprojeto',days:ant?.subs?.[0]?.days||7},{name:'Revisão',days:ant?.subs?.[1]?.days||3}]},
-{name:'Projeto executivo',clientExtraDays:exe?.clientExtraDays||0,subs:[{name:'Desenvolvimento do executivo',days:exe?.subs?.[1]?.days||16},{name:'Compatibilização com projeto dos móveis planejados',days:exe?.subs?.[0]?.days||4}]}
-]}
+ // Cada cliente recebe uma cópia de todas as subetapas do modelo do escritório.
+ // Responsáveis e estados ficam independentes por projeto.
+ const normalize=name=>String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const definitions=[
+  {name:'Levantamento',match:'levantamento',fallback:[{name:'Levantamento',days:2}]},
+  {name:'Estudo preliminar',match:'estudo preliminar',fallback:[{name:'Desenvolvimento do estudo preliminar',days:7},{name:'Revisão',days:3}]},
+  {name:'Anteprojeto',match:'anteprojeto',fallback:[{name:'Desenvolvimento do anteprojeto',days:7},{name:'Revisão',days:3}]},
+  {name:'Projeto executivo',match:'executivo',fallback:[{name:'Desenvolvimento do executivo',days:16},{name:'Compatibilização com projeto dos móveis planejados',days:4}]}
+ ];
+ return definitions.map(def=>{
+  const model=phases.find(p=>normalize(p.name).includes(def.match));
+  const subs=(model?.subs?.length?model.subs:def.fallback).map(sub=>({
+   name:String(sub.name||'Subetapa'),
+   days:Math.max(1,Math.floor(Number(sub.days)||1)),
+   owner:'Não definido',
+   ...(sub.reviewOptional===true?{reviewOptional:true}:{}),
+   ...(sub.compatibility===true?{compatibility:true}:{})
+  }));
+  return {name:def.name,subs,clientExtraDays:Math.max(0,Number(model?.clientExtraDays)||0)};
+ })
+}
 function registrationStageLabel(step){let n=(step?.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();if(n.includes('estudo preliminar'))return 'Estudo preliminar';if(n.includes('anteprojeto'))return 'Anteprojeto';if(n.includes('executivo'))return 'Projeto executivo';return step?.name||'Etapa'}
 function registrationHasSecondary(step){let n=registrationStageLabel(step).toLowerCase();return n.includes('estudo preliminar')||n.includes('anteprojeto')||n.includes('executivo')}
 function registrationSecondaryLabel(step){let n=registrationStageLabel(step).toLowerCase();if(n.includes('estudo preliminar'))return 'Revisão do estudo preliminar';if(n.includes('anteprojeto'))return 'Revisão do anteprojeto';if(n.includes('executivo'))return 'Compatibilização com projeto dos móveis planejados';return ''}
