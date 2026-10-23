@@ -128,6 +128,7 @@ return [
 {name:'Projeto executivo',clientExtraDays:exe?.clientExtraDays||0,subs:[{name:'Desenvolvimento do executivo',days:exe?.subs?.[1]?.days||16},{name:'Compatibilização com projeto dos móveis planejados',days:exe?.subs?.[0]?.days||4}]}
 ]}
 function registrationContractDays(step){if(step&&Number.isFinite(Number(step.contractualDays))&&Number(step.contractualDays)>=1)return Math.floor(Number(step.contractualDays));return Math.max(1,phaseOfficeDays(step||{subs:[]})+Math.max(0,Number(step?.clientExtraDays)||0))}
+function registrationStageLabel(step){let n=(step.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();if(n.includes('estudo preliminar'))return 'Estudo preliminar + revisão';if(n.includes('anteprojeto'))return 'Anteprojeto + revisão';if(n.includes('executivo'))return 'Projeto executivo + compatibilização com projeto dos móveis planejados';return step.name||'Etapa'}
 function registrationSteps(){let p=projects.find(x=>x.id===registrationEditId);return p?.steps?.length?p.steps:defaultRegistrationSteps()}
 function regField(key,label,value,type,wide,required){
 let kind=type||'text',attrs=(required?' required':'')+(kind==='tel'?' autocomplete="tel"':'');
@@ -139,7 +140,7 @@ return '<label class="reg-field"><span>'+label+'</span><select id="reg_'+key+'">
 function regTextarea(key,label,value){return '<label class="reg-field reg-wide"><span>'+label+'</span><textarea id="reg_'+key+'" maxlength="1500">'+esc(value??'')+'</textarea></label>'}
 function registrationForm(){
 let p=projects.find(x=>x.id===registrationEditId),info=p?.clientRegistration||{},condo=p?.condominium||{},steps=registrationSteps();
-let stageHTML='<div class="reg-contract-table"><div class="reg-contract-header"><span>Etapa</span><span>Prazo contratual (dias úteis)</span></div>'+steps.map((stage,i)=>'<div class="reg-contract-row"><div class="reg-contract-name">'+esc(stage.name)+'</div>'+regField('contract_'+i,'Dias úteis',registrationContractDays(stage),'number',false,true)+'</div>').join('')+'</div>';
+let stageHTML='<div class="reg-contract-table"><div class="reg-contract-header"><span>Etapa</span><span>Prazo contratual (dias úteis)</span></div>'+steps.map((stage,i)=>'<div class="reg-contract-row"><div class="reg-contract-name">'+esc(registrationStageLabel(stage))+'</div>'+regField('contract_'+i,'Dias úteis',registrationContractDays(stage),'number',false,true)+'</div>').join('')+'</div>';
 el.innerHTML='<div class="reg-intro">Preencha a ficha para cadastrar a obra. O projeto será criado somente ao selecionar <strong>Salvar e criar projeto</strong>. Não é necessário definir um nome de projeto nem um responsável geral.</div>'
 +'<form id="registrationForm" onsubmit="saveRegistration(event)">'
 +'<section class="reg-card"><div class="reg-heading"><span class="reg-number">01</span><h2>Informações do cliente</h2></div><p class="reg-helper">Dados cadastrais e informações de contato.</p><div class="reg-grid">'
