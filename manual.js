@@ -67,13 +67,19 @@ function manualShortDate(value){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(value||""))return "A definir";
   return value.split("-").reverse().join("/");
 }
+function manualContractParts(step){
+ if(!step)return {main:0,secondary:0};
+ if(step.contractualParts&&Number(step.contractualParts.main)>0)return {main:Math.max(1,Math.floor(Number(step.contractualParts.main))),secondary:Math.max(0,Math.floor(Number(step.contractualParts.secondary)||0))};
+ let subs=step.subs||[],total=Number(step.contractualDays)>0?Math.floor(Number(step.contractualDays)):subs.reduce((sum,sub)=>sum+Math.max(0,Number(sub.days)||0),0)+Math.max(0,Number(step.clientExtraDays)||0);
+ total=Math.max(1,total);
+ if(/levantamento/i.test(step.name||""))return {main:total,secondary:0};
+ let last=Number(subs[subs.length-1]?.days)||0,secondary=Math.min(Math.max(0,Math.floor(last)),Math.max(0,total-1));
+ return {main:total-secondary,secondary};
+}
 function manualDays(step){
-  if(!step)return null;
-  let subs=(step.subs||[]).reduce((s,x)=>s+Math.max(0,Math.floor(Number(x.days)||0)),0);
-  let office=subs||Math.max(1,Number(step.days)||1);
-  let extra=Math.max(0,Number(step.clientExtraDays)||0);
-  let contractual=Number(step.contractualDays)>0?Math.floor(Number(step.contractualDays)):office+extra;
-  return {office,extra:0,total:contractual,contractual};
+ if(!step)return null;
+ let parts=manualContractParts(step),total=parts.main+parts.secondary;
+ return {office:parts.main,extra:parts.secondary,total,contractual:total};
 }
 function manualStep(project,word){
   return (project.steps||[]).find(x=>(x.name||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().includes(word));
@@ -100,8 +106,8 @@ function manualPatchNumbers(ctx,page,project){
   }
   if(page===5&&study){
     replaceNumber(359,749,25,24,study.total,"rgb(239,235,232)",21);
-    let review=(manualStep(project,"estudo preliminar")?.subs||[]).find(x=>(x.name||"").toLowerCase().includes("revis"));
-    if(review)replaceNumber(438,581,17,15,Math.max(1,Number(review.days)||1),"rgb(239,235,232)",13);
+    let revisionDays=manualContractParts(manualStep(project,"estudo preliminar")).secondary;
+    if(revisionDays>0)replaceNumber(438,581,17,15,revisionDays,"rgb(239,235,232)",13);
   }
   if(page===6&&ant)replaceNumber(106,785,23,23,ant.total,"rgb(205,198,195)",19);
   if(page===7&&exe)replaceNumber(400,674,21,25,exe.total,"rgb(207,199,197)",17);
@@ -122,24 +128,32 @@ function manualDrawCover(ctx,project){
   ctx.fillText(manualDatePt(d),52,793,300);
 }
 function manualDrawSummary(ctx,project){
-  const lines=["Levantamento","Estudo preliminar","Anteprojeto","Projeto executivo"];
-  const selected=lines.map((n,i)=>({name:n,step:(project.steps||[]).find(x=>x.name?.toLowerCase()===n.toLowerCase())||(project.steps||[])[i],schedule:(project.schedule||[]).find(x=>x.name?.toLowerCase()===n.toLowerCase())}));
-  ctx.fillStyle="rgba(250,248,245,0.96)";ctx.fillRect(51,128,489,329);
-  ctx.strokeStyle="#CFC3BA";ctx.lineWidth=0.8;ctx.strokeRect(51.5,128.5,488,328);
-  ctx.fillStyle="#8B7663";ctx.font='23px Georgia,"Times New Roman",serif';ctx.fillText("PRAZOS CONTRATUAIS",69,170);
-  ctx.strokeStyle="#AFA094";ctx.beginPath();ctx.moveTo(69,185);ctx.lineTo(519,185);ctx.stroke();
-  ctx.font="11px Arial,sans-serif";ctx.fillStyle="#625245";
-  ctx.fillText("ETAPA",69,212);ctx.fillText("PRAZO (DIAS ÚTEIS)",379,212);
-  for(let i=0;i<selected.length;i++){
-    const row=selected[i],tot=manualDays(row.step),y=246+i*42;
-    ctx.font='13px Georgia,"Times New Roman",serif';ctx.fillStyle="#625245";ctx.fillText(row.name,69,y,275);
-    ctx.font="11px Arial,sans-serif";ctx.fillStyle="#8B7663";
-    ctx.fillText(tot?tot.contractual+" dias úteis":"A definir",400,y);
-    ctx.strokeStyle="#E2D6CB";ctx.beginPath();ctx.moveTo(69,y+10);ctx.lineTo(517,y+10);ctx.stroke();
-  }
-  ctx.font="11px Arial,sans-serif";ctx.fillStyle="#7C6F65";
-  let start=project.startDate?manualShortDate(project.startDate):"a definir";
-  ctx.fillText("Início previsto: "+start,69,429,420);
+ const stages=["Levantamento","Estudo preliminar","Anteprojeto","Projeto executivo"];
+ const lines=[];
+ for(let name of stages){
+   let step=(project.steps||[]).find(x=>x.name?.toLowerCase()===name.toLowerCase()),parts=manualContractParts(step);
+   let primary=name==="Projeto executivo"?"Projeto executivo":name;
+   lines.push({label:primary,days:step?parts.main:null});
+   if(name==="Estudo preliminar")lines.push({label:"Revisão do estudo preliminar",days:step?parts.secondary:null,sub:true});
+   if(name==="Anteprojeto")lines.push({label:"Revisão do anteprojeto",days:step?parts.secondary:null,sub:true});
+   if(name==="Projeto executivo")lines.push({label:"Compatibilização dos móveis planejados",days:step?parts.secondary:null,sub:true});
+ }
+ ctx.fillStyle="rgba(250,248,245,0.97)";ctx.fillRect(51,128,489,348);
+ ctx.strokeStyle="#CFC3BA";ctx.lineWidth=0.8;ctx.strokeRect(51.5,128.5,488,347);
+ ctx.fillStyle="#8B7663";ctx.font='23px Georgia,"Times New Roman",serif';ctx.fillText("PRAZOS CONTRATUAIS",69,167);
+ ctx.strokeStyle="#AFA094";ctx.beginPath();ctx.moveTo(69,185);ctx.lineTo(519,185);ctx.stroke();
+ ctx.font="10px Arial,sans-serif";ctx.fillStyle="#625245";
+ ctx.fillText("ETAPA / ATIVIDADE",69,205);ctx.fillText("DIAS ÚTEIS",433,205);
+ for(let i=0;i<lines.length;i++){
+   let r=lines[i],y=228+i*30;
+   ctx.font=(r.sub?"12px":"13px")+' Georgia,"Times New Roman",serif';
+   ctx.fillStyle=r.sub?"#89766A":"#625245";
+   ctx.fillText((r.sub?"  ":"")+r.label,69,y,330);
+   ctx.font="11px Arial,sans-serif";ctx.fillStyle="#625245";ctx.fillText(r.days==null?"A definir":r.days+" dias",435,y);
+   ctx.strokeStyle="#E2D6CB";ctx.beginPath();ctx.moveTo(69,y+8);ctx.lineTo(519,y+8);ctx.stroke();
+ }
+ ctx.font="11px Arial,sans-serif";ctx.fillStyle="#7C6F65";
+ ctx.fillText("Início previsto: "+(project.startDate?manualShortDate(project.startDate):"a definir"),69,459,420);
 }
 function manualApplyChanges(canvas,pageNumber,project,pageWidth){
   const ctx=canvas.getContext("2d",{willReadFrequently:false});
