@@ -99,11 +99,116 @@ tbody tr:hover{background:#FCFAF8}
 .reg-contract-subrow .reg-contract-name::before{content:"↳";position:absolute;left:0;color:#AF9E8E}
 .reg-contract-total{padding:9px 18px 12px;text-align:right;background:#F5EEE9;border-top:1px solid var(--linha);font-size:12px;color:#625245}
 @media(max-width:640px){.reg-contract-total{padding:9px 10px}.reg-contract-subrow .reg-contract-name{padding-left:14px}}
-.reg-optional-note{display:block;font-size:11px;font-weight:400;color:#8B7663;margin-top:3px;line-height:1.4}.br-date-input{font-variant-numeric:tabular-nums;letter-spacing:.025em;min-width:130px}.br-date-input::placeholder{color:#9A8A7D;opacity:1}</style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
+.reg-optional-note{display:block;font-size:11px;font-weight:400;color:#8B7663;margin-top:3px;line-height:1.4}.br-date-input{font-variant-numeric:tabular-nums;letter-spacing:.025em;min-width:130px}.br-date-input::placeholder{color:#9A8A7D;opacity:1}
+/* Equipe: diretório compacto e compromissos individuais em ordem cronológica. */
+.tag.active{background:#E5EDF3;color:#456C86}
+.team-directory{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:17px 0}
+.team-person{display:flex;align-items:center;gap:14px;min-width:0;width:100%;background:#fff;border:1px solid var(--linha);border-radius:14px;padding:18px 19px;text-align:left;color:var(--grafite);transition:box-shadow .18s,border-color .18s,transform .18s}
+.team-person:hover{border-color:var(--fendi);box-shadow:0 7px 23px rgba(98,82,69,.09);transform:translateY(-1px)}
+.team-avatar{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--marfim);color:var(--marrom);font-size:14px;font-weight:750;letter-spacing:.02em}
+.team-person-text{display:flex;flex-direction:column;min-width:0;flex:1;gap:3px}.team-person-text strong{font-size:15px;color:var(--grafite);overflow-wrap:anywhere}
+.team-person-text .muted{font-size:12px}
+.team-arrow{margin-left:auto;font-size:24px;line-height:1;color:var(--taupe);font-weight:350}
+.team-overdue-count{font-size:11px;font-weight:700;color:#98554D;white-space:nowrap}
+.team-member-heading{justify-content:space-between}
+.team-summary{display:flex;flex-wrap:wrap;gap:10px;margin-top:17px}
+.team-summary span{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--linha);border-radius:9px;font-size:12px;background:#fff}
+.team-summary span strong{font-size:17px}
+.team-summary-late,.team-status-late{color:#A14E48!important}
+.team-summary-active,.team-status-active{color:#466F8A!important}
+.team-summary-good,.team-status-good{color:#4C765A!important}
+.team-timeline-panel{padding-bottom:12px}
+.team-timeline{display:flex;flex-direction:column;margin-top:16px}
+.team-commitment{display:flex;align-items:center;gap:15px;width:100%;padding:16px 9px;background:transparent;border:0;border-bottom:1px solid var(--linha);text-align:left;border-radius:0;color:var(--grafite)}
+.team-commitment:last-child{border-bottom:0}
+.team-commitment:hover{background:var(--offwhite)}
+.team-date{flex:none;width:108px;font-weight:650;font-size:13px;font-variant-numeric:tabular-nums;color:var(--marrom)}
+.team-commitment-body{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.team-commitment-body strong{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.team-commitment-body .muted{font-size:12px}
+.team-status{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font-size:11px;font-weight:700;padding:7px 10px;border-radius:8px}
+.team-status-late{background:#F5E5E2}
+.team-status-active{background:#E7EFF4}
+.team-status-good{background:#E8F0E9}
+@media(max-width:780px){.team-directory{grid-template-columns:1fr}.team-person{padding:15px}.team-date{width:90px}.team-commitment{gap:10px}.team-summary{gap:6px}}
+@media(max-width:520px){.team-commitment{display:grid;grid-template-columns:1fr auto;gap:7px 10px;padding:13px 4px}.team-date{grid-column:1;grid-row:1;width:auto;font-size:12px}.team-commitment-body{grid-column:1;grid-row:2}.team-status{grid-column:2;grid-row:1;white-space:nowrap;font-size:10px;padding:5px 7px}.team-commitment .team-arrow{grid-column:2;grid-row:2;justify-self:end}.team-person{gap:10px}.team-overdue-count{font-size:10px}.team-member-heading button{font-size:12px}}
+</style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
-let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null;let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Aguardando aprovação'?'waiting':'good')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));function rows(list){let fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Etapa</th><th>Equipe das etapas</th><th>Início</th><th>Prazo escritório</th><th>Prazo cliente</th><th>Situação</th></tr></thead><tbody>'+list.map(p=>{let owners=[...new Set((p.schedule?.length?p.schedule:p.steps||[]).map(s=>s.owner).filter(o=>o&&o!=='Não definido'))];return '<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client)+'</div></td><td>'+esc(p.phase)+'</td><td>'+esc(owners.join(', ')|| (p.owner&&p.owner!=='Não definido'?p.owner:'A definir'))+'</td><td>'+fmt(p.startDate)+'</td><td>'+fmt(p.officeDate)+'</td><td>'+fmt(p.clientDate||p.deadline)+'</td><td>'+tag(p.status)+'</td></tr>'}).join('')+'</tbody></table></div>'}
-function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?'Detalhes do projeto':({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+calendarHTML()+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Atrasadas primeiro, depois as próximas entregas da equipe</div></div></div>'+attentionHTML(entries,today)+'</section>'}if(page==='projetos'){let list=projects.filter(p=>filter==='Todos'||p.status===filter);el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='equipe'){let owners=[...new Set([...employees.map(e=>e.name),...projects.map(p=>p.owner)])];el.innerHTML='<section class="panel"><div class="inline"><h3 style="margin:0;flex:1">Equipe e entregas</h3><button class="primary" onclick="addEmployee()">+ Funcionário</button></div><p class="muted">Acompanhe as entregas de cada pessoa e gerencie os integrantes da equipe.</p></section><div class="grid2">'+owners.map(o=>'<section class="panel"><div class="inline"><h3 style="flex:1">'+esc(o)+'</h3><button class="secondary" onclick="removeEmployee('+JSON.stringify(o).replace(/"/g,'&quot;')+')">Excluir</button></div>'+calendarEntries().filter(e=>e.owner===o&&!e.completed).sort((a,b)=>a.date.localeCompare(b.date)).map(e=>'<p><a class="click" onclick="calendarOpen(\''+e.id+'\')">'+esc(e.name)+'</a><br><small>'+esc(formatDateBR(e.date))+' · '+(e.date<iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate())?'Atrasado':'Pendente')+'</small></p>').join('')+(calendarEntries().filter(e=>e.owner===o&&!e.completed).length?'':'<p class="muted">Sem entregas pendentes.</p>')+'</section>').join('')+'</div>'}if(page==='modelos')models()}
+let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null,teamSelectedOwner=null;let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Em andamento'?'active':s==='Concluído'?'good':'waiting')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;teamSelectedOwner=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));function rows(list){let fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Etapa</th><th>Equipe das etapas</th><th>Início</th><th>Prazo escritório</th><th>Prazo cliente</th><th>Situação</th></tr></thead><tbody>'+list.map(p=>{let owners=[...new Set((p.schedule?.length?p.schedule:p.steps||[]).map(s=>s.owner).filter(o=>o&&o!=='Não definido'))];return '<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client)+'</div></td><td>'+esc(p.phase)+'</td><td>'+esc(owners.join(', ')|| (p.owner&&p.owner!=='Não definido'?p.owner:'A definir'))+'</td><td>'+fmt(p.startDate)+'</td><td>'+fmt(p.officeDate)+'</td><td>'+fmt(p.clientDate||p.deadline)+'</td><td>'+tag(p.status)+'</td></tr>'}).join('')+'</tbody></table></div>'}
+function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?'Detalhes do projeto':({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+calendarHTML()+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Atrasadas primeiro, depois as próximas entregas da equipe</div></div></div>'+attentionHTML(entries,today)+'</section>'}if(page==='projetos'){let list=projects.filter(p=>filter==='Todos'||p.status===filter);el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='equipe')renderTeam();if(page==='modelos')models()}
+
+function teamMembers(){
+ const source=[...employees.map(x=>x.name),...calendarEntries().map(x=>x.owner)];
+ const unique=new Map();
+ for(let owner of source){
+  if(typeof owner!=='string')continue;
+  const clean=owner.trim();
+  if(!clean||clean==='Não definido'||clean==='Sem responsável')continue;
+  const key=clean.toLocaleLowerCase('pt-BR');
+  if(!unique.has(key))unique.set(key,clean);
+ }
+ return [...unique.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+function teamCommitments(owner){
+ const key=String(owner||'').trim().toLocaleLowerCase('pt-BR');
+ const scheduledProjects=new Set(projects.filter(p=>(p.schedule||[]).length).map(p=>String(p.id)));
+ return calendarEntries().filter(e=>{
+  if(!e?.date||!/^\d{4}-\d{2}-\d{2}$/.test(e.date)||e.kind==='start')return false;
+  if(String(e.owner||'').trim().toLocaleLowerCase('pt-BR')!==key)return false;
+  // Os prazos gerais de um projeto com cronograma duplicam as entregas das etapas.
+  if(String(e.id).startsWith('p')&&scheduledProjects.has(String(e.projectId)))return false;
+  return true;
+ }).sort((a,b)=>a.date.localeCompare(b.date)||String(a.name).localeCompare(String(b.name),'pt-BR'));
+}
+function teamCommitmentStatus(e,today){
+ if(e.completed)return 'Concluído';
+ if(e.date<today)return 'Atrasado';
+ return 'Em andamento';
+}
+function teamStatusClass(s){return s==='Atrasado'?'late':s==='Concluído'?'good':'active'}
+function teamCounts(entries,today){
+ let overdue=0,active=0,done=0;
+ for(let e of entries){
+  const st=teamCommitmentStatus(e,today);
+  if(st==='Atrasado')overdue++;
+  else if(st==='Concluído')done++;
+  else active++;
+ }
+ return {overdue,active,done};
+}
+function teamJSArg(value){return esc(JSON.stringify(String(value)))}
+function openTeamMember(owner){
+ const name=teamMembers().find(x=>x.toLocaleLowerCase('pt-BR')===String(owner).toLocaleLowerCase('pt-BR'));
+ if(!name)return;
+ teamSelectedOwner=name;
+ page='equipe';selected=null;render();
+ if(typeof window!=='undefined'&&typeof window.scrollTo==='function')window.scrollTo(0,0);
+}
+function closeTeamMember(){teamSelectedOwner=null;render()}
+function renderTeam(){
+ const now=new Date(),today=iso(now.getFullYear(),now.getMonth()+1,now.getDate());
+ const members=teamMembers();
+ if(teamSelectedOwner&&!members.includes(teamSelectedOwner))teamSelectedOwner=null;
+ if(!teamSelectedOwner){
+  el.innerHTML='<section class="panel"><div class="inline"><div style="flex:1"><h3 style="margin:0 0 5px">Equipe</h3><p class="muted" style="margin:0">Selecione um funcionário para consultar seus projetos e entregas.</p></div><button class="primary" onclick="addEmployee()">+ Funcionário</button></div></section>'
+   +(members.length?'<div class="team-directory">'+members.map(owner=>{
+    const entries=teamCommitments(owner),counts=teamCounts(entries,today);
+    const initials=owner.split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toLocaleUpperCase('pt-BR');
+    return '<button type="button" class="team-person" onclick="openTeamMember('+teamJSArg(owner)+')" aria-label="Ver responsabilidades de '+esc(owner)+'"><span class="team-avatar">'+esc(initials)+'</span><span class="team-person-text"><strong>'+esc(owner)+'</strong><span class="muted">'+entries.length+' '+(entries.length===1?'compromisso':'compromissos')+'</span></span>'+(counts.overdue?'<span class="team-overdue-count">'+counts.overdue+' em atraso</span>':'')+'<span class="team-arrow" aria-hidden="true">›</span></button>'
+   }).join('')+'</div>':'<section class="panel"><p class="muted">Nenhum funcionário cadastrado. Clique em + Funcionário para começar.</p></section>');
+  return;
+ }
+ const owner=teamSelectedOwner,entries=teamCommitments(owner),counts=teamCounts(entries,today);
+ const actionItems=entries.map(e=>{
+  const status=teamCommitmentStatus(e,today),label=status==='Concluído'?'good':status==='Atrasado'?'late':'active';
+  const kind=e.kind==='office'?'Prazo do escritório':e.kind==='client'?'Entrega ao cliente':'Entrega ou atividade';
+  return '<button class="team-commitment" type="button" onclick="calendarOpen('+teamJSArg(e.id)+')" aria-label="Abrir '+esc(e.name)+'"><span class="team-date"><span>'+esc(formatDateBR(e.date))+'</span></span><span class="team-commitment-body"><strong>'+esc(e.name)+'</strong><span class="muted">'+kind+'</span></span><span class="team-status team-status-'+label+'">'+status+'</span><span class="team-arrow" aria-hidden="true">›</span></button>';
+ }).join('');
+ el.innerHTML='<section class="panel"><div class="inline team-member-heading"><button class="secondary" onclick="closeTeamMember()">← Voltar à equipe</button><button class="secondary" onclick="removeEmployee('+teamJSArg(owner)+')">Excluir funcionário</button></div><h3 style="margin:16px 0 7px">'+esc(owner)+'</h3><p class="muted" style="margin:0">Projetos, etapas e entregas sob sua responsabilidade, em ordem cronológica.</p><div class="team-summary"><span class="team-summary-late"><strong>'+counts.overdue+'</strong> Atrasado'+(counts.overdue===1?'':'s')+'</span><span class="team-summary-active"><strong>'+counts.active+'</strong> Em andamento</span><span class="team-summary-good"><strong>'+counts.done+'</strong> Concluído'+(counts.done===1?'':'s')+'</span></div></section>'
+  +'<section class="panel team-timeline-panel"><div class="inline" style="justify-content:space-between"><h3 style="margin:0">Responsabilidades</h3><span class="muted">'+entries.length+' '+(entries.length===1?'compromisso':'compromissos')+'</span></div>'+(entries.length?'<div class="team-timeline">'+actionItems+'</div>':'<p class="muted" style="margin-top:18px">Nenhuma entrega atribuída a este funcionário.</p>')+'</section>';
+}
+
 function iso(y,m,d){return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
 function parseISO(s){let a=String(s).split('-').map(Number);return new Date(a[0],a[1]-1,a[2],12)}
 /* Datas visíveis em DD/MM/AAAA; armazenamento e cálculos permanecem em AAAA-MM-DD. */
