@@ -612,11 +612,10 @@ function addProjectStep(id){
 }
 function editProjectStep(id,i){
  let p=projects.find(x=>x.id===id),s=p?.schedule?.[i];if(!s)return;
- let owner=prompt('Responsável:',s.owner);if(owner===null)return;
- let date=promptDateBR('Nova data da entrega',s.deadline);if(!date)return;
+ let date=promptDateBR('Nova data da etapa',s.deadline);if(!date)return;
  let reason=prompt('Motivo da alteração (opcional):','');if(reason===null)return;
  s.history=s.history||[];s.history.push({old:s.deadline,new:nextBusiness(date),reason});
- s.owner=owner;s.deadline=nextBusiness(date);save();render()
+ s.deadline=nextBusiness(date);save();render()
 }
 function completeProjectStep(id,i){let p=projects.find(x=>x.id===id),s=p.schedule[i];s.completed=!s.completed;let next=p.schedule.find(x=>!x.completed);if(next)p.phase=next.name;else if(p.schedule.length)p.status='Concluído';save();render()}function updateProject(id){
  let p=projects.find(x=>x.id===id);if(!p)return;
