@@ -99,13 +99,62 @@ tbody tr:hover{background:#FCFAF8}
 .reg-contract-subrow .reg-contract-name::before{content:"↳";position:absolute;left:0;color:#AF9E8E}
 .reg-contract-total{padding:9px 18px 12px;text-align:right;background:#F5EEE9;border-top:1px solid var(--linha);font-size:12px;color:#625245}
 @media(max-width:640px){.reg-contract-total{padding:9px 10px}.reg-contract-subrow .reg-contract-name{padding-left:14px}}
-.reg-optional-note{display:block;font-size:11px;font-weight:400;color:#8B7663;margin-top:3px;line-height:1.4}</style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
+.reg-optional-note{display:block;font-size:11px;font-weight:400;color:#8B7663;margin-top:3px;line-height:1.4}.br-date-input{font-variant-numeric:tabular-nums;letter-spacing:.025em;min-width:130px}.br-date-input::placeholder{color:#9A8A7D;opacity:1}</style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
 let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null;let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Aguardando aprovação'?'waiting':'good')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));function rows(list){let fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Etapa</th><th>Equipe das etapas</th><th>Início</th><th>Prazo escritório</th><th>Prazo cliente</th><th>Situação</th></tr></thead><tbody>'+list.map(p=>{let owners=[...new Set((p.schedule?.length?p.schedule:p.steps||[]).map(s=>s.owner).filter(o=>o&&o!=='Não definido'))];return '<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client)+'</div></td><td>'+esc(p.phase)+'</td><td>'+esc(owners.join(', ')|| (p.owner&&p.owner!=='Não definido'?p.owner:'A definir'))+'</td><td>'+fmt(p.startDate)+'</td><td>'+fmt(p.officeDate)+'</td><td>'+fmt(p.clientDate||p.deadline)+'</td><td>'+tag(p.status)+'</td></tr>'}).join('')+'</tbody></table></div>'}
 function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?'Detalhes do projeto':({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+calendarHTML()+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Atrasadas primeiro, depois as próximas entregas da equipe</div></div></div>'+attentionHTML(entries,today)+'</section>'}if(page==='projetos'){let list=projects.filter(p=>filter==='Todos'||p.status===filter);el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='equipe'){let owners=[...new Set([...employees.map(e=>e.name),...projects.map(p=>p.owner)])];el.innerHTML='<section class="panel"><div class="inline"><h3 style="margin:0;flex:1">Equipe e entregas</h3><button class="primary" onclick="addEmployee()">+ Funcionário</button></div><p class="muted">Acompanhe as entregas de cada pessoa e gerencie os integrantes da equipe.</p></section><div class="grid2">'+owners.map(o=>'<section class="panel"><div class="inline"><h3 style="flex:1">'+esc(o)+'</h3><button class="secondary" onclick="removeEmployee('+JSON.stringify(o).replace(/"/g,'&quot;')+')">Excluir</button></div>'+calendarEntries().filter(e=>e.owner===o&&!e.completed).sort((a,b)=>a.date.localeCompare(b.date)).map(e=>'<p><a class="click" onclick="calendarOpen(\''+e.id+'\')">'+esc(e.name)+'</a><br><small>'+esc(e.date)+' · '+(e.date<iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate())?'Atrasado':'Pendente')+'</small></p>').join('')+(calendarEntries().filter(e=>e.owner===o&&!e.completed).length?'':'<p class="muted">Sem entregas pendentes.</p>')+'</section>').join('')+'</div>'}if(page==='modelos')models()}
 function iso(y,m,d){return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
 function parseISO(s){let a=String(s).split('-').map(Number);return new Date(a[0],a[1]-1,a[2],12)}
+/* Datas visíveis em DD/MM/AAAA; armazenamento e cálculos permanecem em AAAA-MM-DD. */
+function formatDateBR(value){
+ const v=String(value||'');
+ if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v.slice(8,10)+'/'+v.slice(5,7)+'/'+v.slice(0,4);
+ return v;
+}
+function parseDateBR(value){
+ const v=String(value??'').trim();
+ if(!v)return '';
+ const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
+ if(!m)return null;
+ const day=Number(m[1]),month=Number(m[2]),year=Number(m[3]);
+ if(year<1900||year>2100)return null;
+ const d=new Date(year,month-1,day,12);
+ if(d.getFullYear()!==year||d.getMonth()!==month-1||d.getDate()!==day)return null;
+ return iso(year,month,day);
+}
+function maskDateBR(input){
+ const raw=String(input.value||'').replace(/\D/g,'').slice(0,8);
+ input.value=raw.slice(0,2)+(raw.length>2?'/'+raw.slice(2,4):'')+(raw.length>4?'/'+raw.slice(4,8):'');
+ if(typeof input.setCustomValidity==='function')input.setCustomValidity('');
+}
+function validateDateBRInput(input){
+ let result=parseDateBR(input.value);
+ if(typeof input.setCustomValidity==='function')input.setCustomValidity(result===null?'Informe uma data válida em DD/MM/AAAA.':'');
+ return result;
+}
+function dateInputBR(id,label,value){
+ return '<label>'+esc(label)+' <input id="'+esc(id)+'" class="br-date-input" type="text" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="DD/MM/AAAA" aria-label="'+esc(label)+' (DD/MM/AAAA)" value="'+esc(formatDateBR(value))+'" oninput="maskDateBR(this)" onblur="validateDateBRInput(this)"></label>';
+}
+function promptDateBR(label,currentISO){
+ let raw=prompt(label+' (DD/MM/AAAA):',formatDateBR(currentISO||''));
+ if(raw===null)return null;
+ let date=parseDateBR(raw);
+ if(!date){alert('Informe uma data válida no formato DD/MM/AAAA.');return null}
+ return date;
+}
+function getDateInputBR(id,label){
+ let raw=document.getElementById(id)?.value||'';
+ const value=parseDateBR(raw);
+ if(value===null)alert('A data de '+label+' é inválida. Use DD/MM/AAAA.');
+ return value;
+}
+function saveManualCoverDateBR(id,input){
+ const date=parseDateBR(input.value);
+ if(!date){alert('Informe uma data válida para a capa no formato DD/MM/AAAA.');return}
+ if(typeof manualSaveDate==='function')manualSaveDate(id,date);
+}
+
 function easter(y){let a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k+7)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31),day=(h+l-7*m+114)%31+1;return new Date(y,month-1,day,12)}
 function offsetDay(dt,n){let x=new Date(dt);x.setDate(x.getDate()+n);return iso(x.getFullYear(),x.getMonth()+1,x.getDate())}
 function holidays(y){let h={'01-01':'Confraternização Universal','04-21':'Tiradentes','05-01':'Dia do Trabalho','09-07':'Independência','10-12':'Nossa Senhora Aparecida','11-02':'Finados','11-15':'Proclamação da República','11-20':'Consciência Negra','12-25':'Natal'};let eas=easter(y);let goodFriday=offsetDay(eas,-2).slice(5);h[goodFriday]='Sexta-feira Santa';for(let x of extraHolidays){if(x.date.startsWith(String(y)))h[x.date.slice(5)]=x.name}return h}
@@ -153,6 +202,7 @@ function registrationContractDays(step){let p=registrationContractParts(step);re
 function registrationSteps(){let p=projects.find(x=>x.id===registrationEditId);return p?.steps?.length?p.steps:defaultRegistrationSteps()}
 function regField(key,label,value,type,wide,required){
 let kind=type||'text',attrs=(required?' required':'')+(kind==='tel'?' autocomplete="tel"':'');
+if(kind==='date')return '<label class="reg-field'+(wide?' reg-wide':'')+'"><span>'+label+(required?' <span class="reg-required">*</span>':'')+'</span><input class="br-date-input" id="reg_'+key+'" name="'+key+'" type="text" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(value))+'" oninput="maskDateBR(this)" onblur="validateDateBRInput(this)"'+attrs+'></label>';
 return '<label class="reg-field'+(wide?' reg-wide':'')+'"><span>'+label+(required?' <span class="reg-required">*</span>':'')+'</span><input id="reg_'+key+'" type="'+kind+'" name="'+key+'" value="'+esc(value??'')+'"'+attrs+' maxlength="350"></label>'
 }
 function regSelect(key,label,value,opts){
