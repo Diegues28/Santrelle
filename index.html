@@ -302,6 +302,78 @@ tbody tr:hover{background:#FCFAF8}
 .project-history-details p{font-size:12px;border-bottom:1px solid var(--linha);padding-bottom:7px;margin:9px 0}
 .project-history-details p:last-child{border-bottom:0;padding-bottom:0}
 @media(max-width:620px){.archive-controls input,.archive-controls button{flex:1 1 100%;width:100%;max-width:none}.project-archive-banner button{width:100%}}
+
+/* Módulo pós-obra — pendências independentes com checks individuais */
+.pw-stats{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;margin:20px 0}
+.pw-stat{background:var(--offwhite);border:1px solid var(--linha);border-radius:10px;padding:13px;display:flex;flex-direction:column;gap:8px}
+.pw-stat span{font-size:11px;color:var(--taupe);line-height:1.45}
+.pw-stat strong{font-size:26px;color:var(--marrom);font-variant-numeric:tabular-nums}
+.pw-create{border:1px solid var(--linha);border-radius:10px;background:var(--offwhite);padding:15px;margin-top:16px}
+.pw-create label{font-size:12px;font-weight:700;color:var(--marrom);display:block;margin-bottom:9px}
+.pw-create select{min-width:200px;flex:1;max-width:530px}
+.pw-project-list{display:flex;flex-direction:column;gap:8px}
+.pw-project{display:flex;align-items:center;gap:14px;width:100%;background:#fff;border:1px solid var(--linha);border-radius:11px;padding:15px;text-align:left;color:var(--grafite)}
+.pw-project:hover{background:var(--offwhite);border-color:var(--fendi)}
+.pw-project>span:first-child{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px}
+.pw-project strong{color:var(--marrom);font-size:14px}
+.pw-project small{font-size:12px;color:var(--taupe)}
+.pw-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.pw-badge{display:inline-block;border:1px solid var(--linha);border-radius:7px;padding:5px 9px;background:#F5F1ED;color:var(--taupe);font-size:11px;white-space:nowrap}
+.pw-badge.pw-active{background:#E7EEF4;color:#55728D;border-color:#D8E3EB}
+.pw-badge.pw-good{background:#E5F0E6;color:#4D7457;border-color:#D2E1D2}
+.pw-badge.pw-late{background:#FBE8E5;color:#A1544B;border-color:#F0D3CD}
+.pw-badge.pw-wait{background:#F9EED8;color:#805F3E;border-color:#F0DFC0}
+.pw-arrow{font-size:23px;color:var(--taupe)}
+.pw-empty{padding:26px 13px;text-align:center;background:var(--offwhite);border:1px dashed var(--linha);border-radius:9px;color:var(--taupe);font-size:13px}
+.pw-header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.pw-closed{background:#EAF2E7;color:#4D7457;border:1px solid #D0DECF;padding:12px 15px;border-radius:9px;margin:15px 0}
+.pw-closed p{margin:6px 0 0;font-size:12px}
+.pw-counts{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.pw-counts span{background:var(--offwhite);border:1px solid var(--linha);padding:12px;border-radius:9px;color:var(--taupe);font-size:12px}
+.pw-counts strong{font-size:20px;color:var(--marrom);margin-right:5px}
+.pw-close{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pw-close .muted{font-size:12px}
+.pw-close button:disabled{opacity:.52;cursor:not-allowed}
+.pw-form-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px}
+.pw-form-title h3{margin:0}
+.pw-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pw-fields>div{display:flex;flex-direction:column;gap:6px}
+.pw-fields label{font-size:12px;font-weight:700;color:var(--marrom)}
+.pw-fields input,.pw-fields select,.pw-fields textarea{width:100%;max-width:none;padding:10px;border:1px solid var(--linha);border-radius:8px;background:#fff;font-size:13px;color:var(--grafite)}
+.pw-fields textarea{resize:vertical;min-height:80px;font:inherit}
+.pw-wide{grid-column:span 2}
+.pw-hint{font-size:11px;line-height:1.6;margin:13px 0}
+.pw-form-actions{display:flex;justify-content:flex-end}
+.pw-list-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.pw-list-header h3{margin:0}
+.pw-tabs{display:flex;flex-wrap:wrap;gap:5px}
+.pw-tab{border:1px solid var(--linha);border-radius:8px;background:#fff;color:var(--taupe);padding:8px 11px;font-size:12px}
+.pw-tab-selected{background:var(--marrom);border-color:var(--marrom);color:#fff}
+.pw-items{display:flex;flex-direction:column;gap:12px}
+.pw-item{display:flex;align-items:flex-start;gap:15px;padding:16px;border:1px solid var(--linha);border-radius:10px;background:#fff}
+.pw-item-done{background:#FAFBF8}
+.pw-check{display:flex;flex-direction:column;align-items:center;gap:7px;flex:none;min-width:92px;cursor:pointer}
+.pw-check input{width:22px;height:22px;margin:4px 0;accent-color:#4D7457;cursor:pointer}
+.pw-check span{font-size:10px;color:var(--taupe);text-align:center}
+.pw-item-content{flex:1;min-width:0}
+.pw-item-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.pw-item-heading small{font-size:11px;color:var(--taupe);text-transform:uppercase;font-weight:750;letter-spacing:.03em}
+.pw-item-heading h4{font-size:15px;color:var(--grafite);line-height:1.5;margin:3px 0 10px;overflow-wrap:anywhere}
+.pw-item-done h4{text-decoration:line-through;color:var(--taupe)}
+.pw-meta{display:flex;gap:9px 14px;flex-wrap:wrap;color:var(--taupe);font-size:11px;margin:3px 0 10px}
+.pw-notes{margin:10px 0;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--grafite)}
+.pw-done-note{font-weight:700;font-size:12px;color:#4D7457;margin:7px 0}
+.pw-item-content>a{display:inline-block;margin:5px 0;color:var(--marrom);font-size:12px}
+.pw-item-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:12px}
+.pw-item-actions button{font-size:12px;padding:7px 11px}
+.pw-item-actions details{flex:1 1 100%;background:var(--offwhite);border-radius:7px;padding:8px 10px;font-size:11px}
+.pw-item-actions summary{cursor:pointer;font-weight:700;color:var(--taupe)}
+.pw-item-actions details p{margin:6px 0}
+.pw-shortcut{margin:16px 0;padding:14px 16px;background:var(--offwhite);border:1px solid var(--linha);border-radius:11px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pw-shortcut strong{font-size:14px;color:var(--marrom)}
+.pw-shortcut p{font-size:12px;color:var(--taupe);margin:5px 0 0}
+@media(max-width:1000px){.pw-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.pw-project{flex-wrap:wrap}.pw-project>span:first-child{flex-basis:100%}.pw-badges{justify-content:flex-start}}
+@media(max-width:620px){.pw-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.pw-fields{grid-template-columns:1fr}.pw-wide{grid-column:span 1}.pw-item{flex-wrap:wrap}.pw-check{min-width:100%;flex-direction:row;justify-content:flex-start}.pw-header button,.pw-shortcut button{flex:1}.pw-create select,.pw-create button{flex:1 1 100%}}
 </style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos ativos</button><button data-page="concluidos">✓ Projetos concluídos</button><button data-page="postobra">▣ Pós-obra</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
@@ -332,7 +404,7 @@ function pwStartSelected(){const id=document.getElementById('pwSelectProject')?.
 function pwProjectShortcut(p){
  const w=pwByProject(p.id),stats=w?pwStats(w):null;
  return '<div class="pw-shortcut"><div><strong>Pós-obra</strong><p>'+(w?(w.closedAt?'Acompanhamento encerrado':stats.open+' pendência'+(stats.open===1?'':'s')+' em aberto'):'Nenhum acompanhamento iniciado')+'. Independente da conclusão do projeto.</p></div>'
- +'<button class="secondary" onclick="'+(w?'pwOpen('+JSON.stringify(w.id)+')':'pwStart('+JSON.stringify(p.id)+')')+'">'+(w?'Abrir pós-obra':'Iniciar pós-obra')+'</button></div>'
+ +'<button class="secondary" onclick="'+(w?'pwOpen('+esc(JSON.stringify(w.id))+')':'pwStart('+esc(JSON.stringify(p.id))+')')+'">'+(w?'Abrir pós-obra':'Iniciar pós-obra')+'</button></div>'
 }
 function pwSummary(){
  const all=postWorks.flatMap(w=>w.items||[]),today=pwToday(),active=postWorks.filter(w=>!w.closedAt).length;
@@ -346,7 +418,7 @@ function pwSummary(){
  return '<section class="panel"><h3>Controle interno de pós-obra</h3><p class="muted">Cada ajuste recebe um check independente. O pós-obra continua aberto até todas as pendências serem resolvidas.</p><div class="pw-stats">'+cards+'</div>'+selector+'</section>'
   +'<section class="panel"><h3>Acompanhamentos</h3>'+(ordered.length?'<div class="pw-project-list">'+ordered.map(w=>{
    const p=pwProject(w),stats=pwStats(w);
-   return '<button class="pw-project" onclick="pwOpen('+JSON.stringify(w.id)+')"><span><strong>'+esc(p?.name||'Projeto não encontrado')+'</strong><small>'+esc(p?.client||'')+' · '+esc(p?.status||'')+'</small></span>'
+   return '<button class="pw-project" onclick="pwOpen('+esc(JSON.stringify(w.id))+')"><span><strong>'+esc(p?.name||'Projeto não encontrado')+'</strong><small>'+esc(p?.client||'')+' · '+esc(p?.status||'')+'</small></span>'
     +'<span class="pw-badges"><span class="pw-badge '+(w.closedAt?'pw-good':'pw-active')+'">'+(w.closedAt?'Pós-obra encerrado':'Em acompanhamento')+'</span><span class="pw-badge">'+stats.open+' em aberto</span><span class="pw-badge pw-good">'+stats.done+' concluída'+(stats.done===1?'':'s')+'</span>'
     +(stats.late?'<span class="pw-badge pw-late">'+stats.late+' atrasada'+(stats.late===1?'':'s')+'</span>':'')+'</span><span class="pw-arrow">›</span></button>'
   }).join('')+'</div>':'<div class="pw-empty">Nenhum pós-obra iniciado. Escolha um projeto para começar.</div>')+'</section>';
@@ -359,7 +431,7 @@ function pwForm(w){
  const item=(w.items||[]).find(x=>String(x.id)===String(postWorkEditing)),status=item?.status||'Pendente';
  const inp=(id,label,value,required)=>'<label for="'+id+'">'+label+(required?' *':'')+'</label><input id="'+id+'" value="'+esc(value||'')+'" '+(required?'required ':'')+'maxlength="280">';
  const statuses=['Pendente','Em andamento','Aguardando fornecedor','Aguardando material','Agendado'];
- return '<form id="pwForm" class="pw-form" onsubmit="pwSaveItem(event,'+JSON.stringify(w.id)+')"><div class="pw-form-title"><h3>'+(item?'Editar pendência':'Adicionar pendência')+'</h3>'
+ return '<form id="pwForm" class="pw-form" onsubmit="pwSaveItem(event,'+esc(JSON.stringify(w.id))+')"><div class="pw-form-title"><h3>'+(item?'Editar pendência':'Adicionar pendência')+'</h3>'
   +(item?'<button class="secondary" type="button" onclick="pwCancelEdit()">Cancelar edição</button>':'')+'</div><div class="pw-fields">'
   +'<div>'+inp('pwEnvironment','Ambiente',item?.environment,true)+'</div>'
   +'<div class="pw-wide">'+inp('pwDescription','Pendência / ajuste necessário',item?.description,true)+'</div>'
@@ -378,14 +450,14 @@ function pwIssue(w,item){
  const statusClass=done?'pw-good':late?'pw-late':item.status==='Aguardando fornecedor'?'pw-wait':'pw-active';
  const meta=[item.supplier?'Fornecedor: '+item.supplier:'',item.owner?'Responsável: '+item.owner:'',item.dueDate?'Prazo: '+formatDateBR(item.dueDate):'Sem prazo'].filter(Boolean);
  const ref=/^https?:\/\//i.test(item.reference||'')?'<a href="'+esc(item.reference)+'" target="_blank" rel="noopener noreferrer">Abrir foto / documento ↗</a>':'';
- return '<div class="pw-item '+(done?'pw-item-done':'')+'"><label class="pw-check"><input type="checkbox" '+(done?'checked ':'')+'aria-label="'+esc((done?'Reabrir':'Concluir')+' pendência: '+item.description)+'" onchange="pwToggle('+JSON.stringify(w.id)+','+JSON.stringify(item.id)+',this.checked)">'
+ return '<div class="pw-item '+(done?'pw-item-done':'')+'"><label class="pw-check"><input type="checkbox" '+(done?'checked ':'')+'aria-label="'+esc((done?'Reabrir':'Concluir')+' pendência: '+item.description)+'" onchange="pwToggle('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+',this.checked)">'
   +'<span>'+(done?'Resolvida':'Marcar resolvida')+'</span></label><div class="pw-item-content">'
   +'<div class="pw-item-heading"><div><small>'+esc(item.environment)+'</small><h4>'+esc(item.description)+'</h4></div><span class="pw-badge '+statusClass+'">'+esc(status)+'</span></div>'
   +'<div class="pw-meta">'+meta.map(s=>'<span>'+esc(s)+'</span>').join('')+'</div>'
   +(item.notes?'<p class="pw-notes">'+esc(item.notes)+'</p>':'')
   +(done?'<p class="pw-done-note">✓ Concluída em '+esc(new Date(item.completedAt||item.updatedAt||item.createdAt).toLocaleDateString('pt-BR'))+'</p>':'')
-  +ref+'<div class="pw-item-actions"><button class="secondary" onclick="pwEdit('+JSON.stringify(w.id)+','+JSON.stringify(item.id)+')">Editar</button>'
-  +'<button class="secondary" onclick="pwRemove('+JSON.stringify(w.id)+','+JSON.stringify(item.id)+')">Excluir</button>'
+  +ref+'<div class="pw-item-actions"><button class="secondary" onclick="pwEdit('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Editar</button>'
+  +'<button class="secondary" onclick="pwRemove('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Excluir</button>'
   +(item.history?.length?'<details><summary>Histórico ('+item.history.length+')</summary>'
     +item.history.slice().reverse().slice(0,25).map(h=>'<p>'+esc(new Date(h.at).toLocaleString('pt-BR'))+' · '+esc(h.text)+'</p>').join('')+'</details>':'')
   +'</div></div></div>';
@@ -395,12 +467,12 @@ function pwDetail(w){
  const stats=pwStats(w),open=(w.items||[]).filter(x=>!x.done).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
  const done=(w.items||[]).filter(x=>x.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
  const shown=postWorkFilter==='todos'?[...open,...done]:postWorkFilter==='concluidos'?done:open;
- const tab=(value,label)=>'<button class="pw-tab '+(postWorkFilter===value?'pw-tab-selected':'')+'" onclick="pwFilter('+JSON.stringify(value)+')">'+label+'</button>';
- return '<section class="panel"><div class="pw-header"><button class="secondary" onclick="postWorkSelected=null;postWorkEditing=null;render()">← Voltar aos pós-obras</button><button class="secondary" onclick="openProject('+JSON.stringify(p.id)+')">Ver projeto ↗</button></div>'
+ const tab=(value,label)=>'<button class="pw-tab '+(postWorkFilter===value?'pw-tab-selected':'')+'" onclick="pwFilter('+esc(JSON.stringify(value))+')">'+label+'</button>';
+ return '<section class="panel"><div class="pw-header"><button class="secondary" onclick="postWorkSelected=null;postWorkEditing=null;render()">← Voltar aos pós-obras</button><button class="secondary" onclick="openProject('+esc(JSON.stringify(p.id))+')">Ver projeto ↗</button></div>'
   +'<h2>'+esc(p.name)+'</h2><p class="muted">Cliente: '+esc(p.client||'')+' · Projeto: '+esc(p.status||'')+' — o pós-obra tem situação independente.</p>'
   +(w.closedAt?'<div class="pw-closed"><strong>✓ Acompanhamento encerrado em '+esc(new Date(w.closedAt).toLocaleDateString('pt-BR'))+'</strong><p>O histórico e os checks permanecem disponíveis.</p></div>':'')
   +'<div class="pw-counts"><span><strong>'+stats.open+'</strong> abertas</span><span><strong>'+stats.late+'</strong> atrasadas</span><span><strong>'+stats.waiting+'</strong> aguardando fornecedor</span><span><strong>'+stats.done+'</strong> concluídas</span></div>'
-  +'<div class="pw-close">'+(w.closedAt?'<button class="secondary" onclick="pwReopen('+JSON.stringify(w.id)+')">Reabrir acompanhamento</button>':'<button class="secondary" onclick="pwClose('+JSON.stringify(w.id)+')" '+(!stats.total||stats.open?'disabled ':'')+'>✓ Encerrar acompanhamento</button>')
+  +'<div class="pw-close">'+(w.closedAt?'<button class="secondary" onclick="pwReopen('+esc(JSON.stringify(w.id))+')">Reabrir acompanhamento</button>':'<button class="secondary" onclick="pwClose('+esc(JSON.stringify(w.id))+')" '+(!stats.total||stats.open?'disabled ':'')+'>✓ Encerrar acompanhamento</button>')
   +'<span class="muted">'+(w.closedAt?'O projeto principal não é alterado.':stats.open?'É necessário marcar todas as pendências antes de encerrar.':stats.total?'Todas resolvidas: acompanhamento pronto para encerrar.':'Cadastre a primeira pendência abaixo.')+'</span></div></section>'
   +(w.closedAt?'':'<section class="panel">'+pwForm(w)+'</section>')
   +'<section class="panel"><div class="pw-list-header"><h3>Pendências</h3><div class="pw-tabs">'+tab('abertos','Em aberto ('+stats.open+')')+tab('concluidos','Concluídas ('+stats.done+')')+tab('todos','Todas ('+stats.total+')')+'</div></div>'
