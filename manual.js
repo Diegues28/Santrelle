@@ -69,8 +69,11 @@ function manualShortDate(value){
 }
 function manualDays(step){
   if(!step)return null;
-  let sub=(step.subs||[]).reduce((s,x)=>s+Math.max(0,Math.floor(Number(x.days)||0)),0);
-  return {office:sub||Math.max(1,Number(step.days)||1),extra:Math.max(0,Number(step.clientExtraDays)||0),total:(sub||Math.max(1,Number(step.days)||1))+Math.max(0,Number(step.clientExtraDays)||0)};
+  let subs=(step.subs||[]).reduce((s,x)=>s+Math.max(0,Math.floor(Number(x.days)||0)),0);
+  let office=subs||Math.max(1,Number(step.days)||1);
+  let extra=Math.max(0,Number(step.clientExtraDays)||0);
+  let contractual=Number(step.contractualDays)>0?Math.floor(Number(step.contractualDays)):office+extra;
+  return {office,extra:0,total:contractual,contractual};
 }
 function manualStep(project,word){
   return (project.steps||[]).find(x=>(x.name||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().includes(word));
@@ -123,16 +126,15 @@ function manualDrawSummary(ctx,project){
   const selected=lines.map((n,i)=>({name:n,step:(project.steps||[]).find(x=>x.name?.toLowerCase()===n.toLowerCase())||(project.steps||[])[i],schedule:(project.schedule||[]).find(x=>x.name?.toLowerCase()===n.toLowerCase())}));
   ctx.fillStyle="rgba(250,248,245,0.96)";ctx.fillRect(51,128,489,329);
   ctx.strokeStyle="#CFC3BA";ctx.lineWidth=0.8;ctx.strokeRect(51.5,128.5,488,328);
-  ctx.fillStyle="#8B7663";ctx.font='24px Georgia,"Times New Roman",serif';ctx.fillText("CRONOGRAMA DO SEU PROJETO",69,170);
+  ctx.fillStyle="#8B7663";ctx.font='23px Georgia,"Times New Roman",serif';ctx.fillText("PRAZOS CONTRATUAIS",69,170);
   ctx.strokeStyle="#AFA094";ctx.beginPath();ctx.moveTo(69,185);ctx.lineTo(519,185);ctx.stroke();
   ctx.font="11px Arial,sans-serif";ctx.fillStyle="#625245";
-  ctx.fillText("ETAPA",69,212);ctx.fillText("ESCRITÓRIO",300,212);ctx.fillText("CLIENTE",417,212);
+  ctx.fillText("ETAPA",69,212);ctx.fillText("PRAZO (DIAS ÚTEIS)",379,212);
   for(let i=0;i<selected.length;i++){
     const row=selected[i],tot=manualDays(row.step),y=246+i*42;
-    ctx.font='13px Georgia,"Times New Roman",serif';ctx.fillStyle="#625245";ctx.fillText(row.name,69,y,213);
+    ctx.font='13px Georgia,"Times New Roman",serif';ctx.fillStyle="#625245";ctx.fillText(row.name,69,y,275);
     ctx.font="11px Arial,sans-serif";ctx.fillStyle="#8B7663";
-    ctx.fillText(tot?tot.office+" dias úteis":"A definir",300,y);
-    ctx.fillText(tot?tot.total+" dias úteis":"A definir",417,y);
+    ctx.fillText(tot?tot.contractual+" dias úteis":"A definir",400,y);
     ctx.strokeStyle="#E2D6CB";ctx.beginPath();ctx.moveTo(69,y+10);ctx.lineTo(517,y+10);ctx.stroke();
   }
   ctx.font="11px Arial,sans-serif";ctx.fillStyle="#7C6F65";
