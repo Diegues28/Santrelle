@@ -139,7 +139,7 @@ let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||see
 function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?'Detalhes do projeto':({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+calendarHTML()+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Atrasadas primeiro, depois as próximas entregas da equipe</div></div></div>'+attentionHTML(entries,today)+'</section>'}if(page==='projetos'){let list=projects.filter(p=>filter==='Todos'||p.status===filter);el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='equipe')renderTeam();if(page==='modelos')models()}
 
 function teamMembers(){
- const source=[...employees.map(x=>x.name),...calendarEntries().map(x=>x.owner)];
+ const source=[...employees.map(x=>x.name),...calendarEntries().filter(e=>e.kind==='office'||e.kind==='delivery').map(x=>x.owner)];
  const unique=new Map();
  for(let owner of source){
   if(typeof owner!=='string')continue;
@@ -154,7 +154,10 @@ function teamCommitments(owner){
  const key=String(owner||'').trim().toLocaleLowerCase('pt-BR');
  const scheduledProjects=new Set(projects.filter(p=>(p.schedule||[]).length).map(p=>String(p.id)));
  return calendarEntries().filter(e=>{
-  if(!e?.date||!/^\d{4}-\d{2}-\d{2}$/.test(e.date)||e.kind==='start')return false;
+  if(!e?.date||!/^\d{4}-\d{2}-\d{2}$/.test(e.date))return false;
+  // Nesta aba entram somente entregas internas e tarefas avulsas da equipe.
+  // Apresentacoes e prazos de entrega ao cliente permanecem no calendario geral.
+  if(e.kind!=='office'&&e.kind!=='delivery')return false;
   if(String(e.owner||'').trim().toLocaleLowerCase('pt-BR')!==key)return false;
   // Os prazos gerais de um projeto com cronograma duplicam as entregas das etapas.
   if(String(e.id).startsWith('p')&&scheduledProjects.has(String(e.projectId)))return false;
@@ -191,7 +194,7 @@ function renderTeam(){
  const members=teamMembers();
  if(teamSelectedOwner&&!members.includes(teamSelectedOwner))teamSelectedOwner=null;
  if(!teamSelectedOwner){
-  el.innerHTML='<section class="panel"><div class="inline"><div style="flex:1"><h3 style="margin:0 0 5px">Equipe</h3><p class="muted" style="margin:0">Selecione um funcionário para consultar seus projetos e entregas.</p></div><button class="primary" onclick="addEmployee()">+ Funcionário</button></div></section>'
+  el.innerHTML='<section class="panel"><div class="inline"><div style="flex:1"><h3 style="margin:0 0 5px">Equipe</h3><p class="muted" style="margin:0">Selecione um funcionário para consultar os prazos internos e as tarefas atribuídas.</p></div><button class="primary" onclick="addEmployee()">+ Funcionário</button></div></section>'
    +(members.length?'<div class="team-directory">'+members.map(owner=>{
     const entries=teamCommitments(owner),counts=teamCounts(entries,today);
     const initials=owner.split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toLocaleUpperCase('pt-BR');
@@ -202,11 +205,11 @@ function renderTeam(){
  const owner=teamSelectedOwner,entries=teamCommitments(owner),counts=teamCounts(entries,today);
  const actionItems=entries.map(e=>{
   const status=teamCommitmentStatus(e,today),label=status==='Concluído'?'good':status==='Atrasado'?'late':'active';
-  const kind=e.kind==='office'?'Prazo do escritório':e.kind==='client'?'Entrega ao cliente':'Entrega ou atividade';
+  const kind=e.kind==='office'?'Prazo interno do escritório':'Tarefa atribuída';
   return '<button class="team-commitment" type="button" onclick="calendarOpen('+teamJSArg(e.id)+')" aria-label="Abrir '+esc(e.name)+'"><span class="team-date"><span>'+esc(formatDateBR(e.date))+'</span></span><span class="team-commitment-body"><strong>'+esc(e.name)+'</strong><span class="muted">'+kind+'</span></span><span class="team-status team-status-'+label+'">'+status+'</span><span class="team-arrow" aria-hidden="true">›</span></button>';
  }).join('');
- el.innerHTML='<section class="panel"><div class="inline team-member-heading"><button class="secondary" onclick="closeTeamMember()">← Voltar à equipe</button><button class="secondary" onclick="removeEmployee('+teamJSArg(owner)+')">Excluir funcionário</button></div><h3 style="margin:16px 0 7px">'+esc(owner)+'</h3><p class="muted" style="margin:0">Projetos, etapas e entregas sob sua responsabilidade, em ordem cronológica.</p><div class="team-summary"><span class="team-summary-late"><strong>'+counts.overdue+'</strong> Atrasado'+(counts.overdue===1?'':'s')+'</span><span class="team-summary-active"><strong>'+counts.active+'</strong> Em andamento</span><span class="team-summary-good"><strong>'+counts.done+'</strong> Concluído'+(counts.done===1?'':'s')+'</span></div></section>'
-  +'<section class="panel team-timeline-panel"><div class="inline" style="justify-content:space-between"><h3 style="margin:0">Responsabilidades</h3><span class="muted">'+entries.length+' '+(entries.length===1?'compromisso':'compromissos')+'</span></div>'+(entries.length?'<div class="team-timeline">'+actionItems+'</div>':'<p class="muted" style="margin-top:18px">Nenhuma entrega atribuída a este funcionário.</p>')+'</section>';
+ el.innerHTML='<section class="panel"><div class="inline team-member-heading"><button class="secondary" onclick="closeTeamMember()">← Voltar à equipe</button><button class="secondary" onclick="removeEmployee('+teamJSArg(owner)+')">Excluir funcionário</button></div><h3 style="margin:16px 0 7px">'+esc(owner)+'</h3><p class="muted" style="margin:0">Prazos internos das etapas e tarefas atribuídas, em ordem cronológica. As entregas ao cliente ficam no calendário geral.</p><div class="team-summary"><span class="team-summary-late"><strong>'+counts.overdue+'</strong> Atrasado'+(counts.overdue===1?'':'s')+'</span><span class="team-summary-active"><strong>'+counts.active+'</strong> Em andamento</span><span class="team-summary-good"><strong>'+counts.done+'</strong> Concluído'+(counts.done===1?'':'s')+'</span></div></section>'
+  +'<section class="panel team-timeline-panel"><div class="inline" style="justify-content:space-between"><h3 style="margin:0">Responsabilidades</h3><span class="muted">'+entries.length+' '+(entries.length===1?'compromisso':'compromissos')+'</span></div>'+(entries.length?'<div class="team-timeline">'+actionItems+'</div>':'<p class="muted" style="margin-top:18px">Nenhum prazo interno ou tarefa atribuída a este funcionário.</p>')+'</section>';
 }
 
 function iso(y,m,d){return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
