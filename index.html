@@ -538,7 +538,7 @@ if(!p.manualCoverDate){let now=new Date();p.manualCoverDate=iso(now.getFullYear(
 function openProject(id){selected=projects.find(p=>p.id===id);page='projetos';render()}
 function subownerOptions(current){
  const opts=[...new Set([...employees.map(e=>e.name),...(current&&current!=='Não definido'?[current]:[])])];
- return '<option value="Não definido"'+(current==='Não definido'?' selected':'')+'>Selecionar responsável</option>'
+ return '<option value="Não definido"'+(current==='Não definido'?' selected':'')+'>Selecionar funcionário</option>'
  +opts.map(name=>'<option value="'+esc(name)+'"'+(current===name?' selected':'')+'>'+esc(name)+'</option>').join('');
 }
 function projectSubstepsHTML(p,steps){
