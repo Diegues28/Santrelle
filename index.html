@@ -199,10 +199,78 @@ tbody tr:hover{background:#FCFAF8}
 @media(max-width:700px){.cal-day .cal-holiday{font-size:8px;-webkit-line-clamp:2}.cal-more-mobile{display:inline-block}.holiday-month-overview{padding:12px}.holiday-month-item{grid-template-columns:72px 1fr;gap:5px 8px;padding:8px}.holiday-type{grid-column:2;width:max-content;font-size:10px;padding:4px 7px}.holiday-month-name{font-size:12px}}
 .holiday-month-delete{background:transparent;border:0;padding:4px 3px;color:#8F5B50;text-decoration:underline;text-underline-offset:2px;font-size:11px;cursor:pointer}
 .holiday-month-delete:hover{color:#6E3F37}
+
+/* Santrelle: conferir cronograma com mini-calendário antes de gravar */
+.sched-preview-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(45,38,32,.57);display:flex;justify-content:center;align-items:center;padding:14px;overflow:auto}
+.sched-preview-modal{width:min(1030px,100%);max-height:min(94vh,1000px);overflow:auto;overscroll-behavior:contain;background:var(--offwhite);border:1px solid #D8C7B8;border-radius:18px;padding:24px 26px;box-shadow:0 24px 75px rgba(39,30,25,.24);color:var(--grafite)}
+.sched-preview-top{display:flex;justify-content:space-between;gap:18px;align-items:start;border-bottom:1px solid var(--linha);padding-bottom:15px}
+.sched-preview-top h2{font-size:25px;margin:5px 0 7px;line-height:1.2}
+.sched-preview-top .muted{font-size:13px;margin:0}
+.sched-preview-kicker{letter-spacing:.1em;color:var(--taupe);font-size:10px;font-weight:800}
+.sched-preview-close{width:38px;height:38px;font-size:24px;border:1px solid var(--linha);background:#fff;color:var(--marrom);border-radius:9px;flex:none;cursor:pointer}
+.sched-preview-inputrow{display:flex;align-items:end;gap:22px;flex-wrap:wrap;margin:17px 0}
+.sched-preview-inputrow label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:650;color:var(--marrom)}
+.sched-preview-inputrow input{width:142px;height:43px;padding:9px 10px;background:#fff;font-size:14px}
+.sched-preview-inputrow>div{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.sched-preview-inputrow>div strong{font-size:15px;color:var(--marrom);font-variant-numeric:tabular-nums}
+.sched-preview-inputrow .muted{font-size:12px}
+.sched-preview-notice{border:1px solid #E5D3AD;background:#FBF4E5;color:#795C39;padding:10px 13px;border-radius:9px;font-size:13px;line-height:1.5;margin-bottom:14px}
+.sched-preview-columns{display:grid;grid-template-columns:minmax(280px,350px) minmax(0,1fr);gap:20px;align-items:start}
+.sched-mini-calendar{background:#fff;border:1px solid var(--linha);border-radius:13px;padding:15px;position:sticky;top:0}
+.sched-mini-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}
+.sched-mini-toolbar strong{text-transform:capitalize;color:var(--marrom);font-size:15px}
+.sched-mini-toolbar .inline{gap:5px}
+.sched-mini-toolbar button{padding:4px 12px;line-height:1.3;font-size:22px}
+.sched-mini-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.sched-mini-weekday{text-align:center;color:var(--taupe);font-size:10px;font-weight:750;padding:3px 0 8px}
+.sched-mini-day{min-width:0;height:46px;border:1px solid #F0E8E0;background:#fff;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:4px;color:var(--grafite)}
+.sched-mini-day:hover{border-color:var(--marrom);box-shadow:0 0 0 1px var(--marrom)}
+.sched-mini-outside{opacity:.34}
+.sched-mini-off{background:#F5F1ED;color:#AA9D92}
+.sched-mini-holiday{background:#F7E7DC;color:#895C4C}
+.sched-mini-working{background:#F2E9E1;border-color:#E7D8CB}
+.sched-mini-selected{outline:2px solid var(--marrom);outline-offset:-2px}
+.sched-mini-daynumber{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.sched-mini-marks{display:flex;gap:2px;min-height:5px;max-width:100%;align-items:center;justify-content:center}
+.sched-mini-mark{width:5px;height:5px;border-radius:50%;background:var(--fendi)}
+.sched-mini-start,.sched-legend-start{background:#625245!important}
+.sched-mini-office,.sched-legend-office{background:#69849A!important}
+.sched-mini-client,.sched-legend-client{background:#63836A!important}
+.sched-mini-review{background:#B4834C!important}
+.sched-mini-sub,.sched-legend-sub{background:#A99785!important}
+.sched-mini-legend{display:flex;gap:9px 13px;flex-wrap:wrap;margin-top:13px}
+.sched-mini-legend span{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--taupe)}
+.sched-mini-legend i{display:inline-block;width:8px;height:8px;border-radius:50%}
+.sched-legend-holiday{background:#E9C6AA}
+.sched-mini-hint{font-size:11px;color:var(--taupe);line-height:1.6;margin:12px 0 0}
+.sched-preview-summary{max-height:520px;overflow:auto;padding:0 3px 2px 0}
+.sched-preview-summary h3{font-size:17px;margin:1px 0 5px}
+.sched-preview-summary>p{font-size:12px;line-height:1.5;margin:0 0 11px}
+.sched-preview-stage{padding:12px 13px;background:#fff;border:1px solid var(--linha);border-radius:10px;margin-top:9px}
+.sched-preview-stage-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-bottom:9px;border-bottom:1px solid #F0E7DF}
+.sched-preview-stage-title strong{color:var(--marrom);font-size:14px}
+.sched-preview-stage-title>span{font-size:11px;color:var(--taupe)}
+.sched-preview-dates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:11px 0}
+.sched-preview-dates div{display:flex;flex-direction:column;gap:4px}
+.sched-preview-dates span{font-size:10px;color:var(--taupe)}
+.sched-preview-dates strong{font-size:12px;color:var(--marrom);font-variant-numeric:tabular-nums}
+.sched-preview-optional,.sched-preview-review{font-size:11px;color:#806B4D;background:#FAF4E6;border-radius:6px;padding:7px 9px;margin-bottom:7px}
+.sched-preview-review{background:#EDF2E8;color:#567258}
+.sched-preview-subitems{border-top:1px solid #F1E9E2;padding-top:5px}
+.sched-preview-sub{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:11px;color:#73665B}
+.sched-preview-sub span:first-child{overflow-wrap:anywhere}
+.sched-preview-sub span:last-child{white-space:nowrap;font-weight:650;color:var(--marrom);font-variant-numeric:tabular-nums}
+.sched-preview-sub em{font-size:10px;color:#997F59}
+.sched-preview-footer{margin-top:19px;padding-top:15px;border-top:1px solid var(--linha);display:flex;align-items:end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.sched-preview-footer p{margin:0;max-width:450px;font-size:11px;line-height:1.6}
+.sched-preview-footer .inline{justify-content:flex-end}
+.sched-preview-footer .primary{font-weight:650}
+@media(max-width:850px){.sched-preview-backdrop{align-items:flex-start}.sched-preview-modal{padding:17px;max-height:96vh}.sched-preview-columns{grid-template-columns:1fr}.sched-mini-calendar{position:static;max-width:440px;width:100%;margin:auto}.sched-preview-summary{max-height:none}.sched-preview-footer{align-items:stretch}.sched-preview-footer .inline{width:100%}}
+@media(max-width:520px){.sched-preview-backdrop{padding:6px}.sched-preview-modal{border-radius:11px;padding:13px}.sched-preview-top h2{font-size:20px}.sched-preview-inputrow{gap:14px}.sched-preview-dates strong{font-size:11px}.sched-preview-footer .inline{flex-direction:column-reverse}.sched-preview-footer button{width:100%}.sched-mini-day{height:43px}}
 </style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
-let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null,teamSelectedOwner=null;let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Em andamento'?'active':s==='Concluído'?'good':'waiting')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;teamSelectedOwner=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));function rows(list){let fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Etapa</th><th>Equipe das subetapas</th><th>Início</th><th>Prazo escritório</th><th>Prazo cliente</th><th>Situação</th></tr></thead><tbody>'+list.map(p=>{let owners=projectAssignedOwners(p);return '<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client)+'</div></td><td>'+esc(p.phase)+'</td><td>'+esc(owners.join(', ')|| (p.owner&&p.owner!=='Não definido'?p.owner:'A definir'))+'</td><td>'+fmt(p.startDate)+'</td><td>'+fmt(p.officeDate)+'</td><td>'+fmt(p.clientDate||p.deadline)+'</td><td>'+tag(p.status)+'</td></tr>'}).join('')+'</tbody></table></div>'}
+let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null,teamSelectedOwner=null,schedulePreviewState=null;let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Em andamento'?'active':s==='Concluído'?'good':'waiting')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;teamSelectedOwner=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));function rows(list){let fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Etapa</th><th>Equipe das subetapas</th><th>Início</th><th>Prazo escritório</th><th>Prazo cliente</th><th>Situação</th></tr></thead><tbody>'+list.map(p=>{let owners=projectAssignedOwners(p);return '<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client)+'</div></td><td>'+esc(p.phase)+'</td><td>'+esc(owners.join(', ')|| (p.owner&&p.owner!=='Não definido'?p.owner:'A definir'))+'</td><td>'+fmt(p.startDate)+'</td><td>'+fmt(p.officeDate)+'</td><td>'+fmt(p.clientDate||p.deadline)+'</td><td>'+tag(p.status)+'</td></tr>'}).join('')+'</tbody></table></div>'}
 function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?'Detalhes do projeto':({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+calendarHTML()+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Atrasadas primeiro, depois as próximas entregas da equipe</div></div></div>'+attentionHTML(entries,today)+'</section>'}if(page==='projetos'){let list=projects.filter(p=>filter==='Todos'||p.status===filter);el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='equipe')renderTeam();if(page==='modelos')models()}
 
 
@@ -701,7 +769,7 @@ function projectSubstepsHTML(p,steps){
  }).join('');
  return header+groups+'</section>';
 }
-function detail(){let p=selected,steps=p.steps||phases;let schedule=p.schedule||[];el.innerHTML='<section class="panel"><div class="inline"><button class="secondary" onclick="go(\'projetos\')">← Voltar</button><button class="secondary" onclick="editRegistration('+p.id+')">Ver / editar ficha cadastral</button></div><h2>'+esc(p.name)+'</h2><p class="muted">'+esc(p.client)+'</p><div class="inline"><label>Situação <select id="st">'+['Em andamento','Atrasado','Aguardando aprovação','Concluído'].map(s=>'<option '+(p.status===s?'selected':'')+'>'+s+'</option>').join('')+'</select></label>'+dateInputBR('startDate','Início',p.startDate||'')+dateInputBR('officeDate','Prazo do escritório',p.officeDate||'')+dateInputBR('clientDate','Prazo do cliente',p.clientDate||(/^\d{4}-/.test(p.deadline)?p.deadline:''))+'<button class="primary" onclick="updateProject('+p.id+')">Salvar alterações</button></div></section><section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:6px">Manual do cliente</h3><p class="muted">Manual individual em PDF com 16 páginas. Nome, data da capa e prazos são preenchidos automaticamente a partir da ficha do cliente.</p></div></div><div class="inline"><label>Data da capa <input class="br-date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(p.manualCoverDate||iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate())))+'" oninput="maskDateBR(this)" onchange="saveManualCoverDateBR('+p.id+',this)"></label><button class="primary" onclick="generateManualPdf('+p.id+')">Gerar manual PDF</button><button class="secondary" onclick="document.getElementById(\'manualTemplateInput\').click()">Importar/atualizar modelo PDF</button><input type="file" id="manualTemplateInput" accept=".pdf,application/pdf" style="display:none" onchange="importManualTemplate(event,'+p.id+')"></div><div class="muted" style="margin-top:12px;font-size:13px" id="manualTemplateStatus">Verificando modelo...</div></section><section class="panel"><div class="calendar-head"><div><h3>Planejamento e prazos das etapas</h3><p class="muted">Prazos previstos em dias úteis. Ao apresentar o estudo ou anteprojeto, clique em <strong>Solicitar revisão</strong> somente se o cliente pedir alterações. A compatibilização do executivo continua obrigatória.</p></div><div class="inline"><button class="primary" onclick="createSchedule('+p.id+')">Gerar cronograma</button><button class="secondary" onclick="addProjectStep('+p.id+')">+ Entrega avulsa</button></div></div>'+(!schedule.length?'<p class="muted">Nenhum cronograma gerado. Clique em Gerar cronograma para calcular as datas.</p>':'')+((schedule.length&&p.holidayCalendarVersion!==SANTRELLE_HOLIDAY_CALENDAR_VERSION)?'<div class="reg-warning"><strong>Calendário atualizado:</strong> este cronograma foi gerado antes de considerar todos os feriados nacionais, estaduais de SP e municipais de Santos. Clique em <strong>Gerar cronograma</strong> para recalcular as datas. Os prazos já salvos não serão modificados automaticamente.</div>':'')+((schedule.length&&p.scheduleVersion!==2&&steps.some(registrationHasOptionalReview))?'<div class="reg-warning">Cronograma anterior: clique em <strong>Gerar cronograma</strong> para retirar revisões não solicitadas.</div>':'')+schedule.map((s,i)=>'<div class="phase"><div class="inline"><strong style="flex:1">'+esc(s.name)+'</strong><span class="tag '+(s.completed?'good':'')+'">'+(s.completed?'Concluída':'Pendente')+'</span><button class="secondary" onclick="editProjectStep('+p.id+','+i+')">Editar prazo</button><button class="secondary" onclick="completeProjectStep('+p.id+','+i+')">'+(s.completed?'Reabrir':'Concluir')+'</button>'+(registrationHasOptionalReview(s)?'<button class="secondary" onclick="toggleProjectRevision('+p.id+','+i+')">'+(s.revisionRequested?'Cancelar revisão':'Solicitar revisão')+'</button>':'')+(s.revisionRequested?'<button class="secondary" onclick="completeProjectRevision('+p.id+','+i+')">'+(s.revisionCompleted?'Reabrir revisão':'Concluir revisão')+'</button>':'')+'</div><div class="muted">'+'Prazo da etapa: '+esc(formatDateBR(s.start||''))+' até '+esc(formatDateBR(s.deadline||''))+' · '+s.days+' dias úteis internos · Cliente: '+esc(formatDateBR(s.clientDeadline||s.deadline||''))+(s.contractualDays?' · Prazo previsto: '+s.contractualDays+' dias úteis'+(registrationHasOptionalReview(s)?' · Revisão opcional: '+(s.contractualParts?.secondary||0)+' dias úteis'+(s.revisionRequested?' · Solicitada, entrega em '+esc(formatDateBR(s.revisionDeadline||'A definir')):' · Não solicitada'):s.contractualParts?.secondary>0?' · Compatibilização obrigatória: '+s.contractualParts.secondary+' dias úteis':''):' (+'+(s.clientExtraDays||0)+' dias úteis)')+'</div></div>').join('')+'</section>'+projectSubstepsHTML(p,steps);if(typeof refreshManualTemplateStatus==='function')refreshManualTemplateStatus()}function attentionHTML(entries,today){let visible=entries.filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);if(!visible.length)return '<p class="muted">Nenhuma entrega atrasada ou prevista para os próximos 14 dias.</p>';return '<table><thead><tr><th>Entrega / projeto</th><th>Responsável</th><th>Prazo</th><th>Situação</th></tr></thead><tbody>'+visible.map(e=>'<tr><td><a class="click" onclick="calendarOpen(\''+e.id+'\')">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+esc(e.date.split('-').reverse().join('/'))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')+'</tbody></table>'}
+function detail(){let p=selected,steps=p.steps||phases;let schedule=p.schedule||[];el.innerHTML='<section class="panel"><div class="inline"><button class="secondary" onclick="go(\'projetos\')">← Voltar</button><button class="secondary" onclick="editRegistration('+p.id+')">Ver / editar ficha cadastral</button></div><h2>'+esc(p.name)+'</h2><p class="muted">'+esc(p.client)+'</p><div class="inline"><label>Situação <select id="st">'+['Em andamento','Atrasado','Aguardando aprovação','Concluído'].map(s=>'<option '+(p.status===s?'selected':'')+'>'+s+'</option>').join('')+'</select></label>'+dateInputBR('startDate','Início',p.startDate||'')+dateInputBR('officeDate','Prazo do escritório',p.officeDate||'')+dateInputBR('clientDate','Prazo do cliente',p.clientDate||(/^\d{4}-/.test(p.deadline)?p.deadline:''))+'<button class="primary" onclick="updateProject('+p.id+')">Salvar alterações</button></div></section><section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:6px">Manual do cliente</h3><p class="muted">Manual individual em PDF com 16 páginas. Nome, data da capa e prazos são preenchidos automaticamente a partir da ficha do cliente.</p></div></div><div class="inline"><label>Data da capa <input class="br-date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(p.manualCoverDate||iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate())))+'" oninput="maskDateBR(this)" onchange="saveManualCoverDateBR('+p.id+',this)"></label><button class="primary" onclick="generateManualPdf('+p.id+')">Gerar manual PDF</button><button class="secondary" onclick="document.getElementById(\'manualTemplateInput\').click()">Importar/atualizar modelo PDF</button><input type="file" id="manualTemplateInput" accept=".pdf,application/pdf" style="display:none" onchange="importManualTemplate(event,'+p.id+')"></div><div class="muted" style="margin-top:12px;font-size:13px" id="manualTemplateStatus">Verificando modelo...</div></section><section class="panel"><div class="calendar-head"><div><h3>Planejamento e prazos das etapas</h3><p class="muted">Prazos previstos em dias úteis. Ao apresentar o estudo ou anteprojeto, clique em <strong>Solicitar revisão</strong> somente se o cliente pedir alterações. A compatibilização do executivo continua obrigatória.</p></div><div class="inline"><button class="primary" onclick="createSchedule('+p.id+')">Gerar cronograma</button><button class="secondary" onclick="addProjectStep('+p.id+')">+ Entrega avulsa</button></div></div>'+(!schedule.length?'<p class="muted">Nenhum cronograma gerado. Clique em Gerar cronograma para calcular as datas.</p>':'')+((schedule.length&&p.holidayCalendarVersion!==SANTRELLE_HOLIDAY_CALENDAR_VERSION)?'<div class="reg-warning"><strong>Calendário atualizado:</strong> este cronograma foi gerado antes de considerar todos os feriados nacionais, estaduais de SP e municipais de Santos. Clique em <strong>Gerar cronograma</strong> para recalcular as datas. Os prazos já salvos não serão modificados automaticamente.</div>':'')+((schedule.length&&p.scheduleVersion!==2&&steps.some(registrationHasOptionalReview))?'<div class="reg-warning">Cronograma anterior: clique em <strong>Gerar cronograma</strong> para retirar revisões não solicitadas.</div>':'')+schedule.map((s,i)=>'<div class="phase"><div class="inline"><strong style="flex:1">'+esc(s.name)+'</strong><span class="tag '+(s.completed?'good':'')+'">'+(s.completed?'Concluída':'Pendente')+'</span><button class="secondary" onclick="editProjectStep('+p.id+','+i+')">Editar prazo</button><button class="secondary" onclick="completeProjectStep('+p.id+','+i+')">'+(s.completed?'Reabrir':'Concluir')+'</button>'+(registrationHasOptionalReview(s)?'<button class="secondary" onclick="toggleProjectRevision('+p.id+','+i+')">'+(s.revisionRequested?'Cancelar revisão':'Solicitar revisão')+'</button>':'')+(s.revisionRequested?'<button class="secondary" onclick="completeProjectRevision('+p.id+','+i+')">'+(s.revisionCompleted?'Reabrir revisão':'Concluir revisão')+'</button>':'')+'</div><div class="muted">'+'Prazo da etapa: '+esc(formatDateBR(s.start||''))+' até '+esc(formatDateBR(s.deadline||''))+' · '+s.days+' dias úteis internos · Cliente: '+esc(formatDateBR(s.clientDeadline||s.deadline||''))+(s.contractualDays?' · Prazo previsto: '+s.contractualDays+' dias úteis'+(registrationHasOptionalReview(s)?' · Revisão opcional: '+(s.contractualParts?.secondary||0)+' dias úteis'+(s.revisionRequested?' · Solicitada, entrega em '+esc(formatDateBR(s.revisionDeadline||'A definir')):' · Não solicitada'):s.contractualParts?.secondary>0?' · Compatibilização obrigatória: '+s.contractualParts.secondary+' dias úteis':''):' (+'+(s.clientExtraDays||0)+' dias úteis)')+'</div></div>').join('')+'</section>'+projectSubstepsHTML(p,steps)+(schedulePreviewState&&schedulePreviewState.projectId===p.id?schedulePreviewHTML(p):'');if(typeof refreshManualTemplateStatus==='function')refreshManualTemplateStatus()}function attentionHTML(entries,today){let visible=entries.filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);if(!visible.length)return '<p class="muted">Nenhuma entrega atrasada ou prevista para os próximos 14 dias.</p>';return '<table><thead><tr><th>Entrega / projeto</th><th>Responsável</th><th>Prazo</th><th>Situação</th></tr></thead><tbody>'+visible.map(e=>'<tr><td><a class="click" onclick="calendarOpen(\''+e.id+'\')">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+esc(e.date.split('-').reverse().join('/'))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')+'</tbody></table>'}
 
 function setProjectSubOwner(id,i,j,owner){
  const p=projects.find(x=>x.id===id);if(!p)return;
@@ -791,15 +859,137 @@ function removeProjectSubstep(id,i,j){
  subs.splice(j,1);save();render()
 }
 function changeProjectClientDays(id,i,value){let p=projects.find(x=>x.id===id);p.steps=p.steps||structuredClone(phases);p.steps[i].clientExtraDays=Math.max(0,Math.floor(Number(value)||0));save();render()}function changeProjectSubDays(id,i,j,value){let p=projects.find(x=>x.id===id);p.steps=p.steps||structuredClone(phases);p.steps[i].subs[j].days=Math.max(1,Math.floor(Number(value)||1));save();render()}function changeProjectPhaseDays(id,i,value){let p=projects.find(x=>x.id===id);p.steps=p.steps||structuredClone(phases);p.steps[i].days=Math.max(1,Number(value)||1);save()}
+
+/* Prévia não persistida de cronograma — usa o mesmo cálculo oficial do projeto. */
+function getScheduleDraft(p){
+ if(!p||!schedulePreviewState||schedulePreviewState.projectId!==p.id)return null;
+ const clone=JSON.parse(JSON.stringify(p));
+ clone.steps=clone.steps||JSON.parse(JSON.stringify(phases));
+ buildScheduleForRegistration(clone,nextBusiness(schedulePreviewState.startDate));
+ return clone;
+}
+function schedulePreviewMonth(delta){
+ if(!schedulePreviewState)return;
+ let d=new Date(schedulePreviewState.year,schedulePreviewState.month+delta,1);
+ schedulePreviewState.year=d.getFullYear();schedulePreviewState.month=d.getMonth();render();
+}
+function schedulePreviewChooseDay(date){
+ if(!schedulePreviewState||!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
+ schedulePreviewState.startDate=date;
+ schedulePreviewState.year=Number(date.slice(0,4));schedulePreviewState.month=Number(date.slice(5,7))-1;
+ render();
+}
+function schedulePreviewSetDate(value){
+ if(!schedulePreviewState)return;
+ const date=parseDateBR(value);
+ if(!date){alert('Escolha uma data válida no formato DD/MM/AAAA.');return}
+ if(date===schedulePreviewState.startDate)return;
+ schedulePreviewChooseDay(date);
+}
+function closeSchedulePreview(){
+ schedulePreviewState=null;render();
+}
+function schedulePreviewCalendar(p,draft){
+ const shown=new Date(schedulePreviewState.year,schedulePreviewState.month,1);
+ const year=shown.getFullYear(),month=shown.getMonth();
+ const first=(shown.getDay()+6)%7,daysInMonth=new Date(year,month+1,0).getDate(),cells=Math.ceil((first+daysInMonth)/7)*7;
+ let inner='';
+ for(let i=0;i<cells;i++){
+  const day=offsetDay(shown,i-first),parsed=parseISO(day),outside=parsed.getMonth()!==month;
+  const info=holidayInfo(day),dayOff=!businessDay(day),isSelected=day===schedulePreviewState.startDate,starts=day===draft.startDate;
+  const signals=[];
+  if(starts)signals.push({type:'start',label:'Início do projeto'});
+  for(let j=0;j<(draft.schedule||[]).length;j++){
+   const step=draft.schedule[j];
+   if(step.deadline===day)signals.push({type:'office',label:'Prazo interno: '+step.name});
+   if(step.clientDeadline===day)signals.push({type:'client',label:'Apresentação/entrega ao cliente: '+step.name});
+   if(step.revisionRequested&&step.revisionDeadline===day)signals.push({type:'review',label:'Revisão solicitada: '+step.name});
+   const subs=draft.steps?.[j]?.subs||[];
+   for(let k=0;k<subs.length;k++){
+    if(substepDueDate(draft,j,k)===day)signals.push({type:'sub',label:'Subetapa: '+subs[k].name});
+   }
+  }
+  const within=(draft.schedule||[]).some(step=>day>=step.start&&day<=(step.revisionDeadline||step.clientDeadline||step.deadline));
+  const title=[formatDateBR(day),...(info?[info.name,...info.other]:[]),...signals.map(x=>x.label)].join(' · ');
+  const types=[...new Set(signals.map(x=>x.type))];
+  inner+='<button type="button" class="sched-mini-day '+(outside?'sched-mini-outside ':'')+(dayOff?'sched-mini-off ':'')+(info?'sched-mini-holiday ':'')+(isSelected?'sched-mini-selected ':'')+(within&&!dayOff?'sched-mini-working ':'')+'" title="'+esc(title)+'" aria-label="'+esc(title)+(isSelected?' · Data selecionada':'')+'" aria-pressed="'+(isSelected?'true':'false')+'" onclick="schedulePreviewChooseDay(\''+day+'\')">'
+  +'<span class="sched-mini-daynumber">'+parsed.getDate()+'</span>'
+  +'<span class="sched-mini-marks">'+types.slice(0,4).map(k=>'<span class="sched-mini-mark sched-mini-'+k+'"></span>').join('')+'</span></button>';
+ }
+ return '<div class="sched-mini-calendar"><div class="sched-mini-toolbar"><strong>'+shown.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})+'</strong><div class="inline"><button type="button" class="secondary" aria-label="Mês anterior" onclick="schedulePreviewMonth(-1)">‹</button><button type="button" class="secondary" aria-label="Próximo mês" onclick="schedulePreviewMonth(1)">›</button></div></div>'
+ +'<div class="sched-mini-grid">'+['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map(x=>'<span class="sched-mini-weekday">'+x+'</span>').join('')+inner+'</div>'
+ +'<div class="sched-mini-legend"><span><i class="sched-legend-start"></i> Início</span><span><i class="sched-legend-office"></i> Interno</span><span><i class="sched-legend-client"></i> Cliente</span><span><i class="sched-legend-sub"></i> Subetapa</span><span><i class="sched-legend-holiday"></i> Feriado</span></div>'
+ +'<p class="sched-mini-hint">Clique em um dia para alterar o início. Navegue pelos meses para conferir todas as entregas. Os dias úteis dentro do cronograma ficam realçados.</p></div>';
+}
+function schedulePreviewSummary(draft){
+ const previewRows=(draft.schedule||[]).map((step,i)=>{
+  const phase=draft.steps?.[i]||{};
+  const subitems=(phase.subs||[]).map((sub,j)=>{
+   const date=substepDueDate(draft,i,j),optional=subIsOptionalRevision(phase,sub);
+   if(optional&&!step.revisionRequested)return '<div class="sched-preview-sub"><span>'+esc(sub.name)+' <em>(se solicitado)</em></span><span>Não previsto</span></div>';
+   return '<div class="sched-preview-sub"><span>'+esc(sub.name)+'</span><span>'+esc(date?formatDateBR(date):'A definir')+'</span></div>';
+  }).join('');
+  const parts=registrationContractParts(phase);
+  return '<div class="sched-preview-stage"><div class="sched-preview-stage-title"><strong>'+esc(step.name)+'</strong><span>'+registrationContractDays(phase)+' dias úteis</span></div>'
+  +'<div class="sched-preview-dates"><div><span>Início da etapa</span><strong>'+formatDateBR(step.start)+'</strong></div><div><span>Prazo interno</span><strong>'+formatDateBR(step.deadline)+'</strong></div><div><span>Entrega ao cliente</span><strong>'+formatDateBR(step.clientDeadline)+'</strong></div></div>'
+  +(step.revisionRequested&&step.revisionDeadline?'<div class="sched-preview-review">Revisão solicitada: até <strong>'+formatDateBR(step.revisionDeadline)+'</strong></div>':registrationHasOptionalReview(phase)?'<div class="sched-preview-optional">Revisão opcional: '+parts.secondary+' dias úteis, não incluída.</div>':'')
+  +'<div class="sched-preview-subitems">'+subitems+'</div></div>';
+ }).join('');
+ return '<div class="sched-preview-summary"><h3>Conferência das datas</h3><p class="muted">Prazos em dias úteis, considerando feriados nacionais, estaduais de SP, municipais de Santos e folgas cadastradas.</p>'+previewRows+'</div>';
+}
+function schedulePreviewHTML(p){
+ let draft;
+ try{draft=getScheduleDraft(p)}catch(err){return '<div class="sched-preview-backdrop"><section class="sched-preview-modal"><h3>Não foi possível calcular o cronograma</h3><p>'+esc(err.message||'Verifique os prazos cadastrados.')+'</p><button class="secondary" onclick="closeSchedulePreview()">Fechar</button></section></div>'}
+ if(!draft)return '';
+ const initial=schedulePreviewState.startDate,actual=draft.startDate,moved=initial!==actual;
+ let projectEnd=draft.clientDate||draft.officeDate||'';
+ const pendingRevisions=(draft.steps||[]).filter(s=>registrationHasOptionalReview(s)&&!s.revisionRequested).length;
+ return '<div class="sched-preview-backdrop" role="presentation"><section class="sched-preview-modal" role="dialog" aria-modal="true" aria-labelledby="sched-preview-title">'
+  +'<div class="sched-preview-top"><div><span class="sched-preview-kicker">CONFERÊNCIA ANTES DE SALVAR</span><h2 id="sched-preview-title">Prévia do cronograma</h2><p class="muted">'+esc(p.name)+' · Nenhuma data será alterada até a sua confirmação.</p></div><button class="sched-preview-close" type="button" aria-label="Cancelar prévia" onclick="closeSchedulePreview()">×</button></div>'
+  +'<div class="sched-preview-inputrow"><label>Data de início desejada <input class="br-date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(initial))+'" oninput="maskDateBR(this);if(this.value.length===10)schedulePreviewSetDate(this.value)" onchange="schedulePreviewSetDate(this.value)"></label>'
+  +'<div><span class="muted">Início efetivo</span><strong>'+formatDateBR(actual)+'</strong></div><div><span class="muted">Última entrega prevista</span><strong>'+formatDateBR(projectEnd)+'</strong></div></div>'
+  +(moved?'<div class="sched-preview-notice">A data escolhida ('+formatDateBR(initial)+') é fim de semana ou feriado. O cronograma começa no próximo dia útil: <strong>'+formatDateBR(actual)+'</strong>.</div>':'')
+  +'<div class="sched-preview-columns">'+schedulePreviewCalendar(p,draft)+schedulePreviewSummary(draft)+'</div>'
+  +'<div class="sched-preview-footer"><p class="muted">As revisões não solicitadas não entram no cálculo'+(pendingRevisions?' ('+pendingRevisions+' pendente'+(pendingRevisions===1?'':'s')+').':'.')+' Aguardos por aprovação do cliente podem alterar as datas posteriormente.</p>'
+  +'<div class="inline"><button class="secondary" type="button" onclick="closeSchedulePreview()">Voltar sem salvar</button><button class="primary" type="button" onclick="confirmSchedulePreview()">Conferi as datas — confirmar cronograma</button></div></div>'
+  +'</section></div>';
+}
+function confirmSchedulePreview(){
+ const state=schedulePreviewState;
+ if(!state)return;
+ const p=projects.find(x=>x.id===state.projectId);
+ if(!p){closeSchedulePreview();return}
+ let draft;
+ try{draft=getScheduleDraft(p)}catch(err){alert('Não foi possível calcular o cronograma: '+err.message);return}
+ if(!draft||!draft.schedule.length){alert('Defina as etapas antes de confirmar o cronograma.');return}
+ const currentCount=p.schedule?.length||0;
+ let message='Você conferiu todas as datas deste cronograma?\n\nInício: '+formatDateBR(draft.startDate)+'\nÚltima entrega prevista: '+formatDateBR(draft.clientDate);
+ if(currentCount)message+='\n\nATENÇÃO: confirmar substituirá as datas do cronograma anterior.';
+ message+='\n\nDeseja realmente confirmar e salvar?';
+ if(!confirm(message))return;
+ // Apenas a confirmação pode persistir. As subetapas e seus responsáveis
+ // são mantidos; o cálculo usa exatamente a mesma versão exibida na prévia.
+ p.steps=draft.steps;
+ p.startDate=draft.startDate;
+ p.schedule=draft.schedule;
+ p.officeDate=draft.officeDate;
+ p.clientDate=draft.clientDate;
+ p.deadline=draft.deadline;
+ p.phase=draft.phase;
+ p.holidayCalendarVersion=draft.holidayCalendarVersion;
+ p.scheduleVersion=2;
+ schedulePreviewState=null;
+ save();
+ render();
+}
 function createSchedule(id){
- let p=projects.find(x=>x.id===id);if(!p)return;
- let now=new Date(),today=iso(now.getFullYear(),now.getMonth()+1,now.getDate());
- let start=promptDateBR('Data de início do cronograma',p.startDate||today);
- if(!start)return;
- if((p.schedule||[]).length&&!confirm('Recalcular o cronograma? Os responsáveis, revisões solicitadas e etapas concluídas serão mantidos.'))return;
- p.steps=p.steps||structuredClone(phases);
- buildScheduleForRegistration(p,nextBusiness(start));
- p.scheduleVersion=2;save();render()
+ const p=projects.find(x=>x.id===id);
+ if(!p)return;
+ if(!p.steps?.length&&!phases.length){alert('Este projeto ainda não possui etapas para planejar.');return}
+ const now=new Date(),today=iso(now.getFullYear(),now.getMonth()+1,now.getDate());
+ const selected=/^\d{4}-\d{2}-\d{2}$/.test(p.startDate||'')?p.startDate:today;
+ schedulePreviewState={projectId:id,startDate:selected,year:Number(selected.slice(0,4)),month:Number(selected.slice(5,7))-1};
+ render()
 }
 function toggleProjectRevision(id,i){
  let p=projects.find(x=>x.id===id),step=p?.steps?.[i],current=p?.schedule?.[i];
