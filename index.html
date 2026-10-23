@@ -357,9 +357,59 @@ function saveManualCoverDateBR(id,input){
 
 function easter(y){let a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k+7)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31),day=(h+l-7*m+114)%31+1;return new Date(y,month-1,day,12)}
 function offsetDay(dt,n){let x=new Date(dt);x.setDate(x.getDate()+n);return iso(x.getFullYear(),x.getMonth()+1,x.getDate())}
-function holidays(y){let h={'01-01':'Confraternização Universal','04-21':'Tiradentes','05-01':'Dia do Trabalho','09-07':'Independência','10-12':'Nossa Senhora Aparecida','11-02':'Finados','11-15':'Proclamação da República','11-20':'Consciência Negra','12-25':'Natal'};let eas=easter(y);let goodFriday=offsetDay(eas,-2).slice(5);h[goodFriday]='Sexta-feira Santa';for(let x of extraHolidays){if(x.date.startsWith(String(y)))h[x.date.slice(5)]=x.name}return h}
-function holidayName(date){return holidays(+date.slice(0,4))[date.slice(5)]||''}
-function businessDay(date){if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return false;let d=parseISO(date);return d.getDay()!==0&&d.getDay()!==6&&!holidayName(date)}
+/* Feriados oficiais do Brasil, estado de São Paulo e município de Santos.
+   Fontes: Portaria MGI 11.460/2025, Lei estadual SP 9.497/1997 e
+   art. 245 da Lei Orgânica de Santos / Decreto municipal 11.111/2025.
+   Pontos facultativos não entram automaticamente no cálculo. */
+const SANTRELLE_HOLIDAY_CALENDAR_VERSION='Santos-SP-2026-v1';
+const officialHolidayCache=new Map();
+function officialHolidays(y){
+ if(officialHolidayCache.has(y))return officialHolidayCache.get(y);
+ const holidaysByDate={};
+ const set=(mmdd,name,type)=>holidaysByDate[mmdd]={name,type};
+ const fixedNational={
+  '01-01':'Confraternização Universal',
+  '04-21':'Tiradentes',
+  '05-01':'Dia do Trabalho',
+  '09-07':'Independência do Brasil',
+  '10-12':'Nossa Senhora Aparecida',
+  '11-02':'Finados',
+  '11-15':'Proclamação da República',
+  '11-20':'Dia Nacional de Zumbi e da Consciência Negra',
+  '12-25':'Natal'
+ };
+ for(const [date,name] of Object.entries(fixedNational))set(date,name,'nacional');
+ set('07-09','Revolução Constitucionalista de 1932','estadual');
+ set('01-26','Aniversário da Cidade de Santos','municipal');
+ set('09-08','Nossa Senhora do Monte Serrat — Padroeira de Santos','municipal');
+ const pascoa=easter(y);
+ set(offsetDay(pascoa,-2).slice(5),'Sexta-feira Santa (Paixão de Cristo)','municipal');
+ set(offsetDay(pascoa,60).slice(5),'Corpus Christi','municipal');
+ officialHolidayCache.set(y,holidaysByDate);
+ return holidaysByDate
+}
+function holidayInfo(date){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return null;
+ const official=officialHolidays(Number(date.slice(0,4)))[date.slice(5)];
+ const extra=extraHolidays.filter(x=>x.date===date);
+ if(official)return {...official,other:extra.map(x=>x.name)};
+ if(extra.length)return {name:extra.map(x=>x.name).join(' / '),type:'escritorio',other:[]};
+ return null
+}
+function holidays(y){
+ const byName=Object.fromEntries(Object.entries(officialHolidays(y)).map(([day,info])=>[day,info.name]));
+ for(const folga of extraHolidays)if(folga.date.startsWith(String(y)))byName[folga.date.slice(5)]=[byName[folga.date.slice(5)],folga.name].filter(Boolean).join(' / ');
+ return byName
+}
+function holidayName(date){
+ const info=holidayInfo(date);
+ return info?[info.name,...info.other].join(' / '):''
+}
+function businessDay(date){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return false;
+ const d=parseISO(date);
+ return d.getDay()!==0&&d.getDay()!==6&&!holidayInfo(date)
+}
 function nextBusiness(date){let d=date;for(let i=0;i<370&&!businessDay(d);i++)d=offsetDay(parseISO(d),1);return d}
 function addBusinessDays(start,count){let d=start;for(let i=0;i<count;i++){d=offsetDay(parseISO(d),1);d=nextBusiness(d)}return d}
 function calendarEntries(){let entries=[];for(let p of projects){let completed=p.status==='Concluído';let valid=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'');if(valid(p.startDate))entries.push({id:'p'+p.id,name:'Início: '+p.name,owner:p.owner,date:p.startDate,projectId:p.id,completed:true,kind:'start'});if(valid(p.officeDate))entries.push({id:'p'+p.id,name:'Prazo escritório: '+p.name,owner:p.owner,date:p.officeDate,projectId:p.id,completed,kind:'office'});let client=p.clientDate||(valid(p.deadline)?p.deadline:'');if(valid(client))entries.push({id:'p'+p.id,name:'Entrega cliente: '+p.name,owner:p.owner,date:client,projectId:p.id,completed,kind:'client'});for(let [i,step] of (p.schedule||[]).entries()){if(valid(step.deadline))entries.push({id:'s'+p.id+'_'+i,name:'Etapa escritório: '+step.name+' · '+p.name,owner:projectSteps(p)?.length?'Equipe':(step.owner||p.owner),date:step.deadline,projectId:p.id,completed:!!step.completed,kind:'office'});if(valid(step.clientDeadline))entries.push({id:'s'+p.id+'_'+i,name:(registrationIsCompatibility(step)&&step.contractualParts?.secondary>0?'Entrega e compatibilização: '+step.name:'Apresentação ao cliente: '+step.name)+' · '+p.name,owner:projectSteps(p)?.length?'Equipe':(step.owner||p.owner),date:step.clientDeadline,projectId:p.id,completed:!!step.completed,kind:'client'});if(registrationHasOptionalReview(step)&&step.revisionRequested&&valid(step.revisionDeadline))entries.push({id:'r'+p.id+'_'+i,name:'Revisão solicitada: '+step.name+' · '+p.name,owner:projectSteps(p)?.length?'Equipe':(step.owner||p.owner),date:step.revisionDeadline,projectId:p.id,completed:!!step.revisionCompleted,kind:'client'})}entries.push(...projectSubstepEntries(p))}return entries.concat(deliveries.map(d=>({...d,id:'d'+d.id,kind:'delivery'})))}
