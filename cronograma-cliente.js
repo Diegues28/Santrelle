@@ -15,8 +15,8 @@ function clientTimeRows(p){
   const internalDone=!!stage?.completed;
   let status='Previsto';
   if(actual)status=kind==='approval'?'Aprovado':'Concluído';
-  else if(kind==='approval')status='Aguardando aprovação';
-  else if(kind==='client')status='Aguardando cliente';
+  else if(kind==='approval')status=(rows[rows.length-1]?.actual?'Aguardando aprovação':'Previsto');
+  else if(kind==='client')status=((rows[rows.length-1]?.actual||rows[rows.length-1]?.status==='Concluído')?'Aguardando cliente':'Previsto');
   else if(internalDone)status='Concluído · sem data';
   else if(!start)status='A definir';
   rows.push({key,name,kind,days,start:start||'',limit,actual,status});
