@@ -279,11 +279,109 @@ tbody tr:hover{background:#FCFAF8}
 .client-schedule-table .client-approval-row{background:#F4F0ED}
 .client-timeline-actions{white-space:nowrap}
 .client-timeline-actions button{font-size:11px;padding:6px 7px;margin-right:3px}
-</style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
+
+/* Arquivo de projetos finalizados */
+.archive-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.archive-heading .muted{margin:0;line-height:1.5;font-size:13px}
+.archive-total{display:inline-block;padding:8px 13px;border-radius:10px;background:var(--marfim);color:var(--marrom);font-size:13px;font-weight:750}
+.archive-controls{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:22px 0}
+.archive-controls label{font-size:12px;font-weight:650;color:var(--taupe);display:flex;flex-direction:column;gap:6px;flex:1}
+.archive-controls input{flex:2;min-width:190px;max-width:430px}
+.archive-controls button{flex:none}
+.archive-date{font-weight:650;font-variant-numeric:tabular-nums;color:var(--marrom)}
+.archive-view{font-size:12px}
+.archive-empty{padding:32px 16px;text-align:center;background:var(--offwhite);border:1px dashed var(--areia);border-radius:12px;margin-top:12px}
+.archive-empty strong{color:var(--marrom)}
+.project-archive-banner{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:16px 0;padding:14px 16px;border-radius:11px;border:1px solid var(--linha);background:var(--offwhite)}
+.project-archive-banner strong{font-size:14px;color:var(--marrom)}
+.project-archive-banner p{font-size:12px;color:var(--taupe);margin:5px 0 0}
+.project-archive-done{background:#EFF1E9;border-color:#CDD9C8}
+.project-archive-done strong{color:#4D7457}
+.project-history-details{padding:10px 14px;margin:10px 0;border:1px solid var(--linha);border-radius:10px;background:var(--offwhite)}
+.project-history-details summary{cursor:pointer;color:var(--marrom);font-size:13px;font-weight:650}
+.project-history-details p{font-size:12px;border-bottom:1px solid var(--linha);padding-bottom:7px;margin:9px 0}
+.project-history-details p:last-child{border-bottom:0;padding-bottom:0}
+@media(max-width:620px){.archive-controls input,.archive-controls button{flex:1 1 100%;width:100%;max-width:none}.project-archive-banner button{width:100%}}
+</style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos ativos</button><button data-page="concluidos">✓ Projetos concluídos</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
-let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null,teamSelectedOwner=null,schedulePreviewState=null;let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Em andamento'?'active':s==='Concluído'?'good':'waiting')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;teamSelectedOwner=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));function rows(list){let fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Etapa</th><th>Equipe das subetapas</th><th>Início</th><th>Prazo escritório</th><th>Prazo cliente</th><th>Situação</th></tr></thead><tbody>'+list.map(p=>{let owners=projectAssignedOwners(p);return '<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client)+'</div></td><td>'+esc(p.phase)+'</td><td>'+esc(owners.join(', ')|| (p.owner&&p.owner!=='Não definido'?p.owner:'A definir'))+'</td><td>'+fmt(p.startDate)+'</td><td>'+fmt(p.officeDate)+'</td><td>'+fmt(p.clientDate||p.deadline)+'</td><td>'+tag(p.status)+'</td></tr>'}).join('')+'</tbody></table></div>'}
-function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?'Detalhes do projeto':({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+calendarHTML()+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Atrasadas primeiro, depois as próximas entregas da equipe</div></div></div>'+attentionHTML(entries,today)+'</section>'}if(page==='projetos'){let list=projects.filter(p=>filter==='Todos'||p.status===filter);el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='equipe')renderTeam();if(page==='modelos')models()}
+let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null,teamSelectedOwner=null,schedulePreviewState=null,archiveQuery='';let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Em andamento'?'active':s==='Concluído'?'good':'waiting')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;teamSelectedOwner=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
+/* Arquivo de projetos concluídos: nunca exclui as informações do projeto. */
+function projectCompleteDate(project){
+ const value=project?.completedAt||'';
+ if(!value)return 'Não registrada';
+ if(/^\d{4}-\d{2}-\d{2}$/.test(value))return formatDateBR(value);
+ const parsed=new Date(value);
+ return Number.isNaN(parsed.getTime())?'Não registrada':parsed.toLocaleDateString('pt-BR');
+}
+function archiveProjects(){
+ return projects.filter(p=>p.status==='Concluído').sort((a,b)=>{
+  const x=b.completedAtTime||b.completedAt||'',y=a.completedAtTime||a.completedAt||'';
+  return x.localeCompare(y)||String(a.name).localeCompare(String(b.name),'pt-BR');
+ })
+}
+function archivedRows(list){
+ if(!list.length)return '<div class="archive-empty"><strong>Nenhum projeto concluído encontrado.</strong><p class="muted">Quando você finalizar um projeto, ele aparecerá aqui com os dados preservados.</p></div>';
+ return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Data de conclusão</th><th>Prazo contratual</th><th>Equipe</th><th>Ação</th></tr></thead><tbody>'
+  +list.map(p=>'<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client||'')+'</div></td>'
+  +'<td class="archive-date">'+esc(projectCompleteDate(p))+'</td>'
+  +'<td>'+esc(formatDateBR(p.clientDate||p.deadline||'A definir'))+'</td>'
+  +'<td>'+esc(projectAssignedOwners(p).join(', ')||'Não definido')+'</td>'
+  +'<td><button class="secondary archive-view" onclick="openProject('+p.id+')">Ver projeto</button></td></tr>').join('')+'</tbody></table></div>';
+}
+function archiveSearch(value){
+ archiveQuery=String(value||'');
+ const target=document.getElementById('archiveList');
+ if(target)target.innerHTML=archivedRows(archiveProjects().filter(p=>(p.name+' '+p.client+' '+(p.clientRegistration?.constructionAddress||'')).toLocaleLowerCase('pt-BR').includes(archiveQuery.toLocaleLowerCase('pt-BR'))));
+}
+function renderArchive(){
+ const done=archiveProjects();
+ const term=archiveQuery.toLocaleLowerCase('pt-BR');
+ const subset=done.filter(p=>(p.name+' '+(p.client||'')+' '+(p.clientRegistration?.constructionAddress||'')).toLocaleLowerCase('pt-BR').includes(term));
+ el.innerHTML='<section class="panel"><div class="archive-heading"><div><h3 style="margin:0 0 6px">Projetos concluídos</h3><p class="muted">Arquivo histórico de projetos finalizados, organizados pela data de conclusão mais recente.</p></div><span class="archive-total">'+done.length+' '+(done.length===1?'projeto':'projetos')+'</span></div>'
+  +'<div class="archive-controls"><label for="archiveSearchInput">Buscar cliente ou obra</label><input id="archiveSearchInput" value="'+esc(archiveQuery)+'" placeholder="Nome do cliente ou endereço" oninput="archiveSearch(this.value)" autocomplete="off"><button class="secondary" onclick="go(\'projetos\')">Ver projetos ativos</button></div>'
+  +'<div id="archiveList">'+archivedRows(subset)+'</div></section>';
+}
+function changeProjectStatus(p,newStatus,origin){
+ if(!p||p.status===newStatus)return false;
+ const oldStatus=p.status||'Em andamento',now=new Date();
+ p.status=newStatus;
+ p.projectStatusHistory=p.projectStatusHistory||[];
+ p.projectStatusHistory.push({from:oldStatus,to:newStatus,at:now.toISOString(),reason:origin||'Alteração de situação'});
+ if(newStatus==='Concluído'){
+  p.completedAt=iso(now.getFullYear(),now.getMonth()+1,now.getDate());
+  p.completedAtTime=now.toISOString();
+ }else if(oldStatus==='Concluído'){
+  // Mantém as datas anteriores no histórico, para conservar a rastreabilidade.
+  delete p.completedAt;
+  delete p.completedAtTime;
+ }
+ return true;
+}
+function archiveProject(id){
+ const p=projects.find(x=>x.id===id);if(!p||p.status==='Concluído')return;
+ if(!confirm('Concluir e enviar "'+p.name+'" para Projetos concluídos? A ficha, subetapas, responsáveis, prazos e histórico serão mantidos.'))return;
+ changeProjectStatus(p,'Concluído','Concluído manualmente');
+ save();render();
+}
+function reopenProject(id){
+ const p=projects.find(x=>x.id===id);if(!p||p.status!=='Concluído')return;
+ if(!confirm('Reabrir "'+p.name+'"? Ele voltará para Projetos ativos e o histórico de conclusão continuará registrado.'))return;
+ changeProjectStatus(p,'Em andamento','Projeto reaberto');
+ const next=p.schedule?.find(s=>!s.completed);
+ if(next)p.phase=next.name;
+ save();render();
+}
+function projectArchiveBanner(p){
+ const isDone=p.status==='Concluído';
+ const history=(p.projectStatusHistory||[]).filter(h=>h.from==='Concluído'||h.to==='Concluído').slice().reverse();
+ return '<div class="project-archive-banner '+(isDone?'project-archive-done':'project-archive-active')+'"><div>'
+ +(isDone?'<strong>✓ Projeto concluído e arquivado</strong><p>Data de conclusão: '+esc(projectCompleteDate(p))+'. Todos os dados permanecem disponíveis para consulta.</p>':'<strong>Arquivo do projeto</strong><p>Ao finalizar, o projeto sai da lista de ativos e passa para Projetos concluídos.</p>')
+ +'</div><button class="'+(isDone?'primary':'secondary')+'" onclick="'+(isDone?'reopenProject':'archiveProject')+'('+p.id+')">'+(isDone?'Reabrir projeto':'Concluir e arquivar')+'</button></div>'
+ +(history.length?'<details class="project-history-details"><summary>Histórico de conclusões e reaberturas ('+history.length+')</summary><div>'+history.map(h=>'<p><strong>'+esc(h.to==='Concluído'?'Projeto concluído':'Projeto reaberto')+'</strong> · '+esc(projectCompleteDate({completedAt:h.at}))+(h.reason?' · '+esc(h.reason):'')+'</p>').join('')+'</div></details>':'');
+}
+function rows(list){let fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Etapa</th><th>Equipe das subetapas</th><th>Início</th><th>Prazo escritório</th><th>Prazo cliente</th><th>Situação</th></tr></thead><tbody>'+list.map(p=>{let owners=projectAssignedOwners(p);return '<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client)+'</div></td><td>'+esc(p.phase)+'</td><td>'+esc(owners.join(', ')|| (p.owner&&p.owner!=='Não definido'?p.owner:'A definir'))+'</td><td>'+fmt(p.startDate)+'</td><td>'+fmt(p.officeDate)+'</td><td>'+fmt(p.clientDate||p.deadline)+'</td><td>'+tag(p.status)+'</td></tr>'}).join('')+'</tbody></table></div>'}
+function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?'Detalhes do projeto':({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos',concluidos:'Projetos concluídos'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+calendarHTML()+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Atrasadas primeiro, depois as próximas entregas da equipe</div></div></div>'+attentionHTML(entries,today)+'</section>'}if(page==='projetos'){let list=projects.filter(p=>p.status!=='Concluído'&&(filter==='Todos'||p.status===filter));el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='concluidos')renderArchive();if(page==='equipe')renderTeam();if(page==='modelos')models()}
 
 
 /* Responsabilidade pertence a cada subetapa do projeto, nunca à etapa inteira. */
