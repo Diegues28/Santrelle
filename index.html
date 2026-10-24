@@ -403,6 +403,9 @@ tbody tr:hover{background:#FCFAF8}
 .pw-direct-add{display:inline-flex;align-items:center;justify-content:center;border:1px solid #C6B5A7;background:#F6EEE7;color:var(--marrom);padding:8px 11px;border-radius:8px;font-size:12px;cursor:pointer}
 .pw-direct-add:hover{background:#EFE1D5;border-color:#A89180}
 .pw-direct-add:focus-within{outline:2px solid var(--fendi)}
+
+.pw-file-download{display:block;margin-top:7px;text-align:center;font-size:10px;color:var(--marrom);text-decoration:underline;text-underline-offset:2px}
+.pw-file-download:hover{color:#8F644E}
 </style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos ativos</button><button data-page="concluidos">✓ Projetos concluídos</button><button data-page="postobra">▣ Pós-obra</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
@@ -488,8 +491,8 @@ function pwIssue(w,item){
   +(done?'<p class="pw-done-note">✓ Concluída em '+esc(new Date(item.completedAt||item.updatedAt||item.createdAt).toLocaleDateString('pt-BR'))+'</p>':'')
   +ref+'<div class="pw-file-region" id="pwFiles_'+esc(item.id)+'"></div><div class="pw-item-actions">'
   +(!w.closedAt?'<label class="pw-direct-add" for="pwDirect_'+esc(item.id)+'">＋ Anexar foto/arquivo</label><input class="pw-file-input" id="pwDirect_'+esc(item.id)+'" type="file" accept="image/*,.pdf,application/pdf" multiple onchange="pwAttachDirect(this,'+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')"> ':'')
-  +'<button class="secondary" onclick="pwEdit('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Editar</button>'
-  +'<button class="secondary" onclick="pwRemove('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Excluir</button>'
+  +(w.closedAt?'':'<button class="secondary" onclick="pwEdit('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Editar</button>')
+  +(w.closedAt?'':'<button class="secondary" onclick="pwRemove('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Excluir</button>')
   +(item.history?.length?'<details><summary>Histórico ('+item.history.length+')</summary>'
     +item.history.slice().reverse().slice(0,25).map(h=>'<p>'+esc(new Date(h.at).toLocaleString('pt-BR'))+' · '+esc(h.text)+'</p>').join('')+'</details>':'')
   +'</div></div></div>';
@@ -553,7 +556,7 @@ async function pwSaveItem(event,workId){
   }
   postWorkEditing=null;postWorkFilter='abertos';save();render();
  }catch(err){
-  console.error(err);alert('Não foi possível salvar os anexos: '+err.message+'. A pendência não foi alterada.');
+  console.error(err);alert('Não foi possível salvar os anexos: '+err.message+' A pendência não foi alterada.');
  }finally{
   pwSavingItem=false;
   if(button&&button.isConnected){button.disabled=false;button.textContent=existing?'Salvar alterações':'Adicionar pendência'}
