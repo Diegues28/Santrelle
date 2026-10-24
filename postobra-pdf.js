@@ -73,7 +73,6 @@ async function pwGenerateClientPDF(workId){
    doc.setFillColor(...colors.warm);doc.rect(0,0,W,37,'F');
    write('SANTRELLE',M,19,20,colors.brown,true);
    write('ARQUITETURA E INTERIORES',M,25,8,colors.taupe);
-   write('RELATÓRIO DE PÓS-OBRA',W-M,20,12,colors.brown,true);
    // jsPDF align right applies only to the preceding call:
    doc.setDrawColor(...colors.border);doc.line(M,37,W-M,37);
    y=47;
