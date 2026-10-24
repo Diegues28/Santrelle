@@ -91,7 +91,7 @@ function portalBack(){
 function portalProjectShortcut(project){
  const cfg=portalPreviewData[String(project.id)];
  const count=(cfg?.documents||[]).filter(x=>x.visible).length;
- return '<div class="client-portal-shortcut"><div><strong>Área do Cliente</strong><p>Organize as pastas, as próximas reuniões e a etapa exibida. '+count+' documento'+(count===1?'':'s')+' de demonstração visível'+(count===1?'':'is')+'.</p></div>'
+ return '<div class="client-portal-shortcut"><div><strong>Área do Cliente</strong><p>Organize as pastas, as próximas reuniões e a etapa exibida. '+count+' documento'+(count===1?'':'s')+' de demonstração '+(count===1?'visível':'visíveis')+'.</p></div>'
  +'<div class="client-portal-shortcut-actions"><button class="secondary" type="button" onclick="portalOpen('+portalSafeAction(project.id)+')">Configurar portal</button>'
  +'<button class="primary" type="button" onclick="portalOpenPreview('+portalSafeAction(project.id)+')">Prévia do cliente</button></div></div>'
 }
