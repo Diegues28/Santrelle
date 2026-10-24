@@ -7,7 +7,7 @@ const PORTAL_PREVIEW_STORAGE = 'santrelle_portal_preview_v1';
 const PORTAL_STAGE_TEMPLATES = [
  {id:'estudo',name:'Estudo preliminar'},
  {id:'ante',name:'Anteprojeto'},
- {id:'executivo',name:'Projeto executivo'},
+ {id:'executivo',name:'Executivo'},
  {id:'obra',name:'Obra'},
  {id:'posobra',name:'Pós-obra'}
 ];
@@ -127,7 +127,7 @@ function portalFolderMove(id,stageId){
  const cfg=portalPrefs(portalProjectId),f=portalFolderFor(cfg,id);
  if(!f||!portalStageFor(cfg,stageId)||f.revision)return;
  if(f.stageId===stageId)return;
- if(!confirm('Mover a pasta "'+f.name+'" para a etapa "'+portalStageFor(cfg,stageId).name+'"? Ela só aparecerá quando a nova etapa estiver liberada.'))return;
+ if(!confirm('Mover a pasta "'+f.name+'" para a etapa "'+portalStageFor(cfg,stageId).name+'"? Ela só aparecerá quando a nova etapa estiver liberada.')){render();return}
  f.stageId=stageId;portalFolderId=null;
  portalSave();render()
 }
@@ -367,7 +367,7 @@ function portalManagerStages(cfg){
   }).join('');
   return '<div class="client-portal-stage-admin '+(s.released?'client-portal-stage-admin-released':'')+'">'
    +'<div class="client-portal-stage-admin-heading"><div class="client-portal-stage-order">'+String(cfg.stages.indexOf(s)+1).padStart(2,'0')+'</div>'
-   +'<div class="client-portal-stage-admin-name"><strong>'+esc(s.name)+'</strong><span>'+folders.length+' pasta'+(folders.length===1?'':'s')+' · '+count+' documento'+(count===1?'':'s')+' visível'+(count===1?'':'is')+'</span></div>'
+   +'<div class="client-portal-stage-admin-name"><strong>'+esc(s.name)+'</strong><span>'+folders.length+' pasta'+(folders.length===1?'':'s')+' · '+count+' '+(count===1?'documento visível':'documentos visíveis')+'</span></div>'
    +'<span class="client-portal-stage-state '+(s.released?'client-portal-stage-state-released':'')+'">'+(s.released?'Liberada para o cliente':'Bloqueada')+'</span>'
    +'<button class="'+(s.released?'secondary':'primary')+'" type="button" onclick="portalStageToggle('+portalSafeAction(s.id)+','+(!s.released)+')">'+(s.released?'Ocultar etapa':'Liberar etapa')+'</button></div>'
    +'<div class="client-portal-stage-folders">'+cards+'</div>'
