@@ -149,3 +149,62 @@
 @media(max-width:1200px){.client-portal-meeting-form{grid-template-columns:repeat(2,minmax(0,1fr))}.client-portal-folder-admin-grid{grid-template-columns:1fr}}
 @media(max-width:820px){.client-portal-client-top-grid{grid-template-columns:1fr}.client-portal-project-meta{flex:1 1 100%}.client-portal-document-form{grid-template-columns:repeat(2,minmax(0,1fr))}.client-portal-header-actions{flex-wrap:wrap}}
 @media(max-width:650px){.client-portal-meeting-form,.client-portal-document-form{grid-template-columns:1fr}.client-portal-stage-form,.client-portal-new-folder{flex-direction:column;align-items:stretch}.client-portal-header-actions>button{flex:1}.client-portal-project-actions,.client-portal-project-actions button{flex:1}.client-portal-folder-admin{flex-wrap:wrap}.client-portal-folder-actions{width:100%}.client-portal-form-bottom>div{width:100%}.client-portal-form-bottom>div button{flex:1}.client-portal-doc-actions{flex:1 1 100%;justify-content:flex-end}.client-portal-client-folders{grid-template-columns:1fr}.client-portal-client-header{padding:22px 21px}.client-portal-client-header-side{font-size:9px}.client-portal-client-header-side span{display:block;margin:5px 0 0;text-align:center}.client-portal-client-hero{padding:31px 21px 29px}.client-portal-client-hero h1{font-size:30px}.client-portal-client-top-grid{padding:19px 21px;gap:12px}.client-portal-client-stage,.client-portal-client-meetings{padding:19px}.client-portal-client-library{padding:10px 21px 32px}.client-portal-client-footer{padding:20px 21px}.client-portal-preview-bar{font-size:11px}.client-portal-preview-bar button{flex:1 1 100%}.portal-is-preview main{padding:0 10px 25px}.client-portal-client-library-title h2{font-size:25px}.client-portal-client-document{flex-wrap:wrap}.client-portal-client-doc-label{margin-left:55px}}
+
+
+/* Organização v2: liberação independente das pastas por etapa */
+.client-portal-stage-admin-list{display:flex;flex-direction:column;gap:14px}
+.client-portal-stage-admin{border:1px solid #E4DCD4;border-radius:13px;padding:16px 17px;background:#FCFBF9}
+.client-portal-stage-admin-released{border-color:#C8D9CA;background:#FBFEFB}
+.client-portal-stage-admin-heading{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.client-portal-stage-order{width:34px;height:34px;flex:none;border-radius:9px;background:#EDE4D9;display:flex;align-items:center;justify-content:center;color:#8D765E;font-weight:750;font-size:12px}
+.client-portal-stage-admin-released .client-portal-stage-order{background:#E4EFE5;color:#4F765D}
+.client-portal-stage-admin-name{flex:1 1 150px;display:flex;flex-direction:column;gap:5px}
+.client-portal-stage-admin-name strong{font-size:14px;color:#57483C}
+.client-portal-stage-admin-name>span{font-size:11px;color:#9B8878}
+.client-portal-stage-state{white-space:nowrap;font-size:11px;border-radius:16px;padding:7px 10px;background:#F3EDE8;color:#997969;border:1px solid #E4D6C9;font-weight:750}
+.client-portal-stage-state-released{background:#E8F4E9;color:#4D765A;border-color:#CEDDCE}
+.client-portal-stage-admin-heading>button{font-size:12px;padding:9px 14px;min-width:112px}
+.client-portal-stage-folders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.client-portal-stage-folders .client-portal-folder-admin{border-radius:9px;padding:10px;min-width:0;background:#fff;flex-wrap:wrap;align-items:flex-start}
+.client-portal-stage-folders .client-portal-folder-symbol{width:32px;height:32px;font-size:21px;flex:none}
+.client-portal-folder-data{flex:1;min-width:100px}
+.client-portal-folder-data strong{font-size:12px;color:#605043}
+.client-portal-folder-data span{font-size:10px;color:#988779}
+.client-portal-stage-folders .client-portal-folder-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1 1 100%;justify-content:flex-end;margin-top:5px}
+.client-portal-stage-folders .client-portal-folder-actions button{padding:6px 9px;font-size:11px}
+.client-portal-folder-kind{font-size:10px;color:#928273;margin-right:auto}
+.client-portal-release-revision{margin-right:auto;white-space:nowrap;font-size:11px!important}
+.client-portal-move-folder{border:1px solid #E3D8CE;border-radius:6px;background:#fff;font-size:10px;padding:7px 6px;max-width:136px;color:#746254;min-width:100px}
+.client-portal-folder-available{border-color:#CEDCCB!important}
+.client-portal-stage-note{font-size:11px;line-height:1.6;color:#948171;margin:13px 2px 0}
+.client-portal-new-folder-stage{margin-top:20px;padding:14px;border:1px solid #E7DCD0;border-radius:10px;background:#F8F5F1}
+.client-portal-new-folder-stage select{min-width:200px;max-width:240px;padding:10px;border:1px solid #E2D7CA;border-radius:8px;color:#6E5B4B;background:#fff}
+.client-portal-document-status{font-size:10px;font-weight:750;border-radius:18px;border:1px solid #E5D9CC;padding:6px 10px;color:#907968;background:#F7F2ED;white-space:nowrap}
+.client-portal-status-released{color:#55775D;background:#E9F2E9;border-color:#D0E1D1}
+.client-portal-status-hidden{color:#977B6C}
+.client-portal-released-stage{margin:0 0 28px}
+.client-portal-released-stage-heading{display:flex;align-items:center;gap:13px;padding:0 0 12px;margin-bottom:14px;border-bottom:1px solid #EBE1D7}
+.client-portal-released-stage-icon{display:flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:9px;background:#EAF1E6;color:#507B5B;font-weight:800;font-size:14px;flex:none}
+.client-portal-released-stage-heading>div{display:flex;flex-direction:column;gap:4px}
+.client-portal-released-stage-heading>div>span{font-weight:800;letter-spacing:.14em;color:#998171;font-size:9px}
+.client-portal-released-stage-heading h3{font-family:Georgia,'Times New Roman',serif;font-size:23px;color:#634F40;font-weight:400;margin:0}
+.client-portal-library-locked{padding:30px 20px;margin:8px 0 20px}
+.client-portal-library-locked>p{font-weight:700;font-size:14px;margin:0 0 7px}
+.client-portal-library-locked>span{font-size:12px}
+.client-portal-folder-breadcrumb{font-size:11px;text-transform:uppercase;letter-spacing:.10em;color:#9F8C78;font-weight:800;margin:-7px 0 15px}
+@media(max-width:1060px){
+ .client-portal-stage-folders{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+ .client-portal-stage-admin{padding:14px 12px}
+ .client-portal-stage-admin-heading{gap:9px}
+ .client-portal-stage-admin-heading>button{width:100%;flex:1 1 100%}
+ .client-portal-stage-state{margin-left:auto}
+ .client-portal-stage-folders .client-portal-folder-admin{gap:8px}
+ .client-portal-stage-folders .client-portal-folder-actions{justify-content:flex-start}
+ .client-portal-stage-folders .client-portal-folder-actions button{flex:1 1 auto}
+ .client-portal-move-folder{max-width:100%;flex:1}
+ .client-portal-new-folder-stage{padding:12px}
+ .client-portal-new-folder-stage select,.client-portal-new-folder-stage input,.client-portal-new-folder-stage button{max-width:none;width:100%;flex:1 1 100%}
+ .client-portal-released-stage-heading h3{font-size:21px}
+}
