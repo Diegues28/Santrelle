@@ -440,8 +440,9 @@ function pwForm(w){
   +'<div><label for="pwDueDate">Prazo (DD/MM/AAAA)</label><input id="pwDueDate" class="br-date-input" type="text" maxlength="10" placeholder="DD/MM/AAAA" inputmode="numeric" value="'+esc(formatDateBR(item?.dueDate||''))+'" oninput="maskDateBR(this)" onblur="validateDateBRInput(this)"></div>'
   +'<div><label for="pwStatus">Andamento</label><select id="pwStatus">'+statuses.map(x=>'<option'+(status===x?' selected':'')+'>'+x+'</option>').join('')+'</select></div>'
   +'<div class="pw-wide"><label for="pwNotes">Observações e contatos</label><textarea id="pwNotes" maxlength="4000" rows="3">'+esc(item?.notes||'')+'</textarea></div>'
-  +'<div class="pw-wide">'+inp('pwReference','Link de foto / documento (opcional)',item?.reference,false)+'</div></div>'
-  +'<p class="muted pw-hint">A confirmação de cada ajuste é feita pelo check na lista. Por enquanto, fotos podem ser indicadas por link; ainda não há upload de arquivos.</p>'
+  +'<div class="pw-wide"><label>Fotos e documentos</label><label class="pw-filepick" for="pwFileInput"><span class="pw-filepick-icon">＋</span><span><strong>Adicionar foto ou arquivo</strong><small>Escolha fotos da galeria, câmera ou PDF · vários arquivos de uma vez</small></span></label>'
+  +'<input id="pwFileInput" class="pw-file-input" type="file" accept="image/*,.pdf,application/pdf" multiple onchange="pwFileSelected(this)"><div id="pwFileSelected" class="pw-file-selected">Nenhum arquivo escolhido.</div></div></div>'
+  +'<p class="muted pw-hint">Os anexos ficam vinculados a esta pendência neste navegador. Você pode clicar nas imagens para abrir ou salvar. O PDF do cliente mostra somente as pendências e seus status.</p>'
   +'<div class="pw-form-actions"><button class="primary" type="submit">'+(item?'Salvar alterações':'Adicionar pendência')+'</button></div></form>'
 }
 function pwIssue(w,item){
@@ -456,7 +457,7 @@ function pwIssue(w,item){
   +'<div class="pw-meta">'+meta.map(s=>'<span>'+esc(s)+'</span>').join('')+'</div>'
   +(item.notes?'<p class="pw-notes">'+esc(item.notes)+'</p>':'')
   +(done?'<p class="pw-done-note">✓ Concluída em '+esc(new Date(item.completedAt||item.updatedAt||item.createdAt).toLocaleDateString('pt-BR'))+'</p>':'')
-  +ref+'<div class="pw-item-actions"><button class="secondary" onclick="pwEdit('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Editar</button>'
+  +ref+'<div class="pw-file-region" id="pwFiles_'+esc(item.id)+'"></div><div class="pw-item-actions"><button class="secondary" onclick="pwEdit('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Editar</button>'
   +'<button class="secondary" onclick="pwRemove('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Excluir</button>'
   +(item.history?.length?'<details><summary>Histórico ('+item.history.length+')</summary>'
     +item.history.slice().reverse().slice(0,25).map(h=>'<p>'+esc(new Date(h.at).toLocaleString('pt-BR'))+' · '+esc(h.text)+'</p>').join('')+'</details>':'')
@@ -468,7 +469,7 @@ function pwDetail(w){
  const done=(w.items||[]).filter(x=>x.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
  const shown=postWorkFilter==='todos'?[...open,...done]:postWorkFilter==='concluidos'?done:open;
  const tab=(value,label)=>'<button class="pw-tab '+(postWorkFilter===value?'pw-tab-selected':'')+'" onclick="pwFilter('+esc(JSON.stringify(value))+')">'+label+'</button>';
- return '<section class="panel"><div class="pw-header"><button class="secondary" onclick="postWorkSelected=null;postWorkEditing=null;render()">← Voltar aos pós-obras</button><button class="secondary" onclick="openProject('+esc(JSON.stringify(p.id))+')">Ver projeto ↗</button></div>'
+ return '<section class="panel"><div class="pw-header"><button class="secondary" onclick="postWorkSelected=null;postWorkEditing=null;render()">← Voltar aos pós-obras</button><div class="pw-header-actions"><button id="pwGeneratePDF" class="primary" type="button" onclick="pwGenerateClientPDF('+esc(JSON.stringify(w.id))+')">Gerar PDF para o cliente</button><button class="secondary" onclick="openProject('+esc(JSON.stringify(p.id))+')">Ver projeto ↗</button></div></div>'
   +'<h2>'+esc(p.name)+'</h2><p class="muted">Cliente: '+esc(p.client||'')+' · Projeto: '+esc(p.status||'')+' — o pós-obra tem situação independente.</p>'
   +(w.closedAt?'<div class="pw-closed"><strong>✓ Acompanhamento encerrado em '+esc(new Date(w.closedAt).toLocaleDateString('pt-BR'))+'</strong><p>O histórico e os checks permanecem disponíveis.</p></div>':'')
   +'<div class="pw-counts"><span><strong>'+stats.open+'</strong> abertas</span><span><strong>'+stats.late+'</strong> atrasadas</span><span><strong>'+stats.waiting+'</strong> aguardando fornecedor</span><span><strong>'+stats.done+'</strong> concluídas</span></div>'
@@ -480,7 +481,8 @@ function pwDetail(w){
 }
 function renderPostWork(){
  const w=pwFind(postWorkSelected);
- el.innerHTML=w?pwDetail(w):pwSummary()
+ el.innerHTML=w?pwDetail(w):pwSummary();
+ if(typeof pwFilesAfterRender==='function')pwFilesAfterRender(w);
 }
 function pwFilter(value){if(['abertos','concluidos','todos'].includes(value)){postWorkFilter=value;render()}}
 function pwEdit(workId,itemId){
@@ -489,20 +491,44 @@ function pwEdit(workId,itemId){
  const form=document.getElementById('pwForm');if(form&&typeof form.scrollIntoView==='function')form.scrollIntoView({behavior:'smooth',block:'start'})
 }
 function pwCancelEdit(){postWorkEditing=null;render()}
-function pwSaveItem(event,workId){
+let pwSavingItem=false;
+async function pwSaveItem(event,workId){
  event?.preventDefault?.();
- const w=pwFind(workId);if(!w||w.closedAt)return;
+ const w=pwFind(workId);if(!w||w.closedAt||pwSavingItem)return;
  const field=id=>String(document.getElementById(id)?.value||'').trim();
- const environment=field('pwEnvironment'),description=field('pwDescription'),dueDate=parseDateBR(field('pwDueDate')),reference=field('pwReference');
+ const environment=field('pwEnvironment'),description=field('pwDescription'),dueDate=parseDateBR(field('pwDueDate'));
  if(!environment||!description){alert('Informe o ambiente e a pendência.');return}
  if(dueDate===null){alert('Use uma data válida DD/MM/AAAA ou deixe o prazo em branco.');return}
- if(reference&&!/^https?:\/\/[^\s]+$/i.test(reference)){alert('O link deve começar com https:// ou http://.');return}
- const at=pwNow(),details={environment,description,supplier:field('pwSupplier'),owner:field('pwOwner'),dueDate,status:field('pwStatus'),notes:field('pwNotes'),reference,updatedAt:at};
- const item=w.items.find(x=>String(x.id)===String(postWorkEditing));
- if(item){Object.assign(item,details);item.history=item.history||[];item.history.push({at,text:'Informações atualizadas'})}
- else w.items.push({id:pwId(),...details,done:false,createdAt:at,completedAt:null,history:[{at,text:'Pendência cadastrada'}]});
- postWorkEditing=null;postWorkFilter='abertos';save();render()
+ const existing=w.items.find(x=>String(x.id)===String(postWorkEditing));
+ const itemId=existing?.id||pwId();
+ const newFiles=Array.from(document.getElementById('pwFileInput')?.files||[]);
+ const at=pwNow();
+ const details={environment,description,supplier:field('pwSupplier'),owner:field('pwOwner'),dueDate,status:field('pwStatus'),notes:field('pwNotes'),updatedAt:at};
+ const button=document.querySelector('#pwForm button[type="submit"]');
+ pwSavingItem=true;
+ if(button){button.disabled=true;button.textContent='Salvando...'}
+ try{
+  // Persiste imagens em IndexedDB antes da atualização do cadastro.
+  if(newFiles.length){
+   if(typeof pwSaveFiles!=='function')throw new Error('O módulo de arquivos não foi carregado. Atualize a página e tente novamente.');
+   await pwSaveFiles(w.id,itemId,newFiles);
+  }
+  if(existing){
+   Object.assign(existing,details);existing.history=existing.history||[];
+   existing.history.push({at,text:'Informações atualizadas'+(newFiles.length?' e '+newFiles.length+' anexo(s) adicionado(s)':'')});
+  }else{
+   w.items.push({id:itemId,...details,reference:'',done:false,createdAt:at,completedAt:null,
+    history:[{at,text:'Pendência cadastrada'+(newFiles.length?' com '+newFiles.length+' anexo(s)':'')}]});
+  }
+  postWorkEditing=null;postWorkFilter='abertos';save();render();
+ }catch(err){
+  console.error(err);alert('Não foi possível salvar os anexos: '+err.message+'. A pendência não foi alterada.');
+ }finally{
+  pwSavingItem=false;
+  if(button&&button.isConnected){button.disabled=false;button.textContent=existing?'Salvar alterações':'Adicionar pendência'}
+ }
 }
+
 function pwToggle(workId,itemId,checked){
  const w=pwFind(workId),item=w?.items?.find(x=>String(x.id)===String(itemId));if(!item||w.closedAt)return;
  const done=!!checked;if(item.done===done)return;
@@ -510,11 +536,19 @@ function pwToggle(workId,itemId,checked){
  item.history=item.history||[];item.history.push({at,text:done?'Pendência marcada como concluída':'Pendência reaberta'});
  save();render()
 }
-function pwRemove(workId,itemId){
- const w=pwFind(workId),item=w?.items?.find(x=>String(x.id)===String(itemId));if(!w||w.closedAt||!item)return;
- if(!confirm('Excluir a pendência "'+item.description+'" e seu histórico?'))return;
- w.items=w.items.filter(x=>String(x.id)!==String(itemId));postWorkEditing=null;save();render()
+async function pwRemove(workId,itemId){
+ const w=pwFind(workId),item=w?.items?.find(x=>String(x.id)===String(itemId));
+ if(!w||w.closedAt||!item)return;
+ if(!confirm('Excluir a pendência "'+item.description+'" e seu histórico, incluindo fotos e documentos anexados?'))return;
+ try{
+  if(typeof pwFileDeleteForItem==='function')await pwFileDeleteForItem(itemId);
+ }catch(err){
+  if(!confirm('Não foi possível apagar os anexos neste navegador ('+err.message+'). Excluir mesmo assim o registro da pendência?'))return;
+ }
+ w.items=w.items.filter(x=>String(x.id)!==String(itemId));
+ postWorkEditing=null;save();render()
 }
+
 function pwClose(workId){
  const w=pwFind(workId);if(!w||w.closedAt)return;const st=pwStats(w);
  if(!st.total||st.open){alert('Marque todas as pendências como concluídas antes de encerrar.');return}
@@ -1412,4 +1446,4 @@ function updateProject(id){
  changeProjectStatus(p,status,status==='Concluído'?'Conclusão pelo cadastro do projeto':p.status==='Concluído'?'Projeto reaberto pelo cadastro':'Situação alterada');
  save();render()
 }render();
-</script><script src="manual.js"></script><script src="cronograma-cliente.js"></script></body></html>
+</script><script src="manual.js"></script><script src="cronograma-cliente.js"></script><script src="postobra-anexos.js"></script><script src="postobra-pdf.js"></script></body></html>
