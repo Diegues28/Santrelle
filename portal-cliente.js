@@ -4,11 +4,30 @@
  * A verdadeira área compartilhada depende de backend seguro, autorização e armazenamento privado.
  */
 const PORTAL_PREVIEW_STORAGE = 'santrelle_portal_preview_v1';
+const PORTAL_STAGE_TEMPLATES = [
+ {id:'estudo',name:'Estudo preliminar'},
+ {id:'ante',name:'Anteprojeto'},
+ {id:'executivo',name:'Projeto executivo'},
+ {id:'obra',name:'Obra'},
+ {id:'posobra',name:'Pós-obra'}
+];
+/* Revisões do estudo são opcionais e precisam de liberação individual.
+   Pedidos fica no Anteprojeto; Notas fiscais fica no Pós-obra, ambos
+   facilmente reorganizáveis no painel interno. */
 const PORTAL_FOLDER_TEMPLATES = [
- {id:'apresentacoes',name:'Apresentações',icon:'presentation'},
- {id:'orcamentos',name:'Orçamentos',icon:'calculator'},
- {id:'relatorios',name:'Relatórios',icon:'clipboard'},
- {id:'documentos',name:'Outros documentos',icon:'folder'}
+ {id:'estudo-plantas',name:'Plantas e apresentações',icon:'presentation',stageId:'estudo'},
+ {id:'estudo-revisao-1',name:'Revisão 1',icon:'folder',stageId:'estudo',revision:true,revisionReleased:false},
+ {id:'estudo-revisao-2',name:'Revisão 2',icon:'folder',stageId:'estudo',revision:true,revisionReleased:false},
+ {id:'estudo-revisao-3',name:'Revisão 3',icon:'folder',stageId:'estudo',revision:true,revisionReleased:false},
+ {id:'ante-planilha',name:'Planilha',icon:'calculator',stageId:'ante'},
+ {id:'ante-orcamentos',name:'Orçamentos',icon:'calculator',stageId:'ante'},
+ {id:'ante-apresentacao',name:'Apresentação',icon:'presentation',stageId:'ante'},
+ {id:'ante-pedido',name:'Pedido',icon:'clipboard',stageId:'ante'},
+ {id:'executivo-projetos',name:'Projetos',icon:'folder',stageId:'executivo'},
+ {id:'obra-relatorio',name:'Relatório',icon:'clipboard',stageId:'obra'},
+ {id:'obra-cronograma',name:'Cronograma',icon:'calculator',stageId:'obra'},
+ {id:'posobra-relatorio',name:'Relatório',icon:'clipboard',stageId:'posobra'},
+ {id:'posobra-notas',name:'Notas fiscais',icon:'folder',stageId:'posobra'}
 ];
 let portalPreviewData={};
 try{
@@ -25,15 +44,95 @@ function portalProject(id){return projects.find(p=>String(p.id)===String(id))||n
 function portalPrefs(id){
  const key=String(id);
  if(!portalPreviewData[key]||typeof portalPreviewData[key]!=='object'){
-  portalPreviewData[key]={stage:'',folders:PORTAL_FOLDER_TEMPLATES.map(x=>({...x})),meetings:[],documents:[]};
+  portalPreviewData[key]={
+   schemaVersion:2,stage:'',
+   stages:PORTAL_STAGE_TEMPLATES.map(x=>({...x,released:false})),
+   folders:PORTAL_FOLDER_TEMPLATES.map(x=>({...x})),
+   meetings:[],documents:[]
+  };
   portalSave()
  }
  const p=portalPreviewData[key];
- if(!Array.isArray(p.folders))p.folders=PORTAL_FOLDER_TEMPLATES.map(x=>({...x}));
  if(!Array.isArray(p.meetings))p.meetings=[];
  if(!Array.isArray(p.documents))p.documents=[];
  if(typeof p.stage!=='string')p.stage='';
+ /* Migra a prévia anterior sem perder títulos ou configurações. Nenhuma etapa
+    antiga é aberta automaticamente ao cliente. */
+ if(p.schemaVersion!==2||!Array.isArray(p.stages)||!p.folders?.every(f=>f.stageId)){
+  const oldFolders=Array.isArray(p.folders)?p.folders:[];
+  const moves={apresentacoes:'estudo-plantas',orcamentos:'ante-orcamentos',
+   relatorios:'obra-relatorio',documentos:'antigo-documentos'};
+  const nextFolders=PORTAL_FOLDER_TEMPLATES.map(x=>({...x}));
+  for(const old of oldFolders){
+   const targetId=moves[String(old.id)]||String(old.id);
+   const existing=nextFolders.find(x=>x.id===targetId);
+   if(existing){
+    if(old.icon)existing.icon=old.icon;
+   }else{
+    nextFolders.push({...old,id:targetId,stageId:old.stageId||'posobra',
+     icon:old.icon||'folder',revision:false});
+   }
+  }
+  for(const doc of p.documents){
+   if(doc.folderId in moves)doc.folderId=moves[doc.folderId];
+   if(!nextFolders.some(x=>String(x.id)===String(doc.folderId))){
+    nextFolders.push({id:String(doc.folderId),name:'Pasta recuperada',icon:'folder',stageId:'posobra'});
+   }
+  }
+  p.stages=PORTAL_STAGE_TEMPLATES.map(x=>({...x,released:false}));
+  p.folders=nextFolders;
+  p.schemaVersion=2;
+  portalSave()
+ }
  return p
+}
+
+/* Porta de acesso da prévia: documento, pasta e etapa precisam estar liberados.
+   As verificações serão replicadas nas regras do servidor antes do portal real. */
+function portalStageFor(cfg,id){return cfg.stages.find(s=>String(s.id)===String(id))}
+function portalFolderFor(cfg,id){return cfg.folders.find(f=>String(f.id)===String(id))}
+function portalIsFolderReleased(cfg,folder){
+ if(!folder)return false;
+ const stage=portalStageFor(cfg,folder.stageId);
+ return stage?.released===true && (!folder.revision || folder.revisionReleased===true)
+}
+function portalIsDocumentReleased(cfg,doc){
+ if(doc?.visible!==true)return false;
+ return portalIsFolderReleased(cfg,portalFolderFor(cfg,doc.folderId))
+}
+function portalReleasedDocumentCount(cfg){
+ return cfg.documents.filter(d=>portalIsDocumentReleased(cfg,d)).length
+}
+function portalStageToggle(stageId,released){
+ const cfg=portalPrefs(portalProjectId);
+ const stage=portalStageFor(cfg,stageId);if(!stage)return;
+ if(stage.released===released)return;
+ if(released){
+  if(!confirm('Liberar a etapa "'+stage.name+'" para o cliente? As pastas desta etapa ficarão disponíveis na prévia, exceto revisões ainda não liberadas.'))return
+ }else if(!confirm('Ocultar a etapa "'+stage.name+'" do cliente? As pastas e os documentos dela deixarão de aparecer na prévia, sem serem excluídos.'))return;
+ stage.released=!!released;
+ portalFolderId=null;
+ portalSave();render()
+}
+function portalRevisionToggle(folderId,released){
+ const cfg=portalPrefs(portalProjectId),folder=portalFolderFor(cfg,folderId);
+ if(!folder?.revision)return;
+ if(folder.revisionReleased===released)return;
+ if(released&&!confirm('Liberar a pasta "'+folder.name+'"? Ela aparecerá ao cliente somente enquanto Estudo preliminar estiver liberado.'))return;
+ folder.revisionReleased=!!released;
+ portalFolderId=null;
+ portalSave();render()
+}
+function portalFolderMove(id,stageId){
+ const cfg=portalPrefs(portalProjectId),f=portalFolderFor(cfg,id);
+ if(!f||!portalStageFor(cfg,stageId)||f.revision)return;
+ if(f.stageId===stageId)return;
+ if(!confirm('Mover a pasta "'+f.name+'" para a etapa "'+portalStageFor(cfg,stageId).name+'"? Ela só aparecerá quando a nova etapa estiver liberada.'))return;
+ f.stageId=stageId;portalFolderId=null;
+ portalSave();render()
+}
+function portalStageOptions(cfg,current){
+ return cfg.stages.map(s=>'<option value="'+esc(s.id)+'"'+(s.id===current?' selected':'')+'>'+esc(s.name)+'</option>').join('')
 }
 function portalSave(){
  try{localStorage.setItem(PORTAL_PREVIEW_STORAGE,JSON.stringify(portalPreviewData));return true}
@@ -97,7 +196,7 @@ function portalProjectShortcut(project){
 }
 function portalProjectList(){
  const sorted=projects.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'pt-BR'));
- const card=p=>{const cfg=portalPreviewData[String(p.id)],meetings=cfg?.meetings?.filter(m=>m.visible&&portalIsFuture(m)).length||0,docs=cfg?.documents?.filter(d=>d.visible).length||0;
+ const card=p=>{const cfg=portalPrefs(p.id),meetings=portalUpcoming(cfg).length,docs=portalReleasedDocumentCount(cfg);
   return '<div class="client-portal-project"><div class="client-portal-project-text"><strong>'+esc(p.name||'Projeto sem nome')+'</strong><span>'+esc(p.client||p.clientRegistration?.name||'Cliente')+'</span></div>'
    +'<div class="client-portal-project-meta">'+docs+' documento'+(docs===1?'':'s')+' · '+meetings+' reunião'+(meetings===1?'':'ões')+' agendada'+(meetings===1?'':'s')+'</div>'
    +'<div class="client-portal-project-actions"><button class="secondary" onclick="portalOpen('+portalSafeAction(p.id)+')">Configurar</button>'
@@ -107,7 +206,11 @@ function portalProjectList(){
  +'<section class="panel"><h3>Escolha um projeto</h3>'+(sorted.length?'<div class="client-portal-projects">'+sorted.map(card).join('')+'</div>':'<div class="client-portal-empty">Nenhum projeto cadastrado. Cadastre um projeto para configurar a prévia da Área do Cliente.</div>')+'</section></div>'
 }
 function portalFolderOptions(settings,current){
- return settings.folders.map(f=>'<option value="'+esc(f.id)+'"'+(f.id===current?' selected':'')+'>'+esc(f.name)+'</option>').join('')
+ return settings.stages.map(stage=>{
+  const items=settings.folders.filter(f=>f.stageId===stage.id);
+  if(!items.length)return '';
+  return '<optgroup label="'+esc(stage.name)+'">'+items.map(f=>'<option value="'+esc(f.id)+'"'+(f.id===current?' selected':'')+'>'+esc(f.name)+'</option>').join('')+'</optgroup>'
+ }).join('')
 }
 function portalStageSave(){
  const cfg=portalPrefs(portalProjectId),raw=String(document.getElementById('portalStageName')?.value||'').trim();
@@ -152,17 +255,18 @@ function portalMeetingDelete(id){
 function portalFolderSubmit(event){
  event?.preventDefault?.();
  const cfg=portalPrefs(portalProjectId),input=document.getElementById('portalNewFolder');
- const name=String(input?.value||'').trim();
+ const name=String(input?.value||'').trim(),stageId=document.getElementById('portalNewFolderStage')?.value;
+ if(!portalStageFor(cfg,stageId)){alert('Escolha uma etapa para essa pasta.');return}
  if(!name){alert('Informe o nome da pasta.');return}
- if(cfg.folders.some(x=>x.name.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'))){alert('Já existe uma pasta com esse nome.');return}
- cfg.folders.push({id:portalId(),name,icon:'folder'});portalSave();render()
+ if(cfg.folders.some(x=>x.stageId===stageId&&x.name.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'))){alert('Já existe uma pasta com esse nome nesta etapa.');return}
+ cfg.folders.push({id:portalId(),name,icon:'folder',stageId});portalSave();render()
 }
 function portalFolderRename(id){
  const cfg=portalPrefs(portalProjectId),folder=cfg.folders.find(x=>String(x.id)===String(id));if(!folder)return;
  const name=prompt('Nome da pasta:',folder.name);if(name===null)return;
  const trimmed=name.trim();if(!trimmed)return;
  if(trimmed.length>60){alert('O nome da pasta deve ter até 60 caracteres.');return}
- if(cfg.folders.some(x=>x.id!==folder.id&&x.name.toLocaleLowerCase('pt-BR')===trimmed.toLocaleLowerCase('pt-BR'))){alert('Já existe uma pasta com esse nome.');return}
+ if(cfg.folders.some(x=>x.id!==folder.id&&x.stageId===folder.stageId&&x.name.toLocaleLowerCase('pt-BR')===trimmed.toLocaleLowerCase('pt-BR'))){alert('Já existe uma pasta com esse nome nesta etapa.');return}
  folder.name=trimmed;portalSave();render()
 }
 function portalFolderDelete(id){
@@ -203,9 +307,12 @@ function portalDocumentDelete(id){
 }
 function portalSeedExampleDocuments(){
  const cfg=portalPrefs(portalProjectId),samples=[
-  ['apresentacoes','Apresentação de conceito','Apresentação'],
-  ['orcamentos','Orçamento de iluminação','PDF'],
-  ['relatorios','Relatório de acompanhamento','PDF']
+  ['estudo-plantas','Planta e apresentação inicial','Apresentação'],
+  ['ante-planilha','Planilha do anteprojeto','Planilha'],
+  ['ante-orcamentos','Orçamento de iluminação','PDF'],
+  ['executivo-projetos','Projeto executivo','PDF'],
+  ['obra-relatorio','Relatório de acompanhamento','PDF'],
+  ['posobra-notas','Nota fiscal de referência','PDF']
  ];
  let count=0;
  for(const [folderId,title,type] of samples){
