@@ -208,3 +208,19 @@
  .client-portal-new-folder-stage select,.client-portal-new-folder-stage input,.client-portal-new-folder-stage button{max-width:none;width:100%;flex:1 1 100%}
  .client-portal-released-stage-heading h3{font-size:21px}
 }
+
+
+/* Seleção de arquivos no formulário demonstrativo do portal */
+.client-portal-file-upload{margin-top:14px;padding:15px;border-radius:11px;background:#FBF9F6;border:1px solid #E7DED5}
+.client-portal-file-label{display:block;font-weight:700;font-size:12px;color:#6D5A4B;margin-bottom:9px}
+.client-portal-file-select{display:flex;align-items:center;gap:12px;padding:15px;border-radius:10px;border:1.5px dashed #BDA996;background:#F7F0E9;cursor:pointer;transition:background .15s,border-color .15s}
+.client-portal-file-select:hover{background:#EFE4D8;border-color:#997C65}
+.client-portal-file-select>.client-portal-file-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:#E9DACB;color:#795B47;font-size:25px}
+.client-portal-file-select>span:last-child{display:flex;flex-direction:column;gap:4px}
+.client-portal-file-select strong{font-size:13px;color:#68503E}
+.client-portal-file-select small{font-size:11px;line-height:1.45;font-weight:400;color:#938070}
+.client-portal-file-input{position:absolute;opacity:0;width:1px;height:1px;overflow:hidden;left:-10000px}
+.client-portal-file-selected-info{font-size:12px;color:#938070;margin:9px 0 0;overflow-wrap:anywhere}
+.client-portal-file-selected-info.client-portal-file-selected{color:#5B7459;font-weight:650}
+.client-portal-file-warning{font-size:11px;color:#957F68;line-height:1.6;border-top:1px solid #E9E0D8;padding-top:10px;margin:11px 0 0}
+@media(max-width:650px){.client-portal-file-upload{padding:12px}.client-portal-file-select{gap:9px;padding:13px}.client-portal-file-select strong{font-size:12px}}
