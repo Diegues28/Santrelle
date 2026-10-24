@@ -118,7 +118,7 @@ function portalRevisionToggle(folderId,released){
  const cfg=portalPrefs(portalProjectId),folder=portalFolderFor(cfg,folderId);
  if(!folder?.revision)return;
  if(folder.revisionReleased===released)return;
- if(released&&!confirm('Liberar a pasta "'+folder.name+'"? Ela aparecerá ao cliente somente enquanto Estudo preliminar estiver liberado.'))return;
+ if(released&&!confirm('Liberar a pasta "'+folder.name+'"? Ela aparecerá ao cliente somente enquanto Estudo preliminar estiver liberado.')){render();return}
  folder.revisionReleased=!!released;
  portalFolderId=null;
  portalSave();render()
