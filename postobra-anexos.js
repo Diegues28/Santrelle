@@ -109,9 +109,11 @@ function pwFilesHtml(work,item,files){
   +files.map(file=>{
    const url=URL.createObjectURL(file.blob);pwFileUrls.push(url);
    const image=pwFileKind(file)==='image';
-   return '<div class="pw-file-card"><a class="pw-file-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" download="'+esc(file.name)+'" title="Abrir ou salvar '+esc(file.name)+'">'
-    +(image?'<img loading="lazy" alt="'+esc(file.name)+'" src="'+esc(url)+'">':'<span class="pw-file-document">PDF</span>')
+   const format=/\.pdf$/i.test(file.name||'')||file.type==='application/pdf'?'PDF':'FOTO';
+   return '<div class="pw-file-card"><a class="pw-file-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" title="Abrir '+esc(file.name)+'">'
+    +(image?'<img loading="lazy" alt="'+esc(file.name)+'" src="'+esc(url)+'">':'<span class="pw-file-document">'+format+'</span>')
     +'<span class="pw-file-name">'+esc(file.name)+'</span><small>'+pwFileSize(file.size)+'</small></a>'
+    +'<a class="pw-file-download" href="'+esc(url)+'" download="'+esc(file.name)+'">Baixar arquivo</a>'
     +(!work.closedAt?'<button type="button" class="pw-file-delete" onclick="pwRemoveFile('+esc(JSON.stringify(work.id))+','+esc(JSON.stringify(item.id))+','+esc(JSON.stringify(file.id))+')" title="Remover anexo">Remover</button>':'')
     +'</div>'
   }).join('')+'</div>'
