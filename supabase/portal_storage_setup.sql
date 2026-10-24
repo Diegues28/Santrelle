@@ -50,8 +50,16 @@ create table if not exists public.santrelle_portal_documents (
   project_id uuid not null references public.santrelle_portal_projects(id) on delete cascade,
   stage_key text not null check (stage_key in ('estudo', 'ante', 'executivo', 'obra', 'posobra')),
   folder_key text not null check (length(trim(folder_key)) between 1 and 100),
-  revision_number smallint check (
-    revision_number is null or (stage_key = 'estudo' and revision_number between 1 and 3)
+  revision_number smallint,
+  -- Nunca pode haver arquivo em "Revisão 1/2/3" sem liberação daquela revisão.
+  constraint santrelle_revision_folder_matches check (
+    (folder_key = 'estudo-revisao-1' and stage_key = 'estudo' and revision_number = 1)
+    or (folder_key = 'estudo-revisao-2' and stage_key = 'estudo' and revision_number = 2)
+    or (folder_key = 'estudo-revisao-3' and stage_key = 'estudo' and revision_number = 3)
+    or (
+      folder_key not in ('estudo-revisao-1', 'estudo-revisao-2', 'estudo-revisao-3')
+      and revision_number is null
+    )
   ),
   title text not null check (length(trim(title)) between 1 and 240),
   original_file_name text not null check (length(trim(original_file_name)) between 1 and 240),
