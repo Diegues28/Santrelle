@@ -275,12 +275,42 @@ function portalFolderDelete(id){
  if(!confirm('Excluir a pasta "'+folder.name+'"?'))return;
  cfg.folders=cfg.folders.filter(x=>String(x.id)!==String(id));portalSave();render()
 }
+
+/* Seletor de arquivos da prévia: leitura apenas de metadados (nome e tamanho).
+   Nunca armazena o arquivo nem o torna acessível pela internet. */
+function portalFormatBytes(bytes){
+ const n=Number(bytes)||0;
+ return n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.ceil(n/1024))+' KB'
+}
+function portalFileSelected(input){
+ const name=document.getElementById('portalDocSelectedFile');
+ const file=input?.files?.[0];
+ if(!name)return;
+ if(!file){
+  name.textContent='Nenhum arquivo selecionado.';
+  name.classList.remove('client-portal-file-selected');
+  return
+ }
+ name.textContent=file.name+' · '+portalFormatBytes(file.size)+' — prévia, não enviado';
+ name.classList.add('client-portal-file-selected');
+ const title=document.getElementById('portalDocTitle');
+ if(title&&!title.value.trim()){
+  const fname=String(file.name||'').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim();
+  title.value=fname.slice(0,160)
+ }
+ const type=document.getElementById('portalDocType'),ext=String(file.name||'').split('.').pop().toLowerCase();
+ if(type){
+  type.value=['pdf'].includes(ext)?'PDF':['ppt','pptx','key'].includes(ext)?'Apresentação':['xls','xlsx','csv','numbers'].includes(ext)?'Planilha':['jpg','jpeg','png','webp','heic','gif'].includes(ext)?'Imagem':'Outro'
+ }
+}
 function portalDocumentSubmit(event){
  event?.preventDefault?.();
  const cfg=portalPrefs(portalProjectId),field=id=>String(document.getElementById(id)?.value||'').trim();
  const title=field('portalDocTitle'),folderId=field('portalDocFolder'),type=field('portalDocType'),visible=document.getElementById('portalDocVisible')?.checked===true;
+ const chosenFile=document.getElementById('portalDocFile')?.files?.[0];
  if(!title||!cfg.folders.some(f=>f.id===folderId)){alert('Informe o nome do documento e selecione uma pasta válida.');return}
  if(!['PDF','Apresentação','Planilha','Imagem','Outro'].includes(type)){alert('Selecione um tipo de documento.');return}
+ if(chosenFile&&!confirm('O arquivo "'+chosenFile.name+'" NÃO será enviado ou armazenado nesta prévia. Deseja cadastrar somente o título como exemplo?'))return;
  const record=cfg.documents.find(d=>String(d.id)===String(portalEditingDocument));
  if(record)Object.assign(record,{title,folderId,type,visible});
  else cfg.documents.push({id:portalId(),title,folderId,type,visible,demo:true,addedAt:new Date().toISOString()});
@@ -405,6 +435,11 @@ function portalManagerDocs(cfg){
   +'<label>Nome do documento *<input id="portalDocTitle" required maxlength="160" placeholder="Ex.: Plantas — revisão 1"></label>'
   +'<label>Etapa e pasta *<select id="portalDocFolder" required>'+portalFolderOptions(cfg,editing?.folderId||cfg.folders[0]?.id)+'</select></label>'
   +'<label>Tipo<select id="portalDocType">'+['PDF','Apresentação','Planilha','Imagem','Outro'].map(t=>'<option'+(t===(editing?.type||'PDF')?' selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'
+  +'<div class="client-portal-file-upload"><label for="portalDocFile" class="client-portal-file-label">Arquivo do computador ou celular (prévia)</label>'
+  +'<label class="client-portal-file-select" for="portalDocFile"><span class="client-portal-file-icon">＋</span><span><strong>Selecionar arquivo</strong><small>PDF, apresentação, planilha, imagem ou documento do seu dispositivo</small></span></label>'
+  +'<input id="portalDocFile" class="client-portal-file-input" type="file" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp,.heic,.gif,.key,.numbers" onchange="portalFileSelected(this)">'
+  +'<div id="portalDocSelectedFile" class="client-portal-file-selected-info">Nenhum arquivo selecionado.</div>'
+  +'<p class="client-portal-file-warning">Por enquanto, o seletor demonstra a experiência de escolher um arquivo. O documento não será enviado nem armazenado. O envio real será ativado depois da configuração de autenticação e do Storage privado.</p></div>'
   +'<div class="client-portal-form-bottom"><label class="client-portal-check"><input id="portalDocVisible" type="checkbox" '+(editing?.visible===false?'':'checked')+'> Publicar quando etapa liberada</label>'
   +'<div><button class="primary" type="submit" '+(!cfg.folders.length?'disabled':'')+'>'+(editing?'Salvar documento':'Adicionar documento de exemplo')+'</button>'
   +(editing?'<button class="secondary" type="button" onclick="portalDocumentCancel()">Cancelar</button>':'')+'</div></div></form>'
