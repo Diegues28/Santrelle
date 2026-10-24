@@ -346,43 +346,86 @@ function portalManagerMeetings(cfg){
   +(edit?'<button class="secondary" type="button" onclick="portalMeetingCancel()">Cancelar</button>':'')+'</div></div></form>'
   +'<div class="client-portal-meeting-rows">'+(rows||'<p class="client-portal-empty-small">Nenhuma reunião cadastrada.</p>')+'</div></section>'
 }
+
+function portalManagerStages(cfg){
+ const sections=cfg.stages.map(s=>{
+  const folders=cfg.folders.filter(f=>f.stageId===s.id);
+  const releasedCount=folders.filter(f=>portalIsFolderReleased(cfg,f)).length;
+  const count=cfg.documents.filter(d=>portalIsDocumentReleased(cfg,d)&&folders.some(f=>f.id===d.folderId)).length;
+  const cards=folders.map(folder=>{
+   const n=cfg.documents.filter(x=>String(x.folderId)===String(folder.id)).length;
+   const revisionControl=folder.revision?
+    '<label class="client-portal-check client-portal-release-revision"><input type="checkbox" '+(folder.revisionReleased?'checked ':'')+
+    'onchange="portalRevisionToggle('+portalSafeAction(folder.id)+',this.checked)"> Liberar revisão</label>'
+    :'<span class="client-portal-folder-kind">'+(s.released?'Pasta da etapa':'Aguardando etapa')+'</span>';
+   const move=folder.revision?'':'<select class="client-portal-move-folder" aria-label="Etapa da pasta '+esc(folder.name)+'" onchange="portalFolderMove('+portalSafeAction(folder.id)+',this.value)" title="Mover para outra etapa">'+portalStageOptions(cfg,s.id)+'</select>';
+   return '<div class="client-portal-folder-admin '+(portalIsFolderReleased(cfg,folder)?'client-portal-folder-available':'')+'"><div class="client-portal-folder-symbol">'+portalFolderIcon(folder.icon)+'</div>'
+    +'<div class="client-portal-folder-data"><strong>'+esc(folder.name)+'</strong><span>'+n+' documento'+(n===1?'':'s')+' · '+(portalIsFolderReleased(cfg,folder)?'Liberada':'Não liberada')+'</span></div>'
+    +'<div class="client-portal-folder-actions">'+revisionControl+move
+    +'<button class="secondary" onclick="portalFolderRename('+portalSafeAction(folder.id)+')">Renomear</button>'
+    +'<button class="secondary" onclick="portalFolderDelete('+portalSafeAction(folder.id)+')">Excluir</button></div></div>'
+  }).join('');
+  return '<div class="client-portal-stage-admin '+(s.released?'client-portal-stage-admin-released':'')+'">'
+   +'<div class="client-portal-stage-admin-heading"><div class="client-portal-stage-order">'+String(cfg.stages.indexOf(s)+1).padStart(2,'0')+'</div>'
+   +'<div class="client-portal-stage-admin-name"><strong>'+esc(s.name)+'</strong><span>'+folders.length+' pasta'+(folders.length===1?'':'s')+' · '+count+' documento'+(count===1?'':'s')+' visível'+(count===1?'':'is')+'</span></div>'
+   +'<span class="client-portal-stage-state '+(s.released?'client-portal-stage-state-released':'')+'">'+(s.released?'Liberada para o cliente':'Bloqueada')+'</span>'
+   +'<button class="'+(s.released?'secondary':'primary')+'" type="button" onclick="portalStageToggle('+portalSafeAction(s.id)+','+(!s.released)+')">'+(s.released?'Ocultar etapa':'Liberar etapa')+'</button></div>'
+   +'<div class="client-portal-stage-folders">'+cards+'</div>'
+   +(s.id==='estudo'?'<p class="client-portal-stage-note">Até 3 revisões: cada revisão é liberada separadamente, somente se for utilizada. Liberar o Estudo preliminar não libera automaticamente as revisões.</p>':'')
+   +(!s.released?'<p class="client-portal-stage-note">Nenhuma pasta desta etapa aparece para o cliente até você clicar em <strong>Liberar etapa</strong>.</p>':'')
+   +'</div>';
+ }).join('');
+ return '<section class="panel client-portal-admin-section"><div class="client-portal-section-heading"><div><h3>Liberação das etapas e pastas</h3>'
+  +'<p class="muted">As pastas ficam organizadas por etapa. Clique em “Liberar etapa” quando quiser disponibilizar os documentos ao cliente. Uma etapa anterior pode continuar acessível.</p></div></div>'
+  +'<div class="client-portal-stage-admin-list">'+sections+'</div>'
+  +'<form class="client-portal-new-folder client-portal-new-folder-stage" onsubmit="portalFolderSubmit(event)"><input id="portalNewFolder" required maxlength="60" placeholder="Nova pasta (opcional)">'
+  +'<select id="portalNewFolderStage" aria-label="Etapa da nova pasta">'+portalStageOptions(cfg,cfg.stages[0]?.id)+'</select>'
+  +'<button class="secondary" type="submit">+ Criar pasta</button></form>'
+  +'</section>'
+}
 function portalManagerDocs(cfg){
- const folderNames=Object.fromEntries(cfg.folders.map(f=>[f.id,f.name]));
- const folderCards=cfg.folders.map(f=>{
-  const count=cfg.documents.filter(x=>x.folderId===f.id).length;
-  return '<div class="client-portal-folder-admin"><div class="client-portal-folder-symbol">'+portalFolderIcon(f.icon)+'</div><div><strong>'+esc(f.name)+'</strong><span>'+count+' documento'+(count===1?'':'s')+' cadastrado'+(count===1?'':'s')+'</span></div>'
-   +'<div class="client-portal-folder-actions"><button class="secondary" onclick="portalFolderRename('+portalSafeAction(f.id)+')">Renomear</button><button class="secondary" onclick="portalFolderDelete('+portalSafeAction(f.id)+')">Excluir</button></div></div>'
- }).join('');
- const docs=cfg.documents.map(doc=>{
-  return '<div class="client-portal-doc-row"><div class="client-portal-doc-icon">▤</div><div class="client-portal-doc-details"><strong>'+esc(doc.title)+'</strong><span>'+esc(folderNames[doc.folderId]||'Pasta não encontrada')+' · '+esc(doc.type||'Documento')+' · Apenas ficha de demonstração</span></div>'
-   +'<label class="client-portal-check"><input type="checkbox" '+(doc.visible?'checked ':'')+'onchange="portalDocumentToggle('+portalSafeAction(doc.id)+',this.checked)"> Visível</label>'
-   +'<div class="client-portal-doc-actions"><button class="secondary" onclick="portalDocumentEdit('+portalSafeAction(doc.id)+')">Editar</button><button class="secondary" onclick="portalDocumentDelete('+portalSafeAction(doc.id)+')">Excluir</button></div></div>'
- }).join('');
  const editing=cfg.documents.find(d=>String(d.id)===String(portalEditingDocument));
- return '<section class="panel client-portal-admin-section"><div class="client-portal-section-heading"><div><h3>Pastas dos documentos</h3><p class="muted">Organize as categorias que aparecem ao cliente. Você pode renomear ou adicionar pastas.</p></div></div>'
-  +'<div class="client-portal-folder-admin-grid">'+(folderCards||'<p class="muted">Nenhuma pasta cadastrada.</p>')+'</div>'
-  +'<form class="client-portal-new-folder" onsubmit="portalFolderSubmit(event)"><input id="portalNewFolder" required maxlength="60" placeholder="Nome da nova pasta"><button class="secondary" type="submit">+ Criar pasta</button></form></section>'
-  +'<section class="panel client-portal-admin-section"><div class="client-portal-section-heading"><div><h3>Documentos disponíveis</h3><p class="muted">Cadastre títulos fictícios para testar a disposição dos documentos e a chave de visibilidade. Ainda não é possível enviar, abrir nem baixar arquivos reais nesta prévia.</p></div>'
-  +'<button type="button" class="secondary" onclick="portalSeedExampleDocuments()">Inserir 3 exemplos</button></div>'
-  +'<form class="client-portal-form" onsubmit="portalDocumentSubmit(event)"><div class="client-portal-document-form"><label>Nome do documento *<input id="portalDocTitle" required maxlength="160" placeholder="Ex.: Apresentação final do anteprojeto"></label>'
-  +'<label>Pasta *<select id="portalDocFolder" required>'+portalFolderOptions(cfg,editing?.folderId||cfg.folders[0]?.id)+'</select></label>'
+ const docs=cfg.documents.map(doc=>{
+  const folder=portalFolderFor(cfg,doc.folderId);
+  const stage=folder&&portalStageFor(cfg,folder.stageId);
+  const actual=portalIsDocumentReleased(cfg,doc);
+  const state=actual?'Liberado':!doc.visible?'Oculto pelo escritório':!stage?.released?'Etapa bloqueada':folder?.revision&&!folder.revisionReleased?'Revisão não liberada':'Pasta indisponível';
+  const statusClass=actual?'client-portal-status-released':'client-portal-status-hidden';
+  return '<div class="client-portal-doc-row"><div class="client-portal-doc-icon">▤</div><div class="client-portal-doc-details"><strong>'+esc(doc.title)+'</strong>'
+   +'<span>'+esc(stage?.name||'Etapa indisponível')+' › '+esc(folder?.name||'Pasta não encontrada')+' · '+esc(doc.type||'Documento')+' · Exemplo</span></div>'
+   +'<span class="client-portal-document-status '+statusClass+'">'+state+'</span>'
+   +'<label class="client-portal-check"><input type="checkbox" '+(doc.visible?'checked ':'')+'onchange="portalDocumentToggle('+portalSafeAction(doc.id)+',this.checked)"> Publicar</label>'
+   +'<div class="client-portal-doc-actions"><button class="secondary" onclick="portalDocumentEdit('+portalSafeAction(doc.id)+')">Editar</button>'
+   +'<button class="secondary" onclick="portalDocumentDelete('+portalSafeAction(doc.id)+')">Excluir</button></div></div>'
+ }).join('');
+ return '<section class="panel client-portal-admin-section"><div class="client-portal-section-heading"><div><h3>Documentos por etapa</h3>'
+  +'<p class="muted">Cadastre títulos de exemplo, escolha uma pasta e marque “Publicar”. Mesmo publicado, o documento só aparecerá após liberar a etapa e, se for revisão, a pasta da revisão.</p></div>'
+  +'<button type="button" class="secondary" onclick="portalSeedExampleDocuments()">Inserir exemplos</button></div>'
+  +'<form class="client-portal-form" onsubmit="portalDocumentSubmit(event)"><div class="client-portal-document-form">'
+  +'<label>Nome do documento *<input id="portalDocTitle" required maxlength="160" placeholder="Ex.: Plantas — revisão 1"></label>'
+  +'<label>Etapa e pasta *<select id="portalDocFolder" required>'+portalFolderOptions(cfg,editing?.folderId||cfg.folders[0]?.id)+'</select></label>'
   +'<label>Tipo<select id="portalDocType">'+['PDF','Apresentação','Planilha','Imagem','Outro'].map(t=>'<option'+(t===(editing?.type||'PDF')?' selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'
-  +'<div class="client-portal-form-bottom"><label class="client-portal-check"><input id="portalDocVisible" type="checkbox" '+(editing?.visible===false?'':'checked')+'> Visível para o cliente</label>'
+  +'<div class="client-portal-form-bottom"><label class="client-portal-check"><input id="portalDocVisible" type="checkbox" '+(editing?.visible===false?'':'checked')+'> Publicar quando etapa liberada</label>'
   +'<div><button class="primary" type="submit" '+(!cfg.folders.length?'disabled':'')+'>'+(editing?'Salvar documento':'Adicionar documento de exemplo')+'</button>'
   +(editing?'<button class="secondary" type="button" onclick="portalDocumentCancel()">Cancelar</button>':'')+'</div></div></form>'
-  +'<div class="client-portal-doc-list">'+(docs||'<div class="client-portal-empty-small">Nenhum documento cadastrado. Use “Inserir 3 exemplos” para visualizar uma simulação completa.</div>')+'</div>'
+  +'<div class="client-portal-doc-list">'+(docs||'<div class="client-portal-empty-small">Nenhum documento cadastrado. Use “Inserir exemplos” para visualizar a organização das etapas.</div>')+'</div>'
   +'</section>'
 }
 function portalManagerProject(project,cfg){
- const visible=cfg.documents.filter(x=>x.visible).length,upcoming=portalUpcoming(cfg).length;
+ const visible=portalReleasedDocumentCount(cfg),upcoming=portalUpcoming(cfg).length;
+ const releases=cfg.stages.filter(s=>s.released).length;
  return '<div class="client-portal-admin"><section class="panel"><div class="client-portal-header-actions"><button class="secondary" onclick="portalBack()">← Todos os projetos</button><button class="primary" onclick="portalOpenPreview('+portalSafeAction(project.id)+')">Ver como cliente ↗</button></div>'
-  +'<div class="client-portal-head"><div><span class="client-portal-eyebrow">GERENCIAMENTO INTERNO · PRÉVIA</span><h2>'+esc(project.name||'Projeto')+'</h2><p class="muted">'+esc(project.clientRegistration?.name||project.client||'Cliente')+' · Organize somente o que o cliente poderá visualizar.</p></div>'
-  +'<div class="client-portal-meta-count"><strong>'+visible+'</strong><span>Documentos visíveis</span><strong>'+upcoming+'</strong><span>Reuniões futuras</span></div></div>'
+  +'<div class="client-portal-head"><div><span class="client-portal-eyebrow">GERENCIAMENTO INTERNO · PRÉVIA</span><h2>'+esc(project.name||'Projeto')+'</h2>'
+  +'<p class="muted">'+esc(project.clientRegistration?.name||project.client||'Cliente')+' · Libere as etapas no momento adequado, mantendo documentos e prazos internos protegidos.</p></div>'
+  +'<div class="client-portal-meta-count"><strong>'+releases+'/'+cfg.stages.length+'</strong><span>Etapas liberadas</span><strong>'+visible+'</strong><span>Documentos visíveis</span>'
+  +'<strong>'+upcoming+'</strong><span>Reuniões futuras</span></div></div>'
   +'<div class="client-portal-alert"><strong>Esta ainda é uma prévia local, sem autenticação</strong><p>Não coloque arquivos privados ou dados sensíveis reais aqui. O login e o armazenamento seguro serão desenvolvidos depois da aprovação das telas.</p></div></section>'
-  +'<section class="panel client-portal-admin-section"><div class="client-portal-section-heading"><div><h3>Etapa exibida ao cliente</h3><p class="muted">Apenas o nome. Nenhum prazo, cronograma ou status interno será mostrado. A atualização é manual.</p></div></div>'
-  +'<div class="client-portal-stage-form"><input id="portalStageName" maxlength="80" value="'+esc(cfg.stage)+'" placeholder="Ex.: Anteprojeto"><button class="primary" onclick="portalStageSave()">Salvar etapa</button></div>'
-  +'<p class="client-portal-helper">Deixe o campo vazio e salve caso não queira mostrar uma etapa no portal.</p></section>'
-  +portalManagerMeetings(cfg)+portalManagerDocs(cfg)+'</div>'
+  +'<section class="panel client-portal-admin-section"><div class="client-portal-section-heading"><div><h3>Nome da etapa atual</h3>'
+  +'<p class="muted">Este campo controla somente o nome exibido no portal. É independente da liberação das pastas e nunca mostra prazos ou datas de produção.</p></div></div>'
+  +'<div class="client-portal-stage-form"><input id="portalStageName" maxlength="80" value="'+esc(cfg.stage)+'" placeholder="Ex.: Anteprojeto">'
+  +'<button class="primary" onclick="portalStageSave()">Salvar etapa</button></div>'
+  +'<p class="client-portal-helper">Você escolhe manualmente quando atualizar o nome da etapa.</p></section>'
+  +portalManagerMeetings(cfg)+portalManagerStages(cfg)+portalManagerDocs(cfg)+'</div>'
 }
 function portalPreviewMeetings(cfg){
  const meetings=portalUpcoming(cfg);
@@ -395,19 +438,42 @@ function portalPreviewMeetings(cfg){
  }).join('')
 }
 function portalPreviewFolders(cfg){
+ /* Apenas etapas liberadas participam da biblioteca. A pasta e a publicação
+    individual continuam sujeitas ao respectivo controle de acesso. */
+ const unlockedStages=cfg.stages.filter(stage=>stage.released===true);
  if(portalFolderId){
-  const folder=cfg.folders.find(f=>String(f.id)===String(portalFolderId));
-  if(!folder){portalFolderId=null;return portalPreviewFolders(cfg)}
-  const docs=cfg.documents.filter(d=>d.visible===true&&String(d.folderId)===String(folder.id));
-  const cards=docs.map(d=>'<div class="client-portal-client-document"><span class="client-portal-client-document-icon">▤</span><div><strong>'+esc(d.title)+'</strong><span>'+esc(d.type||'Documento')+' · Prévia sem arquivo anexado</span></div><span class="client-portal-client-doc-label">Exemplo</span></div>').join('');
-  return '<button class="client-portal-back-folder" onclick="portalFolderId=null;render()">← Voltar às pastas</button>'
+  const folder=portalFolderFor(cfg,portalFolderId);
+  if(!portalIsFolderReleased(cfg,folder)){
+   portalFolderId=null;return portalPreviewFolders(cfg);
+  }
+  const stage=portalStageFor(cfg,folder.stageId);
+  const docs=cfg.documents.filter(doc=>String(doc.folderId)===String(folder.id)&&portalIsDocumentReleased(cfg,doc));
+  const cards=docs.map(d=>'<div class="client-portal-client-document"><span class="client-portal-client-document-icon">▤</span>'
+   +'<div><strong>'+esc(d.title)+'</strong><span>'+esc(d.type||'Documento')+' · Prévia sem arquivo anexado</span></div>'
+   +'<span class="client-portal-client-doc-label">Exemplo</span></div>').join('');
+  return '<button class="client-portal-back-folder" onclick="portalFolderId=null;render()">← Voltar às etapas e pastas</button>'
+   +'<div class="client-portal-folder-breadcrumb">'+esc(stage?.name||'Etapa')+'</div>'
    +'<div class="client-portal-client-folder-title"><span>'+portalFolderIcon(folder.icon)+'</span><h3>'+esc(folder.name)+'</h3></div>'
    +(cards||'<div class="client-portal-client-empty"><p>Nenhum documento disponível nesta pasta.</p></div>')
  }
- return '<div class="client-portal-client-folders">'+cfg.folders.map(f=>{
-  const count=cfg.documents.filter(x=>x.visible===true&&String(x.folderId)===String(f.id)).length;
-  return '<button class="client-portal-client-folder" onclick="portalFolderId='+portalSafeAction(f.id)+';render()"><span class="client-portal-client-folder-icon">'+portalFolderIcon(f.icon)+'</span>'
-   +'<strong>'+esc(f.name)+'</strong><span>'+count+' documento'+(count===1?'':'s')+'</span><span class="client-portal-client-folder-arrow">→</span></button>'
+ if(!unlockedStages.length){
+  return '<div class="client-portal-client-empty client-portal-library-locked"><div class="client-portal-empty-icon">▱</div>'
+   +'<p>Seus documentos aparecerão aqui em breve.</p>'
+   +'<span>Assim que o escritório liberar uma etapa, as pastas correspondentes estarão disponíveis para consulta.</span></div>'
+ }
+ return '<div class="client-portal-client-stage-library">'+unlockedStages.map(stage=>{
+  const folders=cfg.folders.filter(folder=>folder.stageId===stage.id&&portalIsFolderReleased(cfg,folder));
+  const list=folders.length?'<div class="client-portal-client-folders">'+folders.map(f=>{
+   const count=cfg.documents.filter(doc=>String(doc.folderId)===String(f.id)&&portalIsDocumentReleased(cfg,doc)).length;
+   return '<button class="client-portal-client-folder" onclick="portalFolderId='+portalSafeAction(f.id)+';render()">'
+    +'<span class="client-portal-client-folder-icon">'+portalFolderIcon(f.icon)+'</span>'
+    +'<strong>'+esc(f.name)+'</strong><span>'+count+' documento'+(count===1?'':'s')+'</span>'
+    +'<span class="client-portal-client-folder-arrow">→</span></button>'
+  }).join('')+'</div>':'<div class="client-portal-client-empty"><p>As pastas desta etapa ainda estão sendo preparadas.</p></div>';
+  return '<section class="client-portal-released-stage"><div class="client-portal-released-stage-heading">'
+   +'<span class="client-portal-released-stage-icon">✓</span>'
+   +'<div><span>ETAPA LIBERADA</span><h3>'+esc(stage.name)+'</h3></div></div>'
+   +list+'</section>';
  }).join('')+'</div>'
 }
 function portalPreviewProject(project,cfg){
@@ -423,7 +489,7 @@ function portalPreviewProject(project,cfg){
   +'<section class="client-portal-client-meetings"><div class="client-portal-client-section-heading"><span>PRÓXIMAS REUNIÕES</span><span>▦</span></div>'
   +portalPreviewMeetings(cfg)+'</section></div>'
   +'<section class="client-portal-client-library"><div class="client-portal-client-library-title"><div><span class="client-portal-client-section-eyebrow">BIBLIOTECA DO PROJETO</span>'
-  +'<h2>Seus documentos</h2><p>Selecione uma pasta para consultar os arquivos disponibilizados pelo escritório.</p></div><span class="client-portal-library-glyph">▱</span></div>'
+  +'<h2>Seus documentos</h2><p>As pastas são disponibilizadas conforme a liberação de cada etapa do seu projeto.</p></div><span class="client-portal-library-glyph">▱</span></div>'
   +portalPreviewFolders(cfg)+'</section>'
   +'<footer class="client-portal-client-footer"><strong>SANTRELLE</strong><span>Arquitetura e Interiores</span><span>Prévia do portal · Arquivos não disponíveis para download nesta versão</span></footer></div>'
 }
