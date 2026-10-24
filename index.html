@@ -374,6 +374,31 @@ tbody tr:hover{background:#FCFAF8}
 .pw-shortcut p{font-size:12px;color:var(--taupe);margin:5px 0 0}
 @media(max-width:1000px){.pw-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.pw-project{flex-wrap:wrap}.pw-project>span:first-child{flex-basis:100%}.pw-badges{justify-content:flex-start}}
 @media(max-width:620px){.pw-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.pw-fields{grid-template-columns:1fr}.pw-wide{grid-column:span 1}.pw-item{flex-wrap:wrap}.pw-check{min-width:100%;flex-direction:row;justify-content:flex-start}.pw-header button,.pw-shortcut button{flex:1}.pw-create select,.pw-create button{flex:1 1 100%}}
+
+/* Pós-obra: anexos diretos de fotos/documentos e PDF do cliente */
+.pw-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+.pw-header-actions button{white-space:nowrap}
+.pw-filepick{display:flex!important;align-items:center;gap:13px;padding:16px;border:1.5px dashed #B9A89B;border-radius:11px;background:#F9F6F2;cursor:pointer;transition:background .12s,border-color .12s}
+.pw-filepick:hover,.pw-filepick:focus-within{background:#F0E8DF;border-color:#8F7968}
+.pw-filepick-icon{display:flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;background:#EAE0D6;border-radius:10px;color:var(--marrom);font-size:25px;line-height:1}
+.pw-filepick>span:last-child{display:flex;flex-direction:column;gap:5px}
+.pw-filepick strong{font-size:13px;color:var(--marrom)}
+.pw-filepick small{color:var(--taupe);font-size:11px;font-weight:400;line-height:1.4}
+.pw-file-input{position:absolute!important;left:-99999px;width:1px!important;height:1px!important;overflow:hidden;opacity:0}
+.pw-file-selected{color:var(--taupe);font-size:11px;line-height:1.5;margin-top:4px;overflow-wrap:anywhere}
+.pw-file-region{margin:10px 0}
+.pw-file-heading{font-size:11px;color:var(--taupe);font-weight:700;margin:0 0 7px}
+.pw-file-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:9px}
+.pw-file-card{background:#FAF8F6;border:1px solid var(--linha);border-radius:9px;padding:7px;min-width:0}
+.pw-file-link{display:flex!important;flex-direction:column;align-items:stretch;gap:4px;text-decoration:none;min-width:0;color:var(--marrom)}
+.pw-file-link img,.pw-file-document{width:100%;height:94px;object-fit:cover;border-radius:6px;background:#EAE6E0}
+.pw-file-document{display:flex;justify-content:center;align-items:center;font-size:21px;font-weight:700;color:#9C7269;letter-spacing:2px}
+.pw-file-name{font-size:10px;color:var(--marrom);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pw-file-link small{color:var(--taupe);font-size:10px}
+.pw-file-delete{font-size:10px;background:#fff;border:1px solid var(--linha);color:#A0574B;border-radius:6px;margin-top:6px;padding:5px 8px;cursor:pointer;width:100%}
+.pw-file-delete:hover{background:#FFF0EC;border-color:#E4C4BC}
+.pw-file-error{color:#A0574B;font-size:11px}
+@media(max-width:620px){.pw-header-actions{width:100%;justify-content:stretch}.pw-header-actions button{flex:1 1 100%}.pw-file-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos ativos</button><button data-page="concluidos">✓ Projetos concluídos</button><button data-page="postobra">▣ Pós-obra</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
