@@ -146,3 +146,27 @@ async function pwRemoveFile(workId,itemId,fileId){
   await pwFilesAfterRender(work)
  }catch(err){alert('Não foi possível remover o anexo: '+err.message)}
 }
+
+
+/* Anexa arquivos a uma pendência já cadastrada, sem abrir o formulário de edição. */
+async function pwAttachDirect(input,workId,itemId){
+ const files=Array.from(input?.files||[]);
+ if(!files.length)return;
+ const work=pwFind(workId);
+ const item=work?.items?.find(x=>String(x.id)===String(itemId));
+ if(!work||work.closedAt||!item)return;
+ input.disabled=true;
+ try{
+  await pwSaveFiles(work.id,item.id,files);
+  item.history=item.history||[];
+  item.history.push({at:new Date().toISOString(),text:files.length+' anexo(s) incluído(s)'});
+  save();
+  await pwFilesAfterRender(work);
+ }catch(err){
+  console.error(err);
+  alert('Não foi possível anexar: '+err.message);
+ }finally{
+  input.disabled=false;
+  input.value='';
+ }
+}
