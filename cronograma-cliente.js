@@ -4,43 +4,61 @@ function clientValidDate(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||
 function clientNextDay(date){return date?nextBusiness(offsetDay(parseISO(date),1)):'';}
 function clientProjectDates(p){return p.clientTimelineDates||{};}
 function clientTimeRows(p){
- const schedule=p.schedule||[], dates=clientProjectDates(p), rows=[];
+ const schedule=p.schedule||[],dates=clientProjectDates(p),rows=[];
  if(!schedule.length)return rows;
  let cursor=clientValidDate(schedule[0]?.start)?schedule[0].start:(clientValidDate(p.startDate)?p.startDate:'');
- function append(key,name,kind,days,stage,forcedStart){
+ let chained=true;
+ function append(key,name,kind,days,stage,forcedStart,independent=false){
   const record=dates[key]||{};
-  const start=clientValidDate(record.start)?record.start:(forcedStart===undefined?cursor:forcedStart);
+  const start=clientValidDate(record.start)?record.start:(independent?'':(forcedStart===undefined?(chained?cursor:''):forcedStart));
   const limit=clientValidDate(start)?(days>0?addBusinessDays(start,days-1):start):'';
   const actual=clientValidDate(record.actual)?record.actual:'';
   const internalDone=!!stage?.completed;
   let status='Previsto';
   if(actual)status=kind==='approval'?'Aprovado':'Concluído';
-  else if(kind==='approval')status=(rows[rows.length-1]?.actual?'Aguardando aprovação':'Previsto');
-  else if(kind==='client')status=((rows[rows.length-1]?.actual||rows[rows.length-1]?.status==='Concluído')?'Aguardando cliente':'Previsto');
+  else if(kind==='approval')status='Aguardando aprovação';
+  else if(kind==='client')status=start?'Aguardando cliente':'A definir';
   else if(internalDone)status='Concluído · sem data';
   else if(!start)status='A definir';
-  rows.push({key,name,kind,days,start:start||'',limit,actual,status});
-  if(kind!=='briefing')cursor=clientNextDay(actual||limit);
+  rows.push({key,name,kind,days,start:start||'',limit,actual,status,independent});
+  if(independent)chained=false;
+  else if(kind!=='briefing'&&chained)cursor=clientNextDay(actual||limit);
+  return rows[rows.length-1];
  }
  append('briefing','Briefing','briefing',0,null,'');
+ let afterStudy=false;
  for(let i=0;i<schedule.length;i++){
-  const s=schedule[i];const normalized=String(s.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-  const isStudy=normalized.includes('estudo preliminar'),isAnte=normalized.includes('anteprojeto'),isExecutive=normalized.includes('executivo');
-  const mainDays=Math.max(1,Math.floor(Number(s.contractualParts?.main)||Number(s.days)||1));
-  const secondary=Math.max(0,Math.floor(Number(s.contractualParts?.secondary)||0));
-  const item='step_'+i;
-  append(item,s.name||'Etapa '+(i+1),'office',mainDays,s);
-  if(isStudy||isAnte){
-   const analysisKey=isStudy?'study':'ante';
-   const stored=p.clientAnalysisDays?.[analysisKey];
-   const days=Number.isInteger(Number(stored))&&Number(stored)>0?Number(stored):CLIENT_ANALYSIS_DEFAULTS[analysisKey];
-   append(item+'_analysis','Análise do cliente — '+s.name,'client',days);
-   if(s.revisionRequested&&secondary>0)append(item+'_revision','Realização de alterações — '+s.name,'office',secondary,{completed:s.revisionCompleted});
-   append(item+'_approval','Aprovação — '+s.name,'approval',0);
-  }else if(isExecutive&&secondary>0){
-   append(item+'_compat','Compatibilização dos móveis planejados','office',secondary);
-  }else if(s.revisionRequested&&secondary>0){
-   append(item+'_revision','Realização de alterações — '+s.name,'office',secondary,{completed:s.revisionCompleted});
+  const step=schedule[i],norm=String(step.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const isStudy=norm.includes('estudo preliminar'),isAnte=norm.includes('anteprojeto'),isExecutive=norm.includes('executivo');
+  const mainDays=Math.max(1,Math.floor(Number(step.contractualParts?.main)||Number(step.days)||1));
+  const secondary=Math.max(0,Math.floor(Number(step.contractualParts?.secondary)||0));
+  const key='step_'+i;
+  if(isStudy){
+   append(key,'Estudo preliminar — R00 (primeira apresentação)','office',mainDays,step,undefined,afterStudy);
+   const days=Number(p.clientAnalysisDays?.study)>0?Math.floor(Number(p.clientAnalysisDays.study)):7;
+   append(key+'_analysis','Análise do cliente — R00','client',days);
+   // R01, R02 e R03 nunca são encadeadas: cada uma tem sua própria
+   // data inicial, definida pelo escritório depois da devolutiva.
+   const revisionDays=Math.max(1,secondary||mainDays);
+   for(let rev=1;rev<=3;rev++){
+    const revKey=key+'_r0'+rev;
+    append(revKey,'Estudo preliminar — R0'+rev,'office',revisionDays,null,undefined,true);
+    append(revKey+'_analysis','Análise do cliente — R0'+rev,'client',days,null,undefined,true);
+   }
+   append(key+'_approval','Aprovação do estudo preliminar','approval',0,null,undefined,true);
+   afterStudy=true;chained=false;cursor='';
+  }else{
+   append(key,step.name||'Etapa '+(i+1),'office',mainDays,step,undefined,afterStudy);
+   if(isAnte){
+    const days=Number(p.clientAnalysisDays?.ante)>0?Math.floor(Number(p.clientAnalysisDays.ante)):15;
+    append(key+'_analysis','Análise do cliente — Anteprojeto','client',days,null,undefined,true);
+    append(key+'_approval','Aprovação — Anteprojeto','approval',0,null,undefined,true);
+   }else if(isExecutive&&secondary>0){
+    append(key+'_compat','Compatibilização dos móveis planejados','office',secondary,null,undefined,true);
+   }else if(step.revisionRequested&&secondary>0){
+    append(key+'_revision','Realização de alterações — '+step.name,'office',secondary,null,undefined,true);
+   }
+   if(afterStudy){chained=false;cursor='';}
   }
  }
  return rows;
@@ -52,7 +70,7 @@ function clientTimelineStatusClass(status){
 }
 function clientTimelineHTML(p){
  const rows=clientTimeRows(p), study=p.clientAnalysisDays?.study||7,ante=p.clientAnalysisDays?.ante||15;
- const instructions='Registre as datas reais das apresentações e das devolutivas do cliente. R01, R02, R03, anteprojeto e executivo têm início independente, definido somente quando forem agendados. O prazo de análise é uma referência, não define automaticamente as próximas etapas.';
+ const instructions='Briefing, levantamento e R00 seguem a data inicial do projeto. R01, R02, R03 e as etapas posteriores só recebem datas quando você informar o início desejado de cada uma. Os 7 dias úteis de análise são uma referência: atrasos do cliente não deslocam automaticamente as próximas etapas.';
  let html='<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:6px">Cronograma para o cliente</h3><p class="muted">'+instructions+'</p></div><div class="inline"><button class="primary" type="button" onclick="generateClientTimelinePDF('+p.id+')">Gerar PDF para o cliente</button></div></div>';
  if(!rows.length)return html+'<p class="muted">Primeiro gere o cronograma do projeto para habilitar esta versão.</p></section>';
  html+='<div class="inline client-analysis-controls"><label>Análise do estudo preliminar <input type="number" min="1" max="180" value="'+study+'" onchange="clientSetAnalysisDays('+p.id+',\'study\',this.value)"> dias úteis</label><label>Análise do anteprojeto <input type="number" min="1" max="180" value="'+ante+'" onchange="clientSetAnalysisDays('+p.id+',\'ante\',this.value)"> dias úteis</label></div>';
@@ -69,7 +87,7 @@ function clientSetAnalysisDays(id,type,input){
  const value=Number(input),p=projects.find(x=>x.id===id);
  if(!p)return;
  if(!Number.isInteger(value)||value<1||value>180){alert('Informe de 1 a 180 dias úteis.');render();return}
- if(!confirm('Atualizar o prazo de análise do cliente para '+value+' dias úteis? As datas previstas a partir dessa análise serão recalculadas.')){render();return}
+ if(!confirm('Atualizar o prazo de análise do cliente para '+value+' dias úteis? Somente os prazos de análise já agendados serão recalculados.')){render();return}
  p.clientAnalysisDays={...(p.clientAnalysisDays||{}),[type]:value};save();render();
 }
 function clientEditTimelineDate(id,key,field){
@@ -85,7 +103,7 @@ function clientEditTimelineDate(id,key,field){
  if(value===null){alert('Informe uma data válida em DD/MM/AAAA.');return}
  if(field==='start'&&value&&!businessDay(value)){alert('A data inicial do prazo deve ser um dia útil. Confira os feriados.');return}
  if(value===previous)return;
- if(!confirm('Confirmar a alteração em '+item.name+'? As datas previstas das etapas seguintes poderão mudar.'))return;
+ if(!confirm('Confirmar a alteração em '+item.name+'? As demais revisões e etapas com início independente não serão alteradas.'))return;
  p.clientTimelineDates=p.clientTimelineDates||{};
  p.clientTimelineDates[key]={...(p.clientTimelineDates[key]||{}),[field]:value};
  p.clientTimelineUpdatedAt=new Date().toISOString();save();render();
