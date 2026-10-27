@@ -106,7 +106,13 @@ function clientEditTimelineDate(id,key,field){
  if(!confirm('Confirmar a alteração em '+item.name+'? As demais revisões e etapas com início independente não serão alteradas.'))return;
  p.clientTimelineDates=p.clientTimelineDates||{};
  p.clientTimelineDates[key]={...(p.clientTimelineDates[key]||{}),[field]:value};
- p.clientTimelineUpdatedAt=new Date().toISOString();save();render();
+ p.clientTimelineUpdatedAt=new Date().toISOString();
+ // Um novo início agendado para uma etapa também atualiza o cronograma
+ // interno, sem criar datas para etapas que ainda não foram agendadas.
+ if(field==='start'&&/^step_\d+$/.test(key)&&p.startDate&&Array.isArray(p.steps)&&p.steps.length){
+  buildScheduleForRegistration(p,p.startDate);
+ }
+ save();render();
 }
 function clientPdfFileName(p){
  const name=String(p.clientRegistration?.name||p.client||p.name||'Projeto').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,65);
