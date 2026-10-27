@@ -1,5 +1,5 @@
 /* Cronograma do cliente - dados exclusivos de cada projeto, sem alterar o planejamento interno. */
-const CLIENT_ANALYSIS_DEFAULTS = {study:5,ante:15};
+const CLIENT_ANALYSIS_DEFAULTS = {study:7,ante:15};
 function clientValidDate(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''));}
 function clientNextDay(date){return date?nextBusiness(offsetDay(parseISO(date),1)):'';}
 function clientProjectDates(p){return p.clientTimelineDates||{};}
@@ -51,8 +51,8 @@ function clientTimelineStatusClass(status){
  return '';
 }
 function clientTimelineHTML(p){
- const rows=clientTimeRows(p), study=p.clientAnalysisDays?.study||5,ante=p.clientAnalysisDays?.ante||15;
- const instructions='Registre a data real da entrega, devolutiva ou aprovação. As próximas datas previstas serão recalculadas em dias úteis, considerando os feriados cadastrados. Os prazos internos permanecem separados.';
+ const rows=clientTimeRows(p), study=p.clientAnalysisDays?.study||7,ante=p.clientAnalysisDays?.ante||15;
+ const instructions='Registre as datas reais das apresentações e das devolutivas do cliente. R01, R02, R03, anteprojeto e executivo têm início independente, definido somente quando forem agendados. O prazo de análise é uma referência, não define automaticamente as próximas etapas.';
  let html='<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:6px">Cronograma para o cliente</h3><p class="muted">'+instructions+'</p></div><div class="inline"><button class="primary" type="button" onclick="generateClientTimelinePDF('+p.id+')">Gerar PDF para o cliente</button></div></div>';
  if(!rows.length)return html+'<p class="muted">Primeiro gere o cronograma do projeto para habilitar esta versão.</p></section>';
  html+='<div class="inline client-analysis-controls"><label>Análise do estudo preliminar <input type="number" min="1" max="180" value="'+study+'" onchange="clientSetAnalysisDays('+p.id+',\'study\',this.value)"> dias úteis</label><label>Análise do anteprojeto <input type="number" min="1" max="180" value="'+ante+'" onchange="clientSetAnalysisDays('+p.id+',\'ante\',this.value)"> dias úteis</label></div>';
@@ -61,7 +61,7 @@ function clientTimelineHTML(p){
   const key=JSON.stringify(row.key);
   html+='<tr class="'+(row.kind==='client'?'client-analysis-row':row.kind==='approval'?'client-approval-row':'')+'"><td><strong>'+esc(row.name)+'</strong></td><td>'+((row.days&&row.kind!=='approval'&&row.kind!=='briefing')?row.days+' dias úteis':'—')+'</td><td>'+esc(formatDateBR(row.start)||'—')+'</td><td>'+esc(formatDateBR(row.limit)||'—')+'</td><td>'+esc(formatDateBR(row.actual)||'—')+'</td><td><span class="tag '+clientTimelineStatusClass(row.status)+'">'+esc(row.status)+'</span></td><td class="client-timeline-actions"><button class="secondary" type="button" onclick="clientEditTimelineDate('+p.id+','+key+',\'actual\')">Data real</button><button class="secondary" type="button" onclick="clientEditTimelineDate('+p.id+','+key+',\'start\')">Início</button></td></tr>';
  }
- html+='</tbody></table></div><p class="muted" style="font-size:12px;margin-top:12px">As datas posteriores a aprovações ainda não realizadas são previsões e poderão mudar após a devolutiva. Revisões opcionais aparecem somente quando solicitadas.</p></section>';
+ html+='</tbody></table></div><p class="muted" style="font-size:12px;margin-top:12px">Datas sem agendamento aparecem como A definir. A análise do cliente não agenda automaticamente a próxima revisão ou etapa; use Início para informar cada data.</p></section>';
  return html;
 }
 function clientSetAnalysisDays(id,type,input){
@@ -149,8 +149,8 @@ async function generateClientTimelinePDF(id){
   }
   const observations=[
    'Os prazos são contados em dias úteis, sem sábados, domingos, feriados nacionais, estaduais de São Paulo, municipais de Santos e folgas do escritório cadastradas.',
-   'As próximas datas são previsões, sujeitas à conclusão das etapas e aos prazos de análise e aprovação do cliente.',
-   'A devolutiva do cliente e eventuais alterações poderão exigir a emissão de um cronograma atualizado. As revisões opcionais somente constam quando solicitadas.'
+   'A analise e a aprovacao do cliente nao definem automaticamente as datas das proximas revisoes ou etapas.',
+   'R01, R02, R03, anteprojeto e executivo terao datas somente apos agendamento confirmado pelo escritorio.'
   ];
   y+=9;
   for(const note of observations){
