@@ -10,7 +10,7 @@ function clientTimeRows(p){
  let chained=true;
  function append(key,name,kind,days,stage,forcedStart,independent=false){
   const record=dates[key]||{};
-  const start=clientValidDate(record.start)?record.start:(independent?'':(forcedStart===undefined?(chained?cursor:''):forcedStart));
+  const start=clientValidDate(record.start)?record.start:(forcedStart!==undefined?forcedStart:(independent?'':(chained?cursor:'')));
   const limit=clientValidDate(start)?(days>0?addBusinessDays(start,days-1):start):'';
   const actual=clientValidDate(record.actual)?record.actual:'';
   const internalDone=!!stage?.completed;
@@ -43,7 +43,7 @@ function clientTimeRows(p){
    for(let rev=1;rev<=3;rev++){
     const revKey=key+'_r0'+rev;
     append(revKey,'Estudo preliminar — R0'+rev,'office',revisionDays,null,undefined,true);
-    append(revKey+'_analysis','Análise do cliente — R0'+rev,'client',days,null,undefined,true);
+    append(revKey+'_analysis','Análise do cliente — R0'+rev,'client',days,null,clientNextDay(rows[rows.length-1].limit),true);
    }
    append(key+'_approval','Aprovação do estudo preliminar','approval',0,null,undefined,true);
    afterStudy=true;chained=false;cursor='';
@@ -51,10 +51,10 @@ function clientTimeRows(p){
    append(key,step.name||'Etapa '+(i+1),'office',mainDays,step,undefined,afterStudy);
    if(isAnte){
     const days=Number(p.clientAnalysisDays?.ante)>0?Math.floor(Number(p.clientAnalysisDays.ante)):15;
-    append(key+'_analysis','Análise do cliente — Anteprojeto','client',days,null,undefined,true);
+    append(key+'_analysis','Análise do cliente — Anteprojeto','client',days,null,clientNextDay(rows[rows.length-1].limit),true);
     append(key+'_approval','Aprovação — Anteprojeto','approval',0,null,undefined,true);
    }else if(isExecutive&&secondary>0){
-    append(key+'_compat','Compatibilização dos móveis planejados','office',secondary,null,undefined,true);
+    append(key+'_compat','Compatibilização dos móveis planejados','office',secondary,null,clientNextDay(rows[rows.length-1].limit),true);
    }else if(step.revisionRequested&&secondary>0){
     append(key+'_revision','Realização de alterações — '+step.name,'office',secondary,null,undefined,true);
    }
