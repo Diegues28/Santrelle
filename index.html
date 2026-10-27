@@ -428,7 +428,54 @@ tbody tr:hover{background:#FCFAF8}
 </style><link rel="stylesheet" href="portal-cliente.css"></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos ativos</button><button data-page="concluidos">✓ Projetos concluídos</button><button data-page="postobra">▣ Pós-obra</button><button data-page="portal">◫ Área do Cliente</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
 const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
-let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null,teamSelectedOwner=null,schedulePreviewState=null,archiveQuery='',postWorkSelected=null,postWorkEditing=null,postWorkFilter='abertos';let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');let postWorks=JSON.parse(localStorage.getItem('santrelle_postobra')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees));localStorage.setItem('santrelle_postobra',JSON.stringify(postWorks))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Em andamento'?'active':s==='Concluído'?'good':'waiting')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;teamSelectedOwner=null;postWorkSelected=null;postWorkEditing=null;if(typeof portalProjectId!=="undefined"){portalProjectId=null;portalView="manager";portalFolderId=null}document.body.classList.remove("portal-is-preview");document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
+let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null,teamSelectedOwner=null,schedulePreviewState=null,archiveQuery='',postWorkSelected=null,postWorkEditing=null,postWorkFilter='abertos';let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');let postWorks=JSON.parse(localStorage.getItem('santrelle_postobra')||'[]');const el=document.getElementById('content');
+/* Modelos: autosave no navegador + versões anteriores para recuperação local.
+   Isto NÃO é uma sincronização na nuvem. */
+const SANTRELLE_MODEL_HISTORY_KEY='santrelle_phases_history';
+const SANTRELLE_MODEL_SAVED_KEY='santrelle_phases_saved_at';
+function persistModelTemplates(){
+ const current=JSON.stringify(phases);
+ const previous=localStorage.getItem('santrelle_phases');
+ if(previous===current)return;
+ // Preserva a versão anterior ANTES de escrever a nova, inclusive ao importar.
+ if(previous!==null){
+  try{
+   const old=JSON.parse(previous);
+   if(Array.isArray(old)){
+    let history=JSON.parse(localStorage.getItem(SANTRELLE_MODEL_HISTORY_KEY)||'[]');
+    if(!Array.isArray(history))history=[];
+    if(history[0]?.snapshot!==previous){
+     history.unshift({savedAt:localStorage.getItem(SANTRELLE_MODEL_SAVED_KEY)||new Date().toISOString(),snapshot:previous});
+    }
+    try{localStorage.setItem(SANTRELLE_MODEL_HISTORY_KEY,JSON.stringify(history.slice(0,25)))}
+    catch(err){console.warn('Histórico de modelos não disponível:',err)}
+   }
+  }catch(err){console.warn('Modelo anterior não pôde entrar no histórico:',err)}
+ }
+ localStorage.setItem('santrelle_phases',current);
+ localStorage.setItem(SANTRELLE_MODEL_SAVED_KEY,new Date().toISOString());
+}
+function save(){
+ let error=null;
+ try{persistModelTemplates()}catch(err){error=err;console.error('Falha ao salvar modelos:',err)}
+ const other=[
+  ['santrelle_projects',projects],
+  ['santrelle_deliveries',deliveries],
+  ['santrelle_holidays',extraHolidays],
+  ['santrelle_employees',employees],
+  ['santrelle_postobra',postWorks]
+ ];
+ for(const [key,data] of other){
+  try{localStorage.setItem(key,JSON.stringify(data))}
+  catch(err){if(!error)error=err;console.error('Falha ao salvar',key,err)}
+ }
+ if(error){
+  alert('Não foi possível salvar todos os dados neste navegador. Evite fechar a página e faça um backup dos modelos. Confira o espaço disponível e as permissões de armazenamento do navegador.');
+  return false;
+ }
+ return true;
+}
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Em andamento'?'active':s==='Concluído'?'good':'waiting')+'">'+esc(s)+'</span>'}function go(p){page=p;selected=null;teamSelectedOwner=null;postWorkSelected=null;postWorkEditing=null;if(typeof portalProjectId!=="undefined"){portalProjectId=null;portalView="manager";portalFolderId=null}document.body.classList.remove("portal-is-preview");document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
 
 /* Pós-obra separado do estado do projeto e persistido no navegador. */
 function pwFind(id){return postWorks.find(w=>String(w.id)===String(id))}
