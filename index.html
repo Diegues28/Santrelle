@@ -1111,17 +1111,33 @@ steps.forEach((stage,i)=>{if(!registrationIsCompatibility(stage))return;for(let 
 }
 function updateContractTotal(i){let first=Number(document.getElementById('reg_contract_'+i+'_main')?.value)||0,second=Number(document.getElementById('reg_contract_'+i+'_secondary')?.value)||0;let box=document.getElementById('reg_contract_total_'+i);if(box)box.innerHTML='Total da etapa: <strong>'+Math.max(0,Math.floor(first)+Math.floor(second))+' dias úteis</strong>'}
 function buildScheduleForRegistration(p,start){
- let cursor=nextBusiness(start),previous=new Map((p.schedule||[]).map(s=>[s.name,s]));p.startDate=cursor;p.schedule=[];
- for(let step of p.steps){
-  let parts=registrationContractParts(step),base=registrationContractDays(step),end=addBusinessDays(cursor,parts.main-1),clientDeadline=addBusinessDays(cursor,base-1),before=previous.get(step.name)||{};
-  let revisionRequested=registrationHasOptionalReview(step)&&!!(step.revisionRequested??before.revisionRequested);
-  let reviewDays=revisionRequested?parts.secondary:0;
-  let revisionStart=reviewDays?nextBusiness(offsetDay(parseISO(clientDeadline),1)):null;
-  let revisionDeadline=reviewDays?addBusinessDays(revisionStart,reviewDays-1):null;
-  p.schedule.push({name:step.name,owner:step.owner||before.owner||'Não definido',start:cursor,deadline:end,clientDeadline,days:parts.main,contractualDays:base,contractualParts:parts,clientExtraDays:0,completed:!!before.completed,history:before.history||[],revisionRequested,revisionStart,revisionDeadline,revisionCompleted:revisionRequested?!!before.revisionCompleted:false});
-  cursor=nextBusiness(offsetDay(parseISO(revisionDeadline||clientDeadline),1))
+ let cursor=nextBusiness(start),previous=new Map((p.schedule||[]).map(s=>[s.name,s]));
+ p.startDate=cursor;p.schedule=[];
+ let awaitingClient=false;
+ for(let i=0;i<p.steps.length;i++){
+  const step=p.steps[i],parts=registrationContractParts(step),base=registrationContractDays(step);
+  const norm=String(step.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const isStudy=norm.includes('estudo preliminar');
+  const manual=p.clientTimelineDates?.['step_'+i]?.start;
+  // Depois da primeira apresentação do estudo preliminar, as etapas
+  // não recebem datas automaticamente: dependem de agendamento explícito.
+  const stageStart=awaitingClient?(manual&&businessDay(manual)?manual:''):cursor;
+  const end=stageStart?addBusinessDays(stageStart,parts.main-1):'';
+  const clientDeadline=stageStart?addBusinessDays(stageStart,base-1):'';
+  const before=previous.get(step.name)||{};
+  const revisionRequested=registrationHasOptionalReview(step)&&!!(step.revisionRequested??before.revisionRequested);
+  const reviewDays=revisionRequested?parts.secondary:0;
+  const revisionStart=reviewDays&&clientDeadline?nextBusiness(offsetDay(parseISO(clientDeadline),1)):'';
+  const revisionDeadline=reviewDays&&revisionStart?addBusinessDays(revisionStart,reviewDays-1):'';
+  p.schedule.push({name:step.name,owner:step.owner||before.owner||'Não definido',start:stageStart,deadline:end,clientDeadline,days:parts.main,contractualDays:base,contractualParts:parts,clientExtraDays:0,completed:!!before.completed,history:before.history||[],revisionRequested,revisionStart,revisionDeadline,revisionCompleted:revisionRequested?!!before.revisionCompleted:false});
+  if(isStudy)awaitingClient=true;
+  if(!awaitingClient&&clientDeadline)cursor=nextBusiness(offsetDay(parseISO(revisionDeadline||clientDeadline),1));
  }
- p.officeDate=p.schedule.at(-1)?.deadline||'';p.clientDate=p.schedule.at(-1)?.revisionDeadline||p.schedule.at(-1)?.clientDeadline||'';p.deadline=p.clientDate||'A definir';p.phase=p.schedule.find(s=>!s.completed)?.name||p.schedule[0]?.name||'A definir';p.holidayCalendarVersion=SANTRELLE_HOLIDAY_CALENDAR_VERSION
+ p.officeDate=p.schedule.at(-1)?.deadline||'';
+ p.clientDate=p.schedule.at(-1)?.revisionDeadline||p.schedule.at(-1)?.clientDeadline||'';
+ p.deadline=p.clientDate||'A definir';
+ p.phase=p.schedule.find(s=>!s.completed)?.name||p.schedule[0]?.name||'A definir';
+ p.holidayCalendarVersion=SANTRELLE_HOLIDAY_CALENDAR_VERSION;
 }
 function saveRegistration(event){
 event.preventDefault();let form=document.getElementById('registrationForm');if(form&&!form.reportValidity())return;
@@ -1335,7 +1351,7 @@ function schedulePreviewCalendar(p,draft){
     if(substepDueDate(draft,j,k)===day)signals.push({type:'sub',label:'Subetapa: '+subs[k].name});
    }
   }
-  const within=(draft.schedule||[]).some(step=>day>=step.start&&day<=(step.revisionDeadline||step.clientDeadline||step.deadline));
+  const within=(draft.schedule||[]).some(step=>step.start&&day>=step.start&&day<=(step.revisionDeadline||step.clientDeadline||step.deadline));
   const title=[formatDateBR(day),...(info?[info.name,...info.other]:[]),...signals.map(x=>x.label)].join(' · ');
   const types=[...new Set(signals.map(x=>x.type))];
   inner+='<button type="button" class="sched-mini-day '+(outside?'sched-mini-outside ':'')+(dayOff?'sched-mini-off ':'')+(info?'sched-mini-holiday ':'')+(isSelected?'sched-mini-selected ':'')+(within&&!dayOff?'sched-mini-working ':'')+'" title="'+esc(title)+'" aria-label="'+esc(title)+(isSelected?' · Data selecionada':'')+'" aria-pressed="'+(isSelected?'true':'false')+'" onclick="schedulePreviewChooseDay(\''+day+'\')">'
@@ -1357,7 +1373,7 @@ function schedulePreviewSummary(draft){
   }).join('');
   const parts=registrationContractParts(phase);
   return '<div class="sched-preview-stage"><div class="sched-preview-stage-title"><strong>'+esc(step.name)+'</strong><span>'+registrationContractDays(phase)+' dias úteis</span></div>'
-  +'<div class="sched-preview-dates"><div><span>Início da etapa</span><strong>'+formatDateBR(step.start)+'</strong></div><div><span>Prazo interno</span><strong>'+formatDateBR(step.deadline)+'</strong></div><div><span>Entrega ao cliente</span><strong>'+formatDateBR(step.clientDeadline)+'</strong></div></div>'
+  +'<div class="sched-preview-dates"><div><span>Início da etapa</span><strong>'+(formatDateBR(step.start)||'A definir')+'</strong></div><div><span>Prazo interno</span><strong>'+(formatDateBR(step.deadline)||'A definir')+'</strong></div><div><span>Entrega ao cliente</span><strong>'+(formatDateBR(step.clientDeadline)||'A definir')+'</strong></div></div>'
   +(step.revisionRequested&&step.revisionDeadline?'<div class="sched-preview-review">Revisão solicitada: até <strong>'+formatDateBR(step.revisionDeadline)+'</strong></div>':registrationHasOptionalReview(phase)?'<div class="sched-preview-optional">Revisão opcional: '+parts.secondary+' dias úteis, não incluída.</div>':'')
   +'<div class="sched-preview-subitems">'+subitems+'</div></div>';
  }).join('');
@@ -1376,7 +1392,7 @@ function schedulePreviewHTML(p){
   +'<div><span class="muted">Início efetivo</span><strong>'+formatDateBR(actual)+'</strong></div><div><span class="muted">Última entrega prevista</span><strong>'+formatDateBR(projectEnd)+'</strong></div></div>'
   +(moved?'<div class="sched-preview-notice">A data escolhida ('+formatDateBR(initial)+') é fim de semana ou feriado. O cronograma começa no próximo dia útil: <strong>'+formatDateBR(actual)+'</strong>.</div>':'')
   +'<div class="sched-preview-columns">'+schedulePreviewCalendar(p,draft)+schedulePreviewSummary(draft)+'</div>'
-  +'<div class="sched-preview-footer"><p class="muted">As revisões não solicitadas não entram no cálculo'+(pendingRevisions?' ('+pendingRevisions+' pendente'+(pendingRevisions===1?'':'s')+').':'.')+' Aguardos por aprovação do cliente podem alterar as datas posteriormente.</p>'
+  +'<div class="sched-preview-footer"><p class="muted">As revisões não solicitadas não entram no cálculo'+(pendingRevisions?' ('+pendingRevisions+' pendente'+(pendingRevisions===1?'':'s')+').':'.')+' Após R00, informe o início de cada revisão e etapa no cronograma do cliente; não haverá encadeamento automático.</p>'
   +'<div class="inline"><button class="secondary" type="button" onclick="closeSchedulePreview()">Voltar sem salvar</button><button class="primary" type="button" onclick="confirmSchedulePreview()">Conferi as datas — confirmar cronograma</button></div></div>'
   +'</section></div>';
 }
@@ -1395,7 +1411,7 @@ function confirmSchedulePreview(){
  try{draft=getScheduleDraft(p)}catch(err){alert('Não foi possível calcular o cronograma: '+err.message);return}
  if(!draft||!draft.schedule.length){alert('Defina as etapas antes de confirmar o cronograma.');return}
  const currentCount=p.schedule?.length||0;
- let message='Você conferiu todas as datas deste cronograma?\n\nInício: '+formatDateBR(draft.startDate)+'\nÚltima entrega prevista: '+formatDateBR(draft.clientDate);
+ let message='Você conferiu todas as datas deste cronograma?\n\nInício: '+formatDateBR(draft.startDate)+'\nÚltima entrega prevista: '+(formatDateBR(draft.clientDate)||'A definir');
  if(currentCount)message+='\n\nATENÇÃO: confirmar substituirá as datas do cronograma anterior.';
  message+='\n\nDeseja realmente confirmar e salvar?';
  if(!confirm(message))return;
