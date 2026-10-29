@@ -347,22 +347,6 @@ window.calendarEntries=function(){
  }
  return entries;
 };
-// Em projetos com revisões independentes, mostra cada uma e a data real
-// sem substituir a estrutura interna das subetapas.
-const previousDetail=window.detail;
-window.detail=function(){
- previousDetail();
- const p=selected;if(!p?.schedule?.length)return;
- const idx=studyAt(p),study=idx>=0?p.schedule[idx]:null;
- if(!study)return;
- const rows=(study.revisions||[]).map(r=>
-  '<div class="flex-detail-row"><strong>'+safe(r.code)+'</strong><span>Início: '+fmt(r.start)+'</span>'
-  +'<span>Entrega: '+fmt(r.deadline)+'</span>'
-  +'<span class="tag '+(r.completed?'good':'')+'">'+(r.completed?'Concluída':r.start?'Agendada':'Aguardando cliente')+'</span></div>').join('');
- const box='<section class="panel flex-detail"><div class="calendar-head"><div><h3>Revisões do estudo preliminar</h3>'
- +'<p class="muted">A R00 é automática. Cada revisão seguinte só aparece na agenda quando você indicar a data desejada de início.</p></div>'
- +'<button class="secondary" onclick="createSchedule('+p.id+')">Definir datas das revisões</button></div>'
- +(rows||'<p class="muted">Gere o cronograma flexível para configurar R01, R02 e R03.</p>')+'</section>';
- el.insertAdjacentHTML('beforeend',box);
-};
+// As revisões continuam no cronograma do cliente e no planejamento interno.
+// Não anexar um bloco avulso à página inicial do painel do projeto.
 })();
