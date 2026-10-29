@@ -49,3 +49,9 @@
 @media(max-width:1100px){.project-hub-grid{grid-template-columns:minmax(240px,1.4fr) minmax(170px,1fr)}.project-hub-actions{grid-column:1/-1}.project-hub-actions-inner{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:none}.project-hub-actions-inner .project-hub-link{min-height:72px}}
 @media(max-width:700px){.project-hub-shell{padding:14px;border-radius:14px}.project-hub-grid{grid-template-columns:1fr;gap:15px}.project-hub-identity{padding:17px}.project-hub-nav,.project-hub-actions-inner{grid-template-columns:1fr 1fr;grid-template-rows:none;gap:8px}.project-hub-actions{grid-column:auto}.project-hub-link{font-size:13px;min-height:65px;padding:12px}.project-hub-nav .project-hub-link:last-child{grid-column:1/-1}.project-hub-actions-inner .project-hub-link:last-child{grid-column:1/-1}.project-document-panel{padding:12px}.project-document-frame{height:67vh;min-height:430px}.project-hub-deadlines{gap:7px}.project-hub-deadline{padding:12px}.project-hub-footer button{width:100%}}
 @media(max-width:380px){.project-hub-nav,.project-hub-actions-inner{grid-template-columns:1fr}.project-hub-nav .project-hub-link:last-child,.project-hub-actions-inner .project-hub-link:last-child{grid-column:auto}.project-hub-deadlines{grid-template-columns:1fr}}
+
+/* A exclusão fica separada das ações rotineiras e exige confirmação. */
+.project-hub-footer-actions{display:flex;gap:9px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.project-hub-delete-btn{color:#985F55!important;border-color:#E4C7BE!important;background:#FFFAF8!important}
+.project-hub-delete-btn:hover{background:#F7E9E4!important}
+@media(max-width:700px){.project-hub-footer-actions{width:100%;display:grid;grid-template-columns:1fr}.project-hub-footer-actions button{width:100%}}
