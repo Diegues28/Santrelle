@@ -335,7 +335,7 @@ const previousCalendarEntries=window.calendarEntries;
 window.calendarEntries=function(){
  let entries=previousCalendarEntries();
  for(const p of projects){
-  const i=studyAt(p),s=p.schedule?.[i];if(!s?.revisions)return;
+  const i=studyAt(p),s=p.schedule?.[i];if(!Array.isArray(s?.revisions))continue;
   entries=entries.filter(e=>e.id!=='r'+p.id+'_'+i);
   for(const r of s.revisions){
    if(!validDate(r.deadline))continue;
