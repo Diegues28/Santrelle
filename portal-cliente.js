@@ -449,7 +449,7 @@ function portalManagerDocs(cfg){
 function portalManagerProject(project,cfg){
  const visible=portalReleasedDocumentCount(cfg),upcoming=portalUpcoming(cfg).length;
  const releases=cfg.stages.filter(s=>s.released).length;
- return '<div class="client-portal-admin"><section class="panel"><div class="client-portal-header-actions"><button class="secondary" onclick="portalBack()">← Todos os projetos</button><button class="primary" onclick="portalOpenPreview('+portalSafeAction(project.id)+')">Ver como cliente ↗</button></div>'
+ return '<div class="client-portal-admin"><section class="panel"><div class="client-portal-header-actions"><button class="secondary" onclick="openProject('+portalSafeAction(project.id)+')">← Painel do projeto</button><button class="secondary" onclick="portalBack()">Todos os projetos</button><button class="primary" onclick="portalOpenPreview('+portalSafeAction(project.id)+')">Ver como cliente ↗</button></div>'
   +'<div class="client-portal-head"><div><span class="client-portal-eyebrow">GERENCIAMENTO INTERNO · PRÉVIA</span><h2>'+esc(project.name||'Projeto')+'</h2>'
   +'<p class="muted">'+esc(project.clientRegistration?.name||project.client||'Cliente')+' · Libere as etapas no momento adequado, mantendo documentos e prazos internos protegidos.</p></div>'
   +'<div class="client-portal-meta-count"><strong>'+releases+'/'+cfg.stages.length+'</strong><span>Etapas liberadas</span><strong>'+visible+'</strong><span>Documentos visíveis</span>'
