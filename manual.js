@@ -41,8 +41,8 @@ async function refreshManualTemplateStatus(){
   if(!document.getElementById("manualTemplateStatus"))return;
   try{
     const model=await manualTemplateGet();
-    manualStatus(model?"Modelo PDF configurado neste navegador. Pronto para gerar o manual.":"Importe o modelo PDF uma única vez neste navegador para preservar o visual original.");
-  }catch(e){manualStatus("Nao foi possivel consultar o modelo: "+e.message,true)}
+    manualStatus(model?"Modelo de 16 páginas encontrado neste navegador. Pronto para gerar o manual.":"Nenhum modelo salvo neste navegador. Selecione o Manual do Projeto de 16 páginas. Modelos enviados em outro aparelho ou no ChatGPT não aparecem automaticamente aqui.");
+  }catch(e){manualStatus("O navegador não permitiu consultar o modelo salvo. Você ainda pode selecionar um PDF de 16 páginas para gerar o manual: "+e.message,true)}
 }
 async function loadManualScript(url,test){
   if(test())return;
@@ -211,32 +211,86 @@ async function manualRenderPdf(project,blob){
 }
 async function generateManualPdf(id){
  const p=projects.find(x=>x.id===id);
- if(!p)return alert("Projeto nao encontrado.");
+ if(!p)return alert("Projeto não encontrado.");
  if(manualProcessing)return;
+ let model=null,storageError=null;
+ try{model=await manualTemplateGet()}
+ catch(e){storageError=e;console.warn("Não foi possível consultar o modelo local:",e)}
+ if(!model){
+  manualStatus(storageError
+   ?"O navegador não conseguiu acessar o modelo salvo. Selecione o PDF de 16 páginas para gerar o manual nesta sessão."
+   :"Este navegador ainda não possui o modelo. Selecione o Manual do Projeto de 16 páginas. O arquivo não é sincronizado entre dispositivos.",!!storageError);
+  const picker=document.getElementById("manualTemplateInput");
+  if(picker)picker.click();
+  else alert("Não encontrei a opção de selecionar o modelo do manual. Atualize a página.");
+  return;
+ }
+ manualProcessing=true;
  try{
-   let model=await manualTemplateGet();
-   if(!model){manualStatus("Primeiro importe o PDF modelo. O arquivo fica guardado neste navegador.");document.getElementById("manualTemplateInput")?.click();return}
-   manualProcessing=true;manualStatus("Preparando o manual do cliente...");
-   await manualRenderPdf(p,model);
- }catch(e){console.error(e);manualStatus("Erro ao gerar manual: "+e.message,true);alert("Nao foi possivel gerar o manual: "+e.message)}
- finally{manualProcessing=false}
+  manualStatus("Preparando o manual do cliente...");
+  await manualRenderPdf(p,model);
+ }catch(e){
+  console.error("Erro ao gerar manual:",e);
+  let message=e.message||"Falha ao preparar o PDF.";
+  if(/16 p[aá]ginas|16 paginas/i.test(message))message+=" Use 'Importar/atualizar modelo PDF' para substituir o arquivo incorreto.";
+  manualStatus("Erro ao gerar manual: "+message,true);
+  alert("Não foi possível gerar o manual: "+message);
+ }finally{manualProcessing=false}
 }
 async function importManualTemplate(event,id){
- const file=event.target.files?.[0];event.target.value="";
+ const input=event?.target;
+ const file=input?.files?.[0];
+ if(input)input.value="";
  if(!file)return;
- if(!/\.pdf$/i.test(file.name)){alert("Selecione um arquivo PDF.");return}
- if(file.size>20000000){alert("O modelo e muito grande (limite de 20 MB).");return}
+ if(!/\.pdf$/i.test(file.name)){
+  manualStatus("Selecione um arquivo com extensão PDF.",true);
+  alert("Selecione um arquivo PDF.");return;
+ }
+ if(file.size>20000000){
+  manualStatus("Este arquivo ultrapassa o limite de 20 MB. O modelo original de 16 páginas é menor.",true);
+  alert("O modelo é muito grande (limite de 20 MB).");return;
+ }
  if(manualProcessing)return;
- manualStatus("Validando e guardando o modelo PDF...");
+ const project=projects.find(x=>x.id===id);
+ if(!project){alert("Projeto não encontrado.");return}
+ manualProcessing=true;
+ manualStatus("Verificando o arquivo "+file.name+"...");
+ let template=null,stored=false;
  try{
-   await loadManualLibraries();
-   const b=await file.arrayBuffer(),pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(b.slice(0))}).promise;
-   let pages=pdf.numPages;await pdf.destroy();
-   if(pages!==16)throw new Error("O arquivo selecionado tem "+pages+" paginas, mas o modelo possui 16.");
-   await manualTemplatePut(new Blob([b],{type:"application/pdf"}));
-   manualStatus("Modelo importado com sucesso! Gerando o manual...");
-   await generateManualPdf(id);
- }catch(e){manualStatus("Nao foi possivel importar o modelo: "+e.message,true);alert(e.message)}
+  await loadManualLibraries();
+  const bytes=await file.arrayBuffer();
+  try{
+   template=await window.pdfjsLib.getDocument({data:new Uint8Array(bytes.slice(0))}).promise;
+  }catch(e){
+   const issue=e?.name==="PasswordException"?"O arquivo está protegido por senha.":"Não foi possível ler o PDF. Ele pode estar corrompido ou protegido.";
+   throw new Error(issue+" Detalhes: "+(e.message||"arquivo inválido"));
+  }
+  const pages=template.numPages;
+  await template.destroy();template=null;
+  if(pages!==16){
+   throw new Error("O arquivo '"+file.name+"' tem "+pages+" páginas, mas este gerador utiliza o Manual do Projeto original de 16 páginas. Não selecione o Manual do Proprietário de 34 páginas nem o arquivo que junta manual e cronograma.");
+  }
+  const blob=new Blob([bytes],{type:"application/pdf"});
+  try{
+   await manualTemplatePut(blob);
+   stored=true;
+  }catch(e){
+   console.warn("PDF validado, mas o armazenamento local não está disponível:",e);
+  }
+  manualStatus(stored
+   ?"Modelo válido de 16 páginas salvo neste navegador. Gerando o manual..."
+   :"Modelo válido de 16 páginas. Este navegador não permitiu guardar o arquivo, mas vou gerar o manual agora...");
+  await manualRenderPdf(project,blob);
+  if(!stored)manualStatus("Manual gerado! O modelo não pôde ser salvo neste navegador. Você precisará selecioná-lo novamente na próxima vez.",true);
+ }catch(e){
+  console.error("Erro ao importar o modelo:",e);
+  const message=e.message||"Não foi possível validar o arquivo.";
+  manualStatus("Não foi possível usar o PDF: "+message,true);
+  alert("Não foi possível usar esse PDF.\n\n"+message+"\n\nO modelo anterior salvo no navegador, se existir, não foi substituído.");
+ }finally{
+  if(template)try{await template.destroy()}catch(e){}
+  manualProcessing=false;
+ }
 }
 async function maybeAutoGenerateManual(id){
  try{
