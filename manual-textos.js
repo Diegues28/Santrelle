@@ -24,7 +24,19 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "Aqui teremos uma reunião com vocês e os demais usuários do espaço para conhecê-los, entender as necessidades e expectativas de cada um, os gostos, as prioridades, seu orçamento e todas as informações relevantes ao projeto.\nConsideramos essa a fase de maior importância para o projeto, pois somente com ela conseguiremos fazer espaços que sejam desenvolvidos única e exclusivamente pra vocês, por isso é imprescindível que todos os envolvidos estejam presentes nessa reunião, para que o projeto seja o mais assertivo possível, pois cada pessoa tem necessidades e estilos diferentes, e queremos que seu lar fique do agrado de todos.\n *O ideal é que reservem 1 a 3 horas para tal reunião, pois a mesma precisa ser bem detalhada e em alguns casos pode durar até mais.\n Para essa reunião vocês precisarão levar referencias visuais daquilo que gostam para cada ambiente (ou daquilo que não gostam também). Pedimos que leve o máximo possivel de referencias, indicamos que use o App Pinterest para facilitar sua busca"
+        "text": "Aqui teremos uma reunião com vocês e os demais usuários do espaço para conhecê-los, entender as necessidades e expectativas de cada um, os gostos, as prioridades, seu orçamento e todas as informações relevantes ao projeto."
+      },
+      {
+        "type": "paragraph",
+        "text": "Consideramos essa a fase de maior importância para o projeto, pois somente com ela conseguiremos fazer espaços que sejam desenvolvidos única e exclusivamente pra vocês, por isso é imprescindível que todos os envolvidos estejam presentes nessa reunião, para que o projeto seja o mais assertivo possível, pois cada pessoa tem necessidades e estilos diferentes, e queremos que seu lar fique do agrado de todos."
+      },
+      {
+        "type": "paragraph",
+        "text": "*O ideal é que reservem 1 a 3 horas para tal reunião, pois a mesma precisa ser bem detalhada e em alguns casos pode durar até mais."
+      },
+      {
+        "type": "paragraph",
+        "text": "Para essa reunião vocês precisarão levar referencias visuais daquilo que gostam para cada ambiente (ou daquilo que não gostam também). Pedimos que leve o máximo possivel de referencias, indicamos que use o App Pinterest para facilitar sua busca"
       }
     ]
   },
@@ -33,7 +45,19 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "Nesse momento fazemos uma visita ao local onde será executado o projeto, para conferir todas as medidas e materiais existentes, verificar as possibilidades do espaço, o que pode ou não ser aproveitado e entender as limitações.\n Essa visita acontece exclusivamente após a reunião de briefing, para melhor andamento do projeto. Se vocês tiverem qualquer projeto ou plantas do espaço, pedimos que os envie a nossa equipe logo após a assinatura do contrato, ajudará bastante nessa etapa.\n **Vocês não precisarão necessariamente estar presentes ou acompanhar a medição, pois a depender do tamanho do espaço e quantidades de informações a serem levantadas, essa visita pode durar de 2 a 6 horas podendo ser feito em dois dias e as profissionais precisam estar bem concentrados nas medições e anotações para que não haja falhas de levantamento, que podem vir a trazer problemas futuros ao projeto.\nAPÓS FINALIZADO O BRIEFING E OS DIAS DESTINADOS AO LEVANTAMENTO, DAREMOS INICIO AO PROJETO, INICIANDO ASSIM A CONTAGEM DO PRAZO."
+        "text": "Nesse momento fazemos uma visita ao local onde será executado o projeto, para conferir todas as medidas e materiais existentes, verificar as possibilidades do espaço, o que pode ou não ser aproveitado e entender as limitações."
+      },
+      {
+        "type": "paragraph",
+        "text": "Essa visita acontece exclusivamente após a reunião de briefing, para melhor andamento do projeto. Se vocês tiverem qualquer projeto ou plantas do espaço, pedimos que os envie a nossa equipe logo após a assinatura do contrato, ajudará bastante nessa etapa."
+      },
+      {
+        "type": "paragraph",
+        "text": "**Vocês não precisarão necessariamente estar presentes ou acompanhar a medição, pois a depender do tamanho do espaço e quantidades de informações a serem levantadas, essa visita pode durar de 2 a 6 horas podendo ser feito em dois dias e as profissionais precisam estar bem concentrados nas medições e anotações para que não haja falhas de levantamento, que podem vir a trazer problemas futuros ao projeto."
+      },
+      {
+        "type": "paragraph",
+        "text": "APÓS FINALIZADO O BRIEFING E OS DIAS DESTINADOS AO LEVANTAMENTO, DAREMOS INICIO AO PROJETO, INICIANDO ASSIM A CONTAGEM DO PRAZO."
       }
     ]
   },
@@ -42,7 +66,23 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "Em caso de alterações, realizaremos as revisões previstas em contrato e informaremos as novas datas no cronograma atualizado. O Estudo Preliminar prevê até três revisões (R01, R02 e R03), quando solicitadas. Cada revisão será agendada conforme a devolutiva e a disponibilidade da equipe."
+        "text": "Começamos o projeto entendendo como o espaço funcionará, onde estarão posicionados os móveis, quais serão suas dimensões, os espaços entre eles, etc."
+      },
+      {
+        "type": "paragraph",
+        "text": "Para tal, elaboramos uma planta de layout (vista de cima) e um modelo 3D com o melhor posicionamento de todo o mobiliário, bem como das paredes a demolir ou demais alterações da infraestrutura dos espaços."
+      },
+      {
+        "type": "paragraph",
+        "text": "Vocês conseguirão ver todos os detalhes do projeto em imagens, reproduzidas como se fossem fotos do espaço já construído. Essa é a fase para analisar tudo que gostam e o que não gostam e nos passar tudo que será preciso modificar, se houver necessidade."
+      },
+      {
+        "type": "paragraph",
+        "text": "Apresentamos essa etapa em reunião presencial, em seguida enviaremos a apresentação via e-mail para poderem analisar. A aprovação da etapa será feita através da assinatura digital de um documento que será anexado ao contrato e a partir de então inciamos a contagem do prazo da próxima etapa."
+      },
+      {
+        "type": "paragraph",
+        "text": "Em caso de alterações, as revisões previstas em contrato serão agendadas e informadas no cronograma atualizado. O Estudo Preliminar permite até três revisões (R01, R02 e R03), quando solicitadas. Cada revisão terá início definido conforme a devolutiva do cliente e a disponibilidade da equipe."
       }
     ]
   },
@@ -60,7 +100,27 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "A partir de agora o projeto já não demanda mais da sua atenção, essa é uma fase interna, onde desenvolvemos todas as plantas e detalhamentos necessários para ser entregue à equipe de obra para sua correta execução. Esse material contém todas as informações técnicas, medidas, especificações de materiais, enfim, tudo que for necessário para facilitar o entendimento da equipe de execução. No fim desta etapa apresentamos todo projeto para vocês. ** Essa fase só é iniciada após aprovação completa do Anteprojeto e quando todos os materiais e equipamentos estiverem devidamente escolhidos e aprovados com vocês, não há como iniciá-la antes disso.\n M O D I F I C A Ç Õ ES\n Após reuníão de Apresentação do Projeto Executivo não poderá acontecer modificações, já que o projeto foi todo definido e será apenas detalhado para execução, caso haja modificações, as mesmas terão um custo e serão combinadas através de aditivo de projeto, também com novo prazo de entrega.\nENTREGA\nO Projeto Executivo completo será entregue exclusivamente por meio digital no final da Obra, pois qualquer alteração que acontecer in-loco será atualizado por nós antes desta entrega. A impressão\n PRAZO: das vias necessárias para obra serão feitas pelo escritório e levado para o local por nossa Coordenadora de Obras."
+        "text": "A partir de agora o projeto já não demanda mais da sua atenção, essa é uma fase interna, onde desenvolvemos todas as plantas e detalhamentos necessários para ser entregue à equipe de obra para sua correta execução. Esse material contém todas as informações técnicas, medidas, especificações de materiais, enfim, tudo que for necessário para facilitar o entendimento da equipe de execução. No fim desta etapa apresentamos todo projeto para vocês. ** Essa fase só é iniciada após aprovação completa do Anteprojeto e quando todos os materiais e equipamentos estiverem devidamente escolhidos e aprovados com vocês, não há como iniciá-la antes disso."
+      },
+      {
+        "type": "paragraph",
+        "text": "M O D I F I C A Ç Õ ES"
+      },
+      {
+        "type": "paragraph",
+        "text": "Após reuníão de Apresentação do Projeto Executivo não poderá acontecer modificações, já que o projeto foi todo definido e será apenas detalhado para execução, caso haja modificações, as mesmas terão um custo e serão combinadas através de aditivo de projeto, também com novo prazo de entrega."
+      },
+      {
+        "type": "paragraph",
+        "text": "ENTREGA"
+      },
+      {
+        "type": "paragraph",
+        "text": "O Projeto Executivo completo será entregue exclusivamente por meio digital no final da Obra, pois qualquer alteração que acontecer in-loco será atualizado por nós antes desta entrega. A impressão"
+      },
+      {
+        "type": "paragraph",
+        "text": "das vias necessárias para obra serão feitas pelo escritório e levado para o local por nossa Coordenadora de Obras."
       }
     ]
   },
@@ -69,7 +129,11 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "Nesta etapa é desenvolvido todo o planejamento de obra, organizamos tudo para termos uma boa gestão antes da obra iniciar. Elaboramos todo de cronograma, informando duração da obra e todos os acontecimentos diários. Agendamos todos os serviços a serem prestados, entregas de materiais, tudo compatibilizado com nosso cronograma. Aqui também é feito Cronograma de Compras com data de compra dos produtos e serviços que serão adquiridos durante a obra, considerando prazo de entrega e demanda da obra. Faremos também todos os tramites para atender as exigência do condomínio para a obra.\n Com tudo isso bem definido, conseguimos ter uma gestão de obra tranquila e que funciona."
+        "text": "Nesta etapa é desenvolvido todo o planejamento de obra, organizamos tudo para termos uma boa gestão antes da obra iniciar. Elaboramos todo de cronograma, informando duração da obra e todos os acontecimentos diários. Agendamos todos os serviços a serem prestados, entregas de materiais, tudo compatibilizado com nosso cronograma. Aqui também é feito Cronograma de Compras com data de compra dos produtos e serviços que serão adquiridos durante a obra, considerando prazo de entrega e demanda da obra. Faremos também todos os tramites para atender as exigência do condomínio para a obra."
+      },
+      {
+        "type": "paragraph",
+        "text": "Com tudo isso bem definido, conseguimos ter uma gestão de obra tranquila e que funciona."
       }
     ]
   },
@@ -115,7 +179,23 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "Após a finalização da obra, a empresa especializada em limpeza pós obras utilizará de equipamentos e produtos específicos para realizar a remoção de toda sujidade dos materiais que foram utilizados durante obra.\n Após a limpeza finalizada teremos o dia da produção que será realizado pela Michele Santos, onde ira ser preparado o imóvel com auxílio de empresas parceiras, dispondo de toda decoração nos ambientes, roupas de cama, tapetes e caso tenham peças do acervo privado que queiram ter como decoração, serão dispostas neste dia também.\n Quando esta parte da decoração for finalizada, é a vez do fotógrado parceiro ao escritório ir ao imóvel para fotografar os ambientes.\n Este é o momento que está tudo pronto e preparado para vocês começarem a habitar o imovel."
+        "text": "Após a finalização da obra, a empresa especializada em limpeza pós obras utilizará de equipamentos e produtos específicos para realizar a remoção de toda sujidade dos materiais que foram utilizados durante obra."
+      },
+      {
+        "type": "paragraph",
+        "text": "Após a limpeza finalizada teremos o dia da produção que será realizado pela Michele Santos, onde ira ser preparado o imóvel com auxílio de empresas parceiras, dispondo de toda decoração nos ambientes, roupas de cama, tapetes e caso tenham peças do acervo privado que queiram ter como decoração, serão dispostas neste dia também."
+      },
+      {
+        "type": "paragraph",
+        "text": "Quando esta parte da decoração for finalizada, é a vez do fotógrado parceiro ao escritório ir ao imóvel para fotografar os ambientes."
+      },
+      {
+        "type": "paragraph",
+        "text": "Este é o momento que está tudo pronto e preparado para vocês começarem a habitar o imovel."
+      },
+      {
+        "type": "paragraph",
+        "text": "01 dia útil"
       }
     ]
   },
@@ -211,7 +291,15 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "Pedimos que aguardem até a Etapa de Anteprojeto para adquirirem qualquer produtos, pois é muito importate a compatibilização que acontece nesta etapa.\nNão compre móveis ou quaisquer produtos sem a definição do projeto.\n contato@santrelle.com.br"
+        "text": "Pedimos que aguardem até a Etapa de Anteprojeto para adquirirem qualquer produtos, pois é muito importate a compatibilização que acontece nesta etapa."
+      },
+      {
+        "type": "paragraph",
+        "text": "Não compre móveis ou quaisquer produtos sem a definição do projeto."
+      },
+      {
+        "type": "paragraph",
+        "text": "contato@santrelle.com.br"
       }
     ]
   },
@@ -220,7 +308,11 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "Como descrito nas etapas, durante o processo de projeto teremos algumas reuniões, todas no próprio escritório ou online, você define como prefere.\nTodas as reuniões tem previsão de até 2 hora de duração, com exceção da reunião de Briefing, que pode durar até 3 horas, portanto prepare sua agenda para elas e para não perder informações. Caso não seja possível comparecer a uma reunião agendada pedimos por gentileza que avise com no mínimo 2 horas de antecedência. Pedimos a gentileza também que não se atrasem, pois em alguns momentos precisamos agendar várias reuniões ou outros compromissos seguidos, o que nos impossibilita que extrapolar o horário e em menos tempo talvez não seja possível definir tudo que precisamos. Por esse motivo nos reservamos no direito de, caso o atraso seja superior a 30 minutos, cancelar automaticamente as reuniões sem aviso prévio. Sabemos que contratempos podem ocorrer, fiquem tranquilos, apenas nos avisem!"
+        "text": "Como descrito nas etapas, durante o processo de projeto teremos algumas reuniões, todas no próprio escritório ou online, você define como prefere."
+      },
+      {
+        "type": "paragraph",
+        "text": "Todas as reuniões tem previsão de até 2 hora de duração, com exceção da reunião de Briefing, que pode durar até 3 horas, portanto prepare sua agenda para elas e para não perder informações. Caso não seja possível comparecer a uma reunião agendada pedimos por gentileza que avise com no mínimo 2 horas de antecedência. Pedimos a gentileza também que não se atrasem, pois em alguns momentos precisamos agendar várias reuniões ou outros compromissos seguidos, o que nos impossibilita que extrapolar o horário e em menos tempo talvez não seja possível definir tudo que precisamos. Por esse motivo nos reservamos no direito de, caso o atraso seja superior a 30 minutos, cancelar automaticamente as reuniões sem aviso prévio. Sabemos que contratempos podem ocorrer, fiquem tranquilos, apenas nos avisem!"
       }
     ]
   },
