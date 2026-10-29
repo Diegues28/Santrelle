@@ -68,7 +68,8 @@ function projectDashboardOverview(project){
  +projectDashboardLink(archive?"Reabrir projeto":"Arquivar projeto",(archive?"reopenProject":"archiveProject")+"("+pid+")","project-hub-link-danger")
  +'</div></nav></div>'
  +'<div class="project-hub-footer"><p>Os documentos ficam em telas próprias. O cronograma do cliente pode ser atualizado conforme as devolutivas; as subetapas e os prazos de trabalho são controlados separadamente.</p>'
- +'<button type="button" class="secondary" onclick="projectDashboardNavigate(\'interno\')">Planejamento interno do escritório ›</button></div>'
+ +'<div class="project-hub-footer-actions"><button type="button" class="secondary" onclick="projectDashboardNavigate(\'interno\')">Planejamento interno do escritório ›</button>'
+ +'<button type="button" class="secondary project-hub-delete-btn" onclick="deleteProject('+pid+')">Excluir projeto definitivamente</button></div></div>'
  +'</div></div>';
 }
 function projectDashboardSubHeader(project,title,hint){
