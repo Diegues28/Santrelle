@@ -426,7 +426,8 @@ tbody tr:hover{background:#FCFAF8}
 @media(max-width:600px){.flex-item-top{align-items:flex-start;flex-direction:column;gap:4px}.flex-detail-row{flex-direction:column;align-items:flex-start}}
 
 </style><link rel="stylesheet" href="portal-cliente.css"><link rel="stylesheet" href="projeto-painel.css"></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos ativos</button><button data-page="concluidos">✓ Projetos concluídos</button><button data-page="postobra">▣ Pós-obra</button><button data-page="portal">◫ Área do Cliente</button><button data-page="equipe">♙ Equipe</button><button data-page="modelos">⚙ Etapas e modelos</button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div><div class="note">Protótipo demonstrativo: os dados desta versão são exemplos e ficam somente neste navegador. Ainda não há conexão com Supabase nem autenticação.</div></main><script>
-const seed=[{id:1,name:'Residência Jardim',client:'Cliente exemplo A',owner:'Ana',status:'Em andamento',phase:'Anteprojeto',deadline:'2026-11-12'},{id:2,name:'Apartamento Praia',client:'Cliente exemplo B',owner:'Joyce',status:'Atrasado',phase:'Briefing',deadline:'2026-10-19'},{id:3,name:'Loja Conceito',client:'Cliente exemplo C',owner:'Leonardo',status:'Aguardando aprovação',phase:'Projeto executivo',deadline:'2026-11-02'}];
+// Novas instalações começam sem projetos demonstrativos; projetos existentes no navegador permanecem intactos.
+const seed=[];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
 let projects=JSON.parse(localStorage.getItem('santrelle_projects')||'null')||seed;let phases=JSON.parse(localStorage.getItem('santrelle_phases')||'null')||initial;let page='painel',filter='Todos',selected=null,registrationEditId=null,teamSelectedOwner=null,schedulePreviewState=null,archiveQuery='',postWorkSelected=null,postWorkEditing=null,postWorkFilter='abertos';let calendarMonth=new Date().getMonth(),calendarYear=new Date().getFullYear(),calendarOwner='Todos',expandedDay=null;let employees=JSON.parse(localStorage.getItem('santrelle_employees')||'null')||[{name:'Ana'},{name:'Joyce'},{name:'Leonardo'}];let deliveries=JSON.parse(localStorage.getItem('santrelle_deliveries')||'[]');let extraHolidays=JSON.parse(localStorage.getItem('santrelle_holidays')||'[]');let postWorks=JSON.parse(localStorage.getItem('santrelle_postobra')||'[]');const el=document.getElementById('content');function save(){localStorage.setItem('santrelle_projects',JSON.stringify(projects));localStorage.setItem('santrelle_phases',JSON.stringify(phases));localStorage.setItem('santrelle_deliveries',JSON.stringify(deliveries));localStorage.setItem('santrelle_holidays',JSON.stringify(extraHolidays));localStorage.setItem('santrelle_employees',JSON.stringify(employees));localStorage.setItem('santrelle_postobra',JSON.stringify(postWorks))}function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function tag(s){return '<span class="tag '+(s==='Atrasado'?'late':s==='Em andamento'?'active':s==='Concluído'?'good':'waiting')+'">'+esc(s)+'</span>'}function go(p){if(typeof projectDashboardReset==='function')projectDashboardReset();page=p;selected=null;teamSelectedOwner=null;postWorkSelected=null;postWorkEditing=null;if(typeof portalProjectId!=="undefined"){portalProjectId=null;portalView="manager";portalFolderId=null}document.body.classList.remove("portal-is-preview");document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
 
@@ -665,6 +666,66 @@ function reopenProject(id){
  const next=p.schedule?.find(s=>!s.completed);
  if(next)p.phase=next.name;
  save();render();
+}
+/* Exclusão deliberada de projetos de teste, sem alterar modelos globais.
+   Remove referências locais do mesmo projeto; nunca apaga outros projetos. */
+async function deleteProject(id){
+ const p=projects.find(x=>String(x.id)===String(id));
+ if(!p)return;
+ const name=String(p.clientRegistration?.name||p.client||p.name||'Projeto');
+ const relatedDeliveries=deliveries.filter(x=>String(x.projectId)===String(p.id));
+ const relatedWorks=postWorks.filter(x=>String(x.projectId)===String(p.id));
+ const issues=relatedWorks.reduce((n,w)=>n+(w.items||[]).length,0);
+ const scope='Ficha cadastral, cronograma, subetapas, histórico e dados do portal deste projeto'
+  +(relatedDeliveries.length?', '+relatedDeliveries.length+' entrega(s) vinculada(s)':'')
+  +(relatedWorks.length?', '+relatedWorks.length+' acompanhamento(s) de pós-obra com '+issues+' pendência(s)':'');
+ if(!confirm('Excluir DEFINITIVAMENTE o projeto de "'+name+'"?\n\nSerão apagados deste navegador:\n'+scope+'.\n\nEsta ação NÃO pode ser desfeita e não é o mesmo que arquivar.\n\nOs modelos padrão de Etapas e Subetapas dos demais projetos serão mantidos.'))return;
+ const answer=prompt('Para confirmar a exclusão definitiva de "'+name+'", digite EXCLUIR em letras maiúsculas:');
+ if(answer!=='EXCLUIR'){
+  if(answer!==null)alert('Exclusão cancelada. Nenhum projeto foi apagado.');
+  return;
+ }
+ // Registra cópias para poder restaurar a sessão caso a gravação falhe.
+ const oldProjects=projects,oldDeliveries=deliveries,oldPostWorks=postWorks;
+ const portalKey=String(p.id);
+ const hasPortal=typeof portalPreviewData!=='undefined'&&Object.prototype.hasOwnProperty.call(portalPreviewData,portalKey);
+ const oldPortal=hasPortal?portalPreviewData[portalKey]:undefined;
+ try{
+  projects=projects.filter(x=>String(x.id)!==String(p.id));
+  deliveries=deliveries.filter(x=>String(x.projectId)!==String(p.id));
+  postWorks=postWorks.filter(x=>String(x.projectId)!==String(p.id));
+  save();
+  if(hasPortal){
+   delete portalPreviewData[portalKey];
+   if(typeof portalSave==='function'&&portalSave()===false)
+    throw new Error('Não foi possível atualizar o registro da área do cliente.');
+  }
+ }catch(err){
+  projects=oldProjects;deliveries=oldDeliveries;postWorks=oldPostWorks;
+  if(hasPortal)portalPreviewData[portalKey]=oldPortal;
+  try{save();if(hasPortal&&typeof portalSave==='function')portalSave()}catch(recoveryError){console.error('Falha ao restaurar após exclusão:',recoveryError)}
+  alert('Não foi possível concluir a exclusão. Confira o armazenamento do navegador.\n'+(err.message||err));
+  return;
+ }
+ // Anexos de versões anteriores do pós-obra podem continuar no IndexedDB.
+ // A limpeza é seletiva por ID de pendência e não afeta anexos de outros projetos.
+ const failed=[];
+ if(typeof pwFileDeleteForItem==='function'){
+  for(const w of relatedWorks){
+   for(const item of w.items||[]){
+    try{await pwFileDeleteForItem(item.id)}
+    catch(err){failed.push(item.id);console.warn('Falha na limpeza de anexo antigo:',err)}
+   }
+  }
+ }
+ if(typeof portalProjectId!=='undefined'&&String(portalProjectId)===String(p.id)){
+  portalProjectId=null;portalView='manager';portalFolderId=null;
+ }
+ schedulePreviewState=null;
+ go('projetos');
+ alert('Projeto "'+name+'" excluído deste navegador.'
+  +(failed.length?'\n\nAtenção: alguns anexos antigos do pós-obra não puderam ser removidos do armazenamento local.':'')
+  +'\n\nOs modelos e subetapas padrão do escritório foram preservados.');
 }
 function projectArchiveBanner(p){
  const isDone=p.status==='Concluído';
