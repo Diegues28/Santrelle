@@ -4,7 +4,7 @@
 const SANTRELLE_MANUAL_DB="santrelle_manual_template_v1";
 const SANTRELLE_PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
 const SANTRELLE_PDFWORKER="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-const SANTRELLE_JSPDF="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js";
+const SANTRELLE_JSPDF="vendor/jspdf.umd.min.js";
 let manualProcessing=false;
 
 function manualDb(){
@@ -38,11 +38,7 @@ function manualStatus(message,isError){
  if(area){area.textContent=message;area.style.color=isError?"#95584B":"#806E5E"}
 }
 async function refreshManualTemplateStatus(){
-  if(!document.getElementById("manualTemplateStatus"))return;
-  try{
-    const model=await manualTemplateGet();
-    manualStatus(model?"Modelo de 16 páginas encontrado neste navegador. Pronto para gerar o manual.":"Nenhum modelo salvo neste navegador. Selecione o Manual do Projeto de 16 páginas. Modelos enviados em outro aparelho ou no ChatGPT não aparecem automaticamente aqui.");
-  }catch(e){manualStatus("O navegador não permitiu consultar o modelo salvo. Você ainda pode selecionar um PDF de 16 páginas para gerar o manual: "+e.message,true)}
+ manualStatus("O manual de 16 páginas está integrado ao Santrelle. Clique em Gerar manual PDF; não é necessário importar nenhum modelo.");
 }
 async function loadManualScript(url,test){
   if(test())return;
@@ -210,32 +206,12 @@ async function manualRenderPdf(project,blob){
   manualStatus("Manual gerado e enviado para download.");
 }
 async function generateManualPdf(id){
- const p=projects.find(x=>x.id===id);
- if(!p)return alert("Projeto não encontrado.");
- if(manualProcessing)return;
- let model=null,storageError=null;
- try{model=await manualTemplateGet()}
- catch(e){storageError=e;console.warn("Não foi possível consultar o modelo local:",e)}
- if(!model){
-  manualStatus(storageError
-   ?"O navegador não conseguiu acessar o modelo salvo. Selecione o PDF de 16 páginas para gerar o manual nesta sessão."
-   :"Este navegador ainda não possui o modelo. Selecione o Manual do Projeto de 16 páginas. O arquivo não é sincronizado entre dispositivos.",!!storageError);
-  const picker=document.getElementById("manualTemplateInput");
-  if(picker)picker.click();
-  else alert("Não encontrei a opção de selecionar o modelo do manual. Atualize a página.");
+ if(typeof manualGenerateFromBuiltIn!=="function"){
+  manualStatus("O módulo de geração não carregou. Atualize a página (Ctrl+F5) e tente novamente.",true);
+  alert("Não foi possível carregar o gerador do Manual do Cliente. Atualize a página (Ctrl+F5) e tente novamente.");
   return;
  }
- manualProcessing=true;
- try{
-  manualStatus("Preparando o manual do cliente...");
-  await manualRenderPdf(p,model);
- }catch(e){
-  console.error("Erro ao gerar manual:",e);
-  let message=e.message||"Falha ao preparar o PDF.";
-  if(/16 p[aá]ginas|16 paginas/i.test(message))message+=" Use 'Importar/atualizar modelo PDF' para substituir o arquivo incorreto.";
-  manualStatus("Erro ao gerar manual: "+message,true);
-  alert("Não foi possível gerar o manual: "+message);
- }finally{manualProcessing=false}
+ return manualGenerateFromBuiltIn(id);
 }
 async function importManualTemplate(event,id){
  const input=event?.target;
@@ -293,9 +269,7 @@ async function importManualTemplate(event,id){
  }
 }
 async function maybeAutoGenerateManual(id){
- try{
-   const model=await manualTemplateGet();
-   if(model)await generateManualPdf(id);
-   else refreshManualTemplateStatus();
- }catch(e){console.warn("Manual aguardando importacao do modelo:",e)}
+ // O manual só é gerado quando a equipe clicar em "Gerar manual PDF".
+ // Não iniciar downloads automaticamente ao cadastrar projetos.
+ return refreshManualTemplateStatus();
 }
