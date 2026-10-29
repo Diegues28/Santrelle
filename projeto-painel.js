@@ -135,20 +135,25 @@ function projectDashboardRefreshPDF(){
 function projectDashboardPDFField(doc,ctx,label,value){
  const val=String(value??"").trim();
  if(!val)return;
- const W=ctx.contentW;
- const max=W-56;
- doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(106,89,77);
+ const max=ctx.contentW-56;
+ doc.setFont("helvetica","bold");doc.setFontSize(9);
  const labelLines=doc.splitTextToSize(label,49);
- doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(61,57,54);
+ doc.setFont("helvetica","normal");doc.setFontSize(9);
  const lines=doc.splitTextToSize(val,max);
- const height=Math.max(labelLines.length,lines.length)*5.3+4;
- ctx.ensure(height+2);
- doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(106,89,77);
- doc.text(labelLines,ctx.margin,ctx.y+4.5);
- doc.setFont("helvetica","normal");doc.setTextColor(61,57,54);
- doc.text(lines,ctx.margin+56,ctx.y+4.5);
- ctx.y+=height;
- doc.setDrawColor(233,225,219);doc.line(ctx.margin,ctx.y,210-ctx.margin,ctx.y);ctx.y+=3;
+ let index=0;
+ while(index<lines.length){
+  if(ctx.y+15>265)ctx.ensure(300);
+  const capacity=Math.max(1,Math.floor((265-ctx.y-7)/5.3));
+  const group=lines.slice(index,index+capacity);
+  doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(106,89,77);
+  doc.text(index===0?labelLines:["(continuação)"],ctx.margin,ctx.y+4.5);
+  doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(61,57,54);
+  doc.text(group,ctx.margin+56,ctx.y+4.5);
+  ctx.y+=Math.max(index===0?labelLines.length:1,group.length)*5.3+4;
+  doc.setDrawColor(233,225,219);doc.line(ctx.margin,ctx.y,210-ctx.margin,ctx.y);
+  ctx.y+=3;
+  index+=group.length;
+ }
 }
 function projectDashboardBuildFichaPDF(project,PDF){
  const doc=new PDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
