@@ -491,9 +491,8 @@ function pwForm(w){
   +'<div><label for="pwDueDate">Prazo (DD/MM/AAAA)</label><input id="pwDueDate" class="br-date-input" type="text" maxlength="10" placeholder="DD/MM/AAAA" inputmode="numeric" value="'+esc(formatDateBR(item?.dueDate||''))+'" oninput="maskDateBR(this)" onblur="validateDateBRInput(this)"></div>'
   +'<div><label for="pwStatus">Andamento</label><select id="pwStatus">'+statuses.map(x=>'<option'+(status===x?' selected':'')+'>'+x+'</option>').join('')+'</select></div>'
   +'<div class="pw-wide"><label for="pwNotes">Observações e contatos</label><textarea id="pwNotes" maxlength="4000" rows="3">'+esc(item?.notes||'')+'</textarea></div>'
-  +'<div class="pw-wide"><label>Fotos e documentos</label><label class="pw-filepick" for="pwFileInput"><span class="pw-filepick-icon">＋</span><span><strong>Adicionar foto ou arquivo</strong><small>Escolha fotos da galeria, câmera ou PDF · vários arquivos de uma vez</small></span></label>'
-  +'<input id="pwFileInput" class="pw-file-input" type="file" accept="image/*,.pdf,application/pdf" multiple onchange="pwFileSelected(this)"><div id="pwFileSelected" class="pw-file-selected">Nenhum arquivo escolhido.</div></div></div>'
-  +'<p class="muted pw-hint">Os anexos ficam vinculados a esta pendência neste navegador. Você pode clicar nas imagens para abrir ou salvar. O PDF do cliente mostra somente as pendências e seus status.</p>'
+  +'</div>'
+  +'<p class="muted pw-hint">Registre os ajustes por ambiente, com descrição, responsável, prazo e andamento. O relatório para o cliente apresenta as pendências e seus status.</p>'
   +'<div class="pw-form-actions"><button class="primary" type="submit">'+(item?'Salvar alterações':'Adicionar pendência')+'</button></div></form>'
 }
 function pwIssue(w,item){
@@ -501,15 +500,14 @@ function pwIssue(w,item){
  const status=done?'Concluído':late?'Atrasado':item.status||'Pendente';
  const statusClass=done?'pw-good':late?'pw-late':item.status==='Aguardando fornecedor'?'pw-wait':'pw-active';
  const meta=[item.supplier?'Fornecedor: '+item.supplier:'',item.owner?'Responsável: '+item.owner:'',item.dueDate?'Prazo: '+formatDateBR(item.dueDate):'Sem prazo'].filter(Boolean);
- const ref=/^https?:\/\//i.test(item.reference||'')?'<a href="'+esc(item.reference)+'" target="_blank" rel="noopener noreferrer">Abrir foto / documento ↗</a>':'';
+
  return '<div class="pw-item '+(done?'pw-item-done':'')+'"><label class="pw-check"><input type="checkbox" '+(done?'checked ':'')+'aria-label="'+esc((done?'Reabrir':'Concluir')+' pendência: '+item.description)+'" onchange="pwToggle('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+',this.checked)">'
   +'<span>'+(done?'Resolvida':'Marcar resolvida')+'</span></label><div class="pw-item-content">'
   +'<div class="pw-item-heading"><div><small>'+esc(item.environment)+'</small><h4>'+esc(item.description)+'</h4></div><span class="pw-badge '+statusClass+'">'+esc(status)+'</span></div>'
   +'<div class="pw-meta">'+meta.map(s=>'<span>'+esc(s)+'</span>').join('')+'</div>'
   +(item.notes?'<p class="pw-notes">'+esc(item.notes)+'</p>':'')
   +(done?'<p class="pw-done-note">✓ Concluída em '+esc(new Date(item.completedAt||item.updatedAt||item.createdAt).toLocaleDateString('pt-BR'))+'</p>':'')
-  +ref+'<div class="pw-file-region" id="pwFiles_'+esc(item.id)+'"></div><div class="pw-item-actions">'
-  +(!w.closedAt?'<label class="pw-direct-add" for="pwDirect_'+esc(item.id)+'">＋ Anexar foto/arquivo</label><input class="pw-file-input" id="pwDirect_'+esc(item.id)+'" type="file" accept="image/*,.pdf,application/pdf" multiple onchange="pwAttachDirect(this,'+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')"> ':'')
+  +'<div class="pw-item-actions">'
   +(w.closedAt?'':'<button class="secondary" onclick="pwEdit('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Editar</button>')
   +(w.closedAt?'':'<button class="secondary" onclick="pwRemove('+esc(JSON.stringify(w.id))+','+esc(JSON.stringify(item.id))+')">Excluir</button>')
   +(item.history?.length?'<details><summary>Histórico ('+item.history.length+')</summary>'
@@ -535,7 +533,6 @@ function pwDetail(w){
 function renderPostWork(){
  const w=pwFind(postWorkSelected);
  el.innerHTML=w?pwDetail(w):pwSummary();
- if(typeof pwFilesAfterRender==='function')pwFilesAfterRender(w);
 }
 function pwFilter(value){if(['abertos','concluidos','todos'].includes(value)){postWorkFilter=value;render()}}
 function pwEdit(workId,itemId){
@@ -544,42 +541,26 @@ function pwEdit(workId,itemId){
  const form=document.getElementById('pwForm');if(form&&typeof form.scrollIntoView==='function')form.scrollIntoView({behavior:'smooth',block:'start'})
 }
 function pwCancelEdit(){postWorkEditing=null;render()}
-let pwSavingItem=false;
-async function pwSaveItem(event,workId){
+function pwSaveItem(event,workId){
  event?.preventDefault?.();
- const w=pwFind(workId);if(!w||w.closedAt||pwSavingItem)return;
+ const w=pwFind(workId);if(!w||w.closedAt)return;
  const field=id=>String(document.getElementById(id)?.value||'').trim();
  const environment=field('pwEnvironment'),description=field('pwDescription'),dueDate=parseDateBR(field('pwDueDate'));
  if(!environment||!description){alert('Informe o ambiente e a pendência.');return}
  if(dueDate===null){alert('Use uma data válida DD/MM/AAAA ou deixe o prazo em branco.');return}
  const existing=w.items.find(x=>String(x.id)===String(postWorkEditing));
- const itemId=existing?.id||pwId();
- const newFiles=Array.from(document.getElementById('pwFileInput')?.files||[]);
  const at=pwNow();
  const details={environment,description,supplier:field('pwSupplier'),owner:field('pwOwner'),dueDate,status:field('pwStatus'),notes:field('pwNotes'),updatedAt:at};
- const button=document.querySelector('#pwForm button[type="submit"]');
- pwSavingItem=true;
- if(button){button.disabled=true;button.textContent='Salvando...'}
- try{
-  // Persiste imagens em IndexedDB antes da atualização do cadastro.
-  if(newFiles.length){
-   if(typeof pwSaveFiles!=='function')throw new Error('O módulo de arquivos não foi carregado. Atualize a página e tente novamente.');
-   await pwSaveFiles(w.id,itemId,newFiles);
-  }
-  if(existing){
-   Object.assign(existing,details);existing.history=existing.history||[];
-   existing.history.push({at,text:'Informações atualizadas'+(newFiles.length?' e '+newFiles.length+' anexo(s) adicionado(s)':'')});
-  }else{
-   w.items.push({id:itemId,...details,reference:'',done:false,createdAt:at,completedAt:null,
-    history:[{at,text:'Pendência cadastrada'+(newFiles.length?' com '+newFiles.length+' anexo(s)':'')}]});
-  }
-  postWorkEditing=null;postWorkFilter='abertos';save();render();
- }catch(err){
-  console.error(err);alert('Não foi possível salvar os anexos: '+err.message+' A pendência não foi alterada.');
- }finally{
-  pwSavingItem=false;
-  if(button&&button.isConnected){button.disabled=false;button.textContent=existing?'Salvar alterações':'Adicionar pendência'}
+ if(existing){
+  Object.assign(existing,details);
+  existing.history=existing.history||[];
+  existing.history.push({at,text:'Informações atualizadas'});
+ }else{
+  w.items.push({id:pwId(),...details,reference:'',done:false,createdAt:at,completedAt:null,history:[{at,text:'Pendência cadastrada'}]});
  }
+ postWorkEditing=null;
+ postWorkFilter='abertos';
+ save();render();
 }
 
 function pwToggle(workId,itemId,checked){
@@ -592,7 +573,7 @@ function pwToggle(workId,itemId,checked){
 async function pwRemove(workId,itemId){
  const w=pwFind(workId),item=w?.items?.find(x=>String(x.id)===String(itemId));
  if(!w||w.closedAt||!item)return;
- if(!confirm('Excluir a pendência "'+item.description+'" e seu histórico, incluindo fotos e documentos anexados?'))return;
+ if(!confirm('Excluir a pendência "'+item.description+'" e seu histórico? Se houver anexos antigos vinculados, eles também serão removidos deste navegador.'))return;
  try{
   if(typeof pwFileDeleteForItem==='function')await pwFileDeleteForItem(itemId);
  }catch(err){
