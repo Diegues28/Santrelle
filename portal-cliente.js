@@ -194,10 +194,16 @@ function portalProjectShortcut(project){
  +'<div class="client-portal-shortcut-actions"><button class="secondary" type="button" onclick="portalOpen('+portalSafeAction(project.id)+')">Configurar portal</button>'
  +'<button class="primary" type="button" onclick="portalOpenPreview('+portalSafeAction(project.id)+')">Prévia do cliente</button></div></div>'
 }
+function portalProjectClients(project){
+ const client=String(project?.clientRegistration?.name||project?.client||'Cliente').trim()||'Cliente';
+ const spouse=String(project?.clientRegistration?.spouseName||'').trim();
+ if(!spouse||client.toLocaleLowerCase('pt-BR')===spouse.toLocaleLowerCase('pt-BR'))return client;
+ return client+' e '+spouse;
+}
 function portalProjectList(){
- const sorted=projects.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'pt-BR'));
+ const sorted=projects.slice().sort((a,b)=>portalProjectClients(a).localeCompare(portalProjectClients(b),'pt-BR'));
  const card=p=>{const cfg=portalPrefs(p.id),meetings=portalUpcoming(cfg).length,docs=portalReleasedDocumentCount(cfg);
-  return '<div class="client-portal-project"><div class="client-portal-project-text"><strong>'+esc(p.name||'Projeto sem nome')+'</strong><span>'+esc(p.client||p.clientRegistration?.name||'Cliente')+'</span></div>'
+  return '<div class="client-portal-project"><div class="client-portal-project-text"><strong>'+esc(portalProjectClients(p))+'</strong></div>'
    +'<div class="client-portal-project-meta">'+docs+' documento'+(docs===1?'':'s')+' · '+meetings+' reunião'+(meetings===1?'':'ões')+' agendada'+(meetings===1?'':'s')+'</div>'
    +'<div class="client-portal-project-actions"><button class="secondary" onclick="portalOpen('+portalSafeAction(p.id)+')">Configurar</button>'
    +'<button class="primary" onclick="portalOpenPreview('+portalSafeAction(p.id)+')">Ver como cliente</button></div></div>'};
@@ -450,8 +456,8 @@ function portalManagerProject(project,cfg){
  const visible=portalReleasedDocumentCount(cfg),upcoming=portalUpcoming(cfg).length;
  const releases=cfg.stages.filter(s=>s.released).length;
  return '<div class="client-portal-admin"><section class="panel"><div class="client-portal-header-actions"><button class="secondary" onclick="openProject('+portalSafeAction(project.id)+')">← Painel do projeto</button><button class="secondary" onclick="portalBack()">Todos os projetos</button><button class="primary" onclick="portalOpenPreview('+portalSafeAction(project.id)+')">Ver como cliente ↗</button></div>'
-  +'<div class="client-portal-head"><div><span class="client-portal-eyebrow">GERENCIAMENTO INTERNO · PRÉVIA</span><h2>'+esc(project.name||'Projeto')+'</h2>'
-  +'<p class="muted">'+esc(project.clientRegistration?.name||project.client||'Cliente')+' · Libere as etapas no momento adequado, mantendo documentos e prazos internos protegidos.</p></div>'
+  +'<div class="client-portal-head"><div><span class="client-portal-eyebrow">GERENCIAMENTO INTERNO · PRÉVIA</span><h2>'+esc(portalProjectClients(project))+'</h2>'
+  +'<p class="muted">Libere as etapas no momento adequado, mantendo documentos e prazos internos protegidos.</p></div>'
   +'<div class="client-portal-meta-count"><strong>'+releases+'/'+cfg.stages.length+'</strong><span>Etapas liberadas</span><strong>'+visible+'</strong><span>Documentos visíveis</span>'
   +'<strong>'+upcoming+'</strong><span>Reuniões futuras</span></div></div>'
   +'<div class="client-portal-alert"><strong>Esta ainda é uma prévia local, sem autenticação</strong><p>Não coloque arquivos privados ou dados sensíveis reais aqui. O login e o armazenamento seguro serão desenvolvidos depois da aprovação das telas.</p></div></section>'
