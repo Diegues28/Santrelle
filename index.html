@@ -1097,9 +1097,9 @@ function removeEmployee(name){
  if(!member)return;
  const commitments=teamCommitments(member);
  const message='Remover "'+member+'" da lista de funcionários?'
-  +'\\n\\nAs '+commitments.length+' tarefa(s) e prazo(s) já associados a esse nome continuarão nos projetos e no histórico.'
-  +'\\nVocê poderá reatribuir as atividades e cadastrar o funcionário novamente no futuro.'
-  +'\\n\\nNenhum projeto será excluído.';
+  +'\n\nAs '+commitments.length+' tarefa(s) e prazo(s) já associados a esse nome continuarão nos projetos e no histórico.'
+  +'\nVocê poderá reatribuir as atividades e cadastrar o funcionário novamente no futuro.'
+  +'\n\nNenhum projeto será excluído.';
  if(!confirm(message))return;
  const oldEmployees=employees.slice(),oldHidden=hiddenTeamMembers.slice();
  employees=employees.filter(e=>teamMemberKey(e.name)!==key);
