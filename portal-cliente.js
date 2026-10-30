@@ -512,12 +512,13 @@ function portalPreviewFolders(cfg){
  }).join('')+'</div>'
 }
 function portalPreviewProject(project,cfg){
- const name=String(project.clientRegistration?.name||project.client||'Cliente').trim();
- const greeting=name.split(/\s+/)[0]||'Cliente';
+ const name=String(project.clientRegistration?.name||project.client||'Cliente').trim()||'Cliente';
+ const spouse=String(project.clientRegistration?.spouseName||'').trim();
+ const greeting=spouse&&spouse.toLocaleLowerCase('pt-BR')!==name.toLocaleLowerCase('pt-BR')
+   ?name+' e '+spouse:name;
  return '<div class="client-portal-preview-bar"><span>◉ Modo de prévia · O cliente ainda não tem acesso real</span><button onclick="portalGoManager()">← Voltar ao escritório</button></div>'
-  +'<div class="client-portal-client"><header class="client-portal-client-header"><div><div class="client-portal-client-brand">SANTRELLE</div><span>ARQUITETURA E INTERIORES</span></div><div class="client-portal-client-header-side">ÁREA DO CLIENTE <span>PRÉVIA</span></div></header>'
-  +'<section class="client-portal-client-hero"><div class="client-portal-eyebrow">O SEU ESPAÇO EXCLUSIVO</div><h1>Olá, '+esc(greeting)+'!</h1><p>Seja bem-vindo ao espaço dedicado ao seu projeto. Aqui você poderá consultar os documentos disponibilizados pelo escritório.</p>'
-  +'<div class="client-portal-client-hero-project"><span>SEU PROJETO</span><strong>'+esc(project.name||'Projeto')+'</strong></div></section>'
+  +'<div class="client-portal-client"><header class="client-portal-client-header"><div class="client-portal-header-logo"><img class="client-portal-logo-image" src="santrelle-logo.svg" alt="Santrelle Arquitetura e Interiores"></div></div><div class="client-portal-client-header-side">ÁREA DO CLIENTE <span>PRÉVIA</span></div></header>'
+  +'<section class="client-portal-client-hero"><div class="client-portal-watermark" aria-hidden="true"></div><div class="client-portal-client-hero-content"><div class="client-portal-eyebrow">Seu espaço exclusivo</div><h1>Olá, '+esc(greeting)+'!</h1><p>Seja bem-vindo ao espaço dedicado ao seu projeto. Aqui você poderá consultar os documentos disponibilizados pelo escritório.</p></div></section>'
   +'<div class="client-portal-client-top-grid"><section class="client-portal-client-stage"><span class="client-portal-client-section-eyebrow">ETAPA DO PROJETO</span>'
   +'<div class="client-portal-client-stage-name">'+(cfg.stage?esc(cfg.stage):'Aguardando atualização')+'</div>'
   +'<p>Acompanhe aqui o nome da etapa compartilhada pelo escritório.</p></section>'
@@ -526,7 +527,7 @@ function portalPreviewProject(project,cfg){
   +'<section class="client-portal-client-library"><div class="client-portal-client-library-title"><div><span class="client-portal-client-section-eyebrow">BIBLIOTECA DO PROJETO</span>'
   +'<h2>Seus documentos</h2><p>As pastas são disponibilizadas conforme a liberação de cada etapa do seu projeto.</p></div><span class="client-portal-library-glyph">▱</span></div>'
   +portalPreviewFolders(cfg)+'</section>'
-  +'<footer class="client-portal-client-footer"><strong>SANTRELLE</strong><span>Arquitetura e Interiores</span><span>Prévia do portal · Arquivos não disponíveis para download nesta versão</span></footer></div>'
+  +'<footer class="client-portal-client-footer"><div class="client-portal-footer-contact"><a href="tel:+5513996326227" aria-label="Telefone Santrelle: (13) 99632-6227">Telefone: (13) 99632-6227</a><a href="https://www.instagram.com/santrellearquitetura/" target="_blank" rel="noopener noreferrer">Instagram: @santrellearquitetura</a><a href="https://santrelle.com.br/" target="_blank" rel="noopener noreferrer">Site: santrelle.com.br</a></div><span class="client-portal-footer-preview">Prévia de demonstração · O acesso aos arquivos ainda não está habilitado</span></footer></div>'
 }
 function renderClientPortalManager(){
  const project=portalProject(portalProjectId);
