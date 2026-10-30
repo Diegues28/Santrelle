@@ -517,7 +517,7 @@ function portalPreviewProject(project,cfg){
  const greeting=spouse&&spouse.toLocaleLowerCase('pt-BR')!==name.toLocaleLowerCase('pt-BR')
    ?name+' e '+spouse:name;
  return '<div class="client-portal-preview-bar"><span>◉ Modo de prévia · O cliente ainda não tem acesso real</span><button onclick="portalGoManager()">← Voltar ao escritório</button></div>'
-  +'<div class="client-portal-client"><header class="client-portal-client-header"><div class="client-portal-header-logo"><img class="client-portal-logo-image" src="santrelle-logo.svg" alt="Santrelle Arquitetura e Interiores"></div></div><div class="client-portal-client-header-side">ÁREA DO CLIENTE <span>PRÉVIA</span></div></header>'
+  +'<div class="client-portal-client">'
   +'<section class="client-portal-client-hero"><div class="client-portal-watermark" aria-hidden="true"></div><div class="client-portal-client-hero-content"><div class="client-portal-eyebrow">Seu espaço exclusivo</div><h1>Olá, '+esc(greeting)+'!</h1><p>Seja bem-vindo ao espaço dedicado ao seu projeto. Aqui você poderá consultar os documentos disponibilizados pelo escritório.</p></div></section>'
   +'<div class="client-portal-client-top-grid"><section class="client-portal-client-stage"><span class="client-portal-client-section-eyebrow">ETAPA DO PROJETO</span>'
   +'<div class="client-portal-client-stage-name">'+(cfg.stage?esc(cfg.stage):'Aguardando atualização')+'</div>'
