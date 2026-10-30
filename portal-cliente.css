@@ -224,3 +224,124 @@
 .client-portal-file-selected-info.client-portal-file-selected{color:#5B7459;font-weight:650}
 .client-portal-file-warning{font-size:11px;color:#957F68;line-height:1.6;border-top:1px solid #E9E0D8;padding-top:10px;margin:11px 0 0}
 @media(max-width:650px){.client-portal-file-upload{padding:12px}.client-portal-file-select{gap:9px;padding:13px}.client-portal-file-select strong{font-size:12px}}
+
+
+/* Identidade da Santrelle — Área do Cliente (2026).
+   As fontes fornecidas são tipografias comerciais/demo; usamos a instalação
+   local quando existente e fallbacks para não redistribuir arquivos sem licença web. */
+@font-face{
+ font-family:"Santrelle Mories Local";
+ src:local("Mories Display"),local("Mories");
+ font-style:normal;font-weight:400;font-display:swap;
+}
+@font-face{
+ font-family:"Santrelle Calibri Light Local";
+ src:local("Calibri Light"),local("Calibri-Light");
+ font-style:normal;font-weight:300;font-display:swap;
+}
+.client-portal-client{
+ font-family:"Santrelle Calibri Light Local","Calibri Light",Calibri,"Segoe UI",Arial,sans-serif;
+ font-weight:300;
+}
+.client-portal-client h1,
+.client-portal-client h2,
+.client-portal-client h3,
+.client-portal-client-stage-name{
+ font-family:"Santrelle Mories Local","Mories Display","Mories",Georgia,"Times New Roman",serif;
+ font-weight:400;
+}
+.client-portal-client button,
+.client-portal-client a,
+.client-portal-client p,
+.client-portal-client strong,
+.client-portal-client span{
+ font-family:inherit;
+}
+.client-portal-client-header{
+ padding:14px 43px;
+ min-height:114px;
+ background:#FFFEFD;
+}
+.client-portal-client-header>div:first-child{gap:0;align-items:flex-start}
+.client-portal-header-logo{display:flex;align-items:center;justify-content:flex-start}
+.client-portal-logo-image{
+ display:block;width:166px;height:auto;max-height:114px;object-fit:contain;
+ object-position:left center;
+}
+.client-portal-client-hero{
+ position:relative;
+ isolation:isolate;
+ overflow:hidden;
+ background:linear-gradient(115deg,#F3EDE6 0%,#F7F2EC 100%);
+ min-height:215px;
+ padding:39px 43px 37px;
+}
+.client-portal-client-hero-content{position:relative;z-index:1;max-width:min(680px,100%)}
+.client-portal-client-hero .client-portal-eyebrow{
+ color:#947D69;
+ font-family:"Santrelle Calibri Light Local","Calibri Light",Calibri,"Segoe UI",sans-serif;
+ font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+ font-weight:400;
+}
+.client-portal-client-hero h1{
+ font-size:clamp(30px,3.5vw,47px);line-height:1.18;
+ max-width:780px;overflow-wrap:anywhere;
+ margin:11px 0 15px;color:#625245;
+}
+.client-portal-client-hero>p,
+.client-portal-client-hero-content>p{
+ font-size:15px;line-height:1.7;color:#76685C;margin:0;
+ max-width:550px;
+}
+.client-portal-watermark{
+ position:absolute;
+ z-index:0;
+ right:32px;top:0;
+ width:min(390px,46%);height:245px;
+ background-image:url("santrelle-logo.svg");
+ background-position:center top;
+ background-repeat:no-repeat;
+ background-size:100% auto;
+ opacity:.10;
+ pointer-events:none;
+ -webkit-mask-image:linear-gradient(#000 0%,#000 67%,transparent 72%);
+ mask-image:linear-gradient(#000 0%,#000 67%,transparent 72%);
+}
+.client-portal-client-footer{
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ gap:13px;
+ padding:24px 43px;
+ background:#FAF7F4;
+}
+.client-portal-footer-contact{
+ display:flex;align-items:center;justify-content:center;
+ gap:11px 25px;flex-wrap:wrap;text-align:center;
+}
+.client-portal-footer-contact a{
+ color:#705D4E;text-decoration:none;
+ border-bottom:1px solid transparent;
+ font-size:13px;letter-spacing:.01em;
+ overflow-wrap:anywhere;
+}
+.client-portal-footer-contact a:hover,
+.client-portal-footer-contact a:focus-visible{
+ color:#4F3F35;
+ border-bottom-color:#BCA895;
+}
+.client-portal-footer-preview{
+ text-align:center;color:#A79585;
+ font-size:11px;line-height:1.5;
+}
+@media(max-width:650px){
+ .client-portal-client-header{padding:11px 21px;min-height:96px}
+ .client-portal-logo-image{width:122px;max-height:100px}
+ .client-portal-client-header-side{font-size:9px;text-align:right}
+ .client-portal-client-hero{padding:31px 21px 31px;min-height:200px}
+ .client-portal-client-hero h1{font-size:clamp(28px,6.6vw,37px)}
+ .client-portal-client-hero-content>p{font-size:13px;max-width:92%}
+ .client-portal-watermark{width:235px;height:145px;right:-20px;top:20px;opacity:.08}
+ .client-portal-client-footer{padding:20px 21px}
+ .client-portal-footer-contact{flex-direction:column;gap:11px}
+}
