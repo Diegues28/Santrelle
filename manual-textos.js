@@ -195,7 +195,7 @@ const SANTRELLE_MANUAL_PAGES=[
       },
       {
         "type": "paragraph",
-        "text": "01 dia útil"
+        "text": "A duração desta etapa será indicada conforme o escopo contratado e o cronograma do projeto."
       }
     ]
   },
@@ -225,7 +225,7 @@ const SANTRELLE_MANUAL_PAGES=[
     "blocks": [
       {
         "type": "paragraph",
-        "text": "O cronograma do seu projeto será enviado separadamente e atualizado conforme o andamento das etapas."
+        "text": "A seguir estão os prazos contratuais cadastrados para as etapas do seu projeto. As datas de início, entrega e aprovação serão acompanhadas no cronograma individual atualizado."
       },
       {
         "type": "paragraph",
