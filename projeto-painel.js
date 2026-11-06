@@ -83,7 +83,6 @@ function projectDashboardDocumentView(project,kind){
  const content=projectDashboardSubHeader(project,title,isManual?"Documento de 16 páginas":"Dados da ficha cadastrada")
  +'<section class="project-document-panel">'
  +'<div class="project-document-actions">'
- ''
  +(!isManual?'<button class="secondary" type="button" onclick="editRegistration('+pid+')">Editar ficha cadastral</button>':'')
  +'<button class="secondary" type="button" onclick="projectDashboardRefreshPDF()">Atualizar visualização</button>'
  +'<span id="projectDocumentActions"></span></div>'
