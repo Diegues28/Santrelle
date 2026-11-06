@@ -79,12 +79,11 @@ function projectDashboardSubHeader(project,title,hint){
 function projectDashboardDocumentView(project,kind){
  const title=kind==="ficha"?"Ficha cadastral":"Manual do cliente";
  const pid=JSON.stringify(project.id);
- const date=project.manualCoverDate||iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());
  const isManual=kind==="manual";
  const content=projectDashboardSubHeader(project,title,isManual?"Documento de 16 páginas":"Dados da ficha cadastrada")
  +'<section class="project-document-panel">'
  +'<div class="project-document-actions">'
- +(isManual?'<label>Data da capa<input class="br-date-input" type="text" inputmode="numeric" maxlength="10" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(date))+'" oninput="maskDateBR(this)" onchange="projectDashboardSetManualDate('+pid+',this)"></label>':'')
+ ''
  +(!isManual?'<button class="secondary" type="button" onclick="editRegistration('+pid+')">Editar ficha cadastral</button>':'')
  +'<button class="secondary" type="button" onclick="projectDashboardRefreshPDF()">Atualizar visualização</button>'
  +'<span id="projectDocumentActions"></span></div>'
@@ -226,32 +225,8 @@ function projectDashboardBuildFichaPDF(project,PDF){
  return doc;
 }
 async function projectDashboardBuildManualPDF(project,PDF){
- // Usa o PDF padrão do escritório somente quando ele tiver sido cadastrado
- // pela equipe em Etapas e modelos; caso contrário, mantém o gerador integrado.
- if(typeof manualTemplateManagerInfo==="function"&&manualTemplateManagerInfo()){
-  const template=await manualTemplateGet();
-  if(!template)throw new Error("O PDF padrão não está mais disponível neste navegador. Reenvie o arquivo em Etapas e modelos.");
-  try{return await manualBuildFromTemplate(project,template)}
-  catch(err){
-   throw new Error("Não foi possível gerar o manual usando o PDF padrão: "+(err.message||err)+". Para usar o manual integrado, remova o PDF padrão em Etapas e modelos.");
-  }
- }
- if(!Array.isArray(SANTRELLE_MANUAL_PAGES)||SANTRELLE_MANUAL_PAGES.length!==16)
-  throw new Error("Não foi possível encontrar as 16 páginas do manual. Atualize o aplicativo.");
- const doc=new PDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
- doc.setProperties({title:"Manual do Cliente - Santrelle Arquitetura",author:"Santrelle Arquitetura e Interiores"});
- for(let i=0;i<SANTRELLE_MANUAL_PAGES.length;i++){
-  if(i)doc.addPage();
-  const item=SANTRELLE_MANUAL_PAGES[i];
-  if(i===0)manualPdfCover(doc,project);
-  else {
-   manualPdfDecorate(doc,i+1,item.title);
-   const blocks=i===11?[...item.blocks,{type:"contractTable"}]:item.blocks;
-   manualPdfBody(doc,blocks,project,i);
-   manualPdfStageDuration(doc,manualPdfStageContract(project,i));
-  }
- }
- return doc;
+ const template=await manualPreferredTemplate();
+ return await manualBuildFromTemplate(project,template);
 }
 async function projectDashboardLoadPDF(project,kind){
  const pId=String(project.id),token=projectDocumentToken;

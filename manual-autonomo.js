@@ -237,42 +237,16 @@ async function manualGenerateFromBuiltIn(id){
  const project=projects.find(p=>String(p.id)===String(id));
  if(!project){alert("Projeto não encontrado.");return}
  if(manualProcessing)return;
- if(!Array.isArray(SANTRELLE_MANUAL_PAGES)||SANTRELLE_MANUAL_PAGES.length!==16){
-  alert("O conteúdo do manual não foi carregado. Atualize a página e tente novamente.");return;
- }
  manualProcessing=true;
  const button=document.getElementById("manualGenerateButton");
  if(button){button.disabled=true;button.textContent="Gerando PDF..."}
  manualStatus("Preparando o manual. Não é necessário anexar nenhum arquivo...");
  try{
-  const PDF=await manualEnsurePdfLibrary();
-  const template=typeof manualTemplateManagerInfo==="function"?manualTemplateManagerInfo():null;
-  if(template){
-   const file=await manualTemplateGet();
-   if(!file)throw new Error("O PDF padrão não está disponível. Envie novamente em Etapas e modelos.");
-   const original=await manualBuildFromTemplate(project,file);
-   const individual=manualClientNames(project).join("_");
-   original.save("Manual_do_Cliente_"+manualNameForFile(individual)+".pdf");
-   manualStatus("Manual gerado usando o PDF padrão do escritório e os dados deste projeto.");
-   return;
-  }
-  const doc=new PDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
-  doc.setProperties({title:"Manual do Cliente - Santrelle Arquitetura",author:"Santrelle Arquitetura e Interiores",subject:"Manual do Cliente"});
-  for(let i=0;i<SANTRELLE_MANUAL_PAGES.length;i++){
-   if(i)doc.addPage();
-   const page=SANTRELLE_MANUAL_PAGES[i];
-   manualStatus("Montando o manual: página "+(i+1)+" de 16...");
-   if(i===0)manualPdfCover(doc,project);
-   else{
-    manualPdfDecorate(doc,i+1,page.title);
-    const blocks=i===11?[...page.blocks,{type:"contractTable"}]:page.blocks;
-    manualPdfBody(doc,blocks,project,i);
-    manualPdfStageDuration(doc,manualPdfStageContract(project,i));
-   }
-  }
-  const name=project.clientRegistration?.name||project.client||project.name||"Cliente";
-  doc.save("Manual_do_Cliente_"+manualNameForFile(name)+".pdf");
-  manualStatus("Manual gerado com sucesso! O PDF foi enviado para os downloads do navegador.");
+  const file=await manualPreferredTemplate();
+  const original=await manualBuildFromTemplate(project,file);
+  const individual=manualClientNames(project).join("_");
+  original.save("Manual_do_Cliente_"+manualNameForFile(individual)+".pdf");
+  manualStatus("Manual gerado usando o modelo original do escritório e os dados deste projeto.");
  }catch(error){
   console.error("Falha ao gerar manual integrado:",error);
   const message=error?.message||"Erro inesperado.";
