@@ -226,6 +226,16 @@ function projectDashboardBuildFichaPDF(project,PDF){
  return doc;
 }
 async function projectDashboardBuildManualPDF(project,PDF){
+ // Usa o PDF padrão do escritório somente quando ele tiver sido cadastrado
+ // pela equipe em Etapas e modelos; caso contrário, mantém o gerador integrado.
+ if(typeof manualTemplateManagerInfo==="function"&&manualTemplateManagerInfo()){
+  const template=await manualTemplateGet();
+  if(!template)throw new Error("O PDF padrão não está mais disponível neste navegador. Reenvie o arquivo em Etapas e modelos.");
+  try{return await manualBuildFromTemplate(project,template)}
+  catch(err){
+   throw new Error("Não foi possível gerar o manual usando o PDF padrão: "+(err.message||err)+". Para usar o manual integrado, remova o PDF padrão em Etapas e modelos.");
+  }
+ }
  if(!Array.isArray(SANTRELLE_MANUAL_PAGES)||SANTRELLE_MANUAL_PAGES.length!==16)
   throw new Error("Não foi possível encontrar as 16 páginas do manual. Atualize o aplicativo.");
  const doc=new PDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
