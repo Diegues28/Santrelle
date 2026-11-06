@@ -109,24 +109,34 @@ async function refreshManualTemplateStatus(){
  manualStatus("O manual de 16 páginas está integrado ao Santrelle. Clique em Gerar manual PDF; não é necessário importar nenhum modelo.");
 }
 async function loadManualScript(url,test){
-  if(test())return;
-  const existing=document.querySelector('script[data-manual-url="'+url+'"]');
-  if(existing){await new Promise((ok,bad)=>{existing.addEventListener("load",ok,{once:true});existing.addEventListener("error",bad,{once:true})});return}
-  await new Promise((ok,bad)=>{
-    let s=document.createElement("script");s.src=url;s.async=true;s.dataset.manualUrl=url;
-    s.onload=ok;s.onerror=()=>bad(new Error("Nao foi possivel carregar a biblioteca de PDF. Verifique a conexao com a internet."));
-    document.head.appendChild(s);
-  });
+ if(test())return;
+ const previous=document.querySelector('script[data-manual-url="'+url+'"]');
+ if(previous)previous.remove(); // evita aguardar por um script que já falhou
+ await new Promise((ok,bad)=>{
+  const script=document.createElement("script");script.src=url;script.async=true;script.dataset.manualUrl=url;
+  let done=false;
+  const timeout=setTimeout(()=>finish(new Error("A biblioteca de PDF não respondeu. Verifique a conexão.")),15000);
+  function finish(error){
+   if(done)return;done=true;clearTimeout(timeout);
+   if(error){script.remove();bad(error)}
+   else ok();
+  }
+  script.onload=()=>test()?finish():finish(new Error("Biblioteca PDF carregou, mas não foi inicializada."));
+  script.onerror=()=>finish(new Error("Não foi possível carregar a biblioteca PDF. Verifique a conexão."));
+  document.head.appendChild(script);
+ });
 }
 async function loadManualLibraries(){
-  if(!window.pdfjsLib){
-   try{await loadManualScript(SANTRELLE_PDFJS,()=>!!window.pdfjsLib)}
-   catch(primaryError){
-    await loadManualScript("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",()=>!!window.pdfjsLib);
-   }
+ let worker=SANTRELLE_PDFWORKER;
+ if(!window.pdfjsLib){
+  try{await loadManualScript(SANTRELLE_PDFJS,()=>!!window.pdfjsLib)}
+  catch(primaryError){
+   worker="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+   await loadManualScript("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",()=>!!window.pdfjsLib);
   }
-  await loadManualScript(SANTRELLE_JSPDF,()=>!!window.jspdf?.jsPDF);
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc=SANTRELLE_PDFWORKER;
+ }
+ await loadManualScript(SANTRELLE_JSPDF,()=>!!window.jspdf?.jsPDF);
+ window.pdfjsLib.GlobalWorkerOptions.workerSrc=worker;
 }
 function manualDatePt(value){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(value||""))return "";
