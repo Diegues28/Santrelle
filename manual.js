@@ -33,6 +33,74 @@ async function manualTemplatePut(blob){
     t.onerror=()=>{db.close();reject(t.error)};
   });
 }
+
+/* Modelo PDF opcional do escritório, salvo apenas neste navegador.
+   Até existir Supabase com acesso protegido, não deve conter dados de clientes. */
+const SANTRELLE_MANUAL_MODEL_INFO_KEY="santrelle_manual_model_info";
+function manualTemplateManagerInfo(){
+ try{return JSON.parse(localStorage.getItem(SANTRELLE_MANUAL_MODEL_INFO_KEY)||"null")}
+ catch(err){return null}
+}
+function manualTemplateManagerHTML(){
+ const meta=manualTemplateManagerInfo();
+ const date=meta?.savedAt?new Date(meta.savedAt).toLocaleDateString("pt-BR"):"";
+ const status=meta
+  ?"PDF padrão salvo neste navegador: "+String(meta.name||"Modelo do escritório")+(date?" · cadastrado em "+date:"")
+  :"Nenhum PDF padrão cadastrado. O sistema utiliza o manual integrado de 16 páginas.";
+ return '<section class="panel" id="manualTemplateManagerPanel" style="margin-top:22px">'
+  +'<div class="inline" style="justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0 0 5px">Manual do Cliente — PDF padrão</h3>'
+  +'<p class="muted" style="margin:0">Adicione o manual original de 16 páginas para preservar a identidade visual do escritório. O PDF será a base dos manuais individuais.</p></div></div>'
+  +'<p class="muted" style="margin:12px 0 15px">O arquivo fica somente neste navegador, não é enviado ao GitHub nem compartilhado entre computadores. Os nomes e prazos de cada cliente serão inseridos ao gerar o manual.</p>'
+  +'<div class="inline" style="gap:10px;align-items:center;flex-wrap:wrap"><label class="secondary" for="manualTemplateInput" style="display:inline-block;padding:10px 14px;border-radius:8px;cursor:pointer">Selecionar PDF padrão</label>'
+  +'<input type="file" id="manualTemplateInput" accept=".pdf,application/pdf" onchange="manualTemplateManagerImport(this)" style="position:absolute;max-width:1px;max-height:1px;opacity:0;overflow:hidden">'
+  +(meta?'<button type="button" class="secondary" onclick="manualTemplateManagerRemove()">Remover modelo cadastrado</button>':'')
+  +'</div><p id="manualTemplateManagerStatus" class="muted" role="status" style="margin:12px 0 0">'+esc(status)+'</p></section>';
+}
+async function manualTemplateManagerImport(input){
+ const file=input?.files?.[0];
+ if(input)input.value="";
+ if(!file)return;
+ const status=document.getElementById("manualTemplateManagerStatus");
+ const message=(t,bad=false)=>{if(status){status.textContent=t;status.style.color=bad?"#9D493D":"#625245"}};
+ if(!/\.pdf$/i.test(file.name)||file.size<50||file.size>20000000){
+  message("Escolha um arquivo PDF válido de até 20 MB.",true);return;
+ }
+ try{
+  message("Verificando e salvando o modelo PDF...");
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  const signature=new TextDecoder("ascii").decode(bytes.slice(0,5));
+  if(signature!=="%PDF-")throw new Error("O arquivo selecionado não parece ser um PDF válido.");
+  // Conferência preliminar sem depender de bibliotecas externas.
+  const ascii=new TextDecoder("latin1").decode(bytes);
+  const occurrences=(ascii.match(/\/Type\s*\/Page\b/g)||[]).length;
+  if(occurrences>0&&occurrences!==16)
+   throw new Error("Esse PDF parece ter "+occurrences+" páginas. O modelo deve ter 16 páginas.");
+  await manualTemplatePut(new Blob([bytes],{type:"application/pdf"}));
+  localStorage.setItem(SANTRELLE_MANUAL_MODEL_INFO_KEY,JSON.stringify({
+   name:file.name,size:file.size,savedAt:new Date().toISOString()
+  }));
+  if(typeof models==="function"&&page==="modelos")models();
+  message("PDF padrão salvo. Ao abrir o Manual do Cliente, ele será usado com os nomes e prazos do projeto.");
+ }catch(err){
+  console.error("Falha ao cadastrar PDF padrão:",err);
+  message("Não foi possível cadastrar o PDF: "+(err.message||"Erro desconhecido"),true);
+ }
+}
+async function manualTemplateManagerRemove(){
+ if(!confirm("Remover o PDF padrão salvo neste navegador? O manual integrado continuará disponível. Nenhum projeto será excluído."))return;
+ try{
+  const db=await manualDb();
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction("files","readwrite");
+   tx.objectStore("files").delete("modelo");
+   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+  });
+  db.close();
+  localStorage.removeItem(SANTRELLE_MANUAL_MODEL_INFO_KEY);
+  if(typeof models==="function"&&page==="modelos")models();
+ }catch(err){alert("Não foi possível remover o modelo: "+err.message)}
+}
+
 function manualStatus(message,isError){
  const area=document.getElementById("manualTemplateStatus");
  if(area){area.textContent=message;area.style.color=isError?"#95584B":"#806E5E"}
@@ -51,7 +119,12 @@ async function loadManualScript(url,test){
   });
 }
 async function loadManualLibraries(){
-  await loadManualScript(SANTRELLE_PDFJS,()=>!!window.pdfjsLib);
+  if(!window.pdfjsLib){
+   try{await loadManualScript(SANTRELLE_PDFJS,()=>!!window.pdfjsLib)}
+   catch(primaryError){
+    await loadManualScript("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",()=>!!window.pdfjsLib);
+   }
+  }
   await loadManualScript(SANTRELLE_JSPDF,()=>!!window.jspdf?.jsPDF);
   window.pdfjsLib.GlobalWorkerOptions.workerSrc=SANTRELLE_PDFWORKER;
 }
@@ -83,46 +156,58 @@ function manualStep(project,word){
   return (project.steps||[]).find(x=>(x.name||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().includes(word));
 }
 function manualCoverName(project){
-  let name=(project.clientRegistration?.name||project.client||"CLIENTE").trim().toLocaleUpperCase("pt-BR");
-  if(!name)return ["CLIENTE"];
-  let parts=name.split(/\s+E\s+/i);
-  if(parts.length===2)return [parts[0],"E",parts[1]];
-  let words=name.split(/\s+/),lines=[],line="";
-  for(let word of words){if((line+" "+word).trim().length>16&&line){lines.push(line);line=word}else line=(line+" "+word).trim()}
+ const names=typeof manualClientNames==="function"?manualClientNames(project)
+  :[String(project?.clientRegistration?.name||project?.client||"CLIENTE")];
+ const lines=[];
+ for(let i=0;i<names.length;i++){
+  if(i)lines.push("E");
+  const upper=String(names[i]||"CLIENTE").trim().toLocaleUpperCase("pt-BR");
+  const words=upper.split(/\s+/);let line="";
+  for(const word of words){
+   if((line+" "+word).trim().length>21&&line){lines.push(line);line=word}
+   else line=(line+" "+word).trim();
+  }
   if(line)lines.push(line);
-  return lines;
+ }
+ return lines;
 }
-function manualPatchNumbers(ctx,page){
-  // O manual é fixo: nenhum prazo numérico fica impresso neste documento.
-  // As datas e durações de cada cliente ficam exclusivamente no cronograma atualizado.
-  if(page===5){
-    ctx.fillStyle="rgb(239,235,232)";
-    ctx.fillRect(69,578,479,57);
-    ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";
-    ctx.font='13px Georgia,"Times New Roman",serif';
-    ctx.fillText("Quando houver solicitação de alterações, os prazos",75,592,462);
-    ctx.fillText("de reapresentação serão informados no cronograma",75,610,462);
-    ctx.fillText("atualizado, conforme as condições contratuais.",75,628,462);
-    ctx.fillStyle="rgb(239,235,232)";ctx.fillRect(275,744,253,37);
-    ctx.fillStyle="#88786E";ctx.font='15px Georgia,"Times New Roman",serif';
-    ctx.fillText("PRAZO: CONSULTE O CRONOGRAMA",287,768,235);
+function manualPatchNumbers(ctx,page,project){
+ const details=typeof manualPdfStageContract==="function"
+  ?manualPdfStageContract(project,page-1):null;
+ const dur=details?"PRAZO: "+details.main+" "+(details.main===1?"DIA ÚTIL":"DIAS ÚTEIS")
+  :"PRAZO: CONFORME CRONOGRAMA";
+ if(page===5){
+  ctx.fillStyle="rgb(239,235,232)";ctx.fillRect(69,578,479,57);
+  ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";ctx.font='13px Georgia,"Times New Roman",serif';
+  ctx.fillText("Quando houver solicitação de alterações, os prazos",75,592,462);
+  ctx.fillText("de reapresentação serão informados no cronograma",75,610,462);
+  ctx.fillText("atualizado, conforme as condições contratuais.",75,628,462);
+  ctx.fillStyle="rgb(239,235,232)";ctx.fillRect(275,744,273,37);
+  ctx.fillStyle="#88786E";ctx.font='15px Georgia,"Times New Roman",serif';
+  ctx.fillText(dur,287,768,258);
+ }
+ if(page===6){
+  ctx.fillStyle="rgb(205,198,195)";ctx.fillRect(39,780,260,34);
+  ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";ctx.font='12px Georgia,"Times New Roman",serif';
+  ctx.fillText(dur,44,803,245);
+ }
+ if(page===7){
+  ctx.fillStyle="rgb(206,197,195)";ctx.fillRect(392,620,162,103);
+  ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";ctx.font='15px Georgia,"Times New Roman",serif';
+  ctx.fillText("PRAZOS",409,650,138);
+  ctx.font='12px Georgia,"Times New Roman",serif';
+  ctx.fillText(details?details.main+" DIAS ÚTEIS":"A DEFINIR",409,678,138);
+  if(details?.secondary>0){
+   ctx.font='10px Georgia,"Times New Roman",serif';
+   ctx.fillText("COMPATIBILIZAÇÃO:",409,694,138);
+   ctx.fillText(details.secondary+" DIAS ÚTEIS ADICIONAIS",409,709,138);
   }
-  if(page===6){
-    ctx.fillStyle="rgb(205,198,195)";ctx.fillRect(39,780,226,34);
-    ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";
-    ctx.font='12px Georgia,"Times New Roman",serif';
-    ctx.fillText("PRAZO: CONSULTE O",44,795,208);
-    ctx.fillText("CRONOGRAMA DO PROJETO",44,809,208);
-  }
-  if(page===7){
-    ctx.fillStyle="rgb(206,197,195)";ctx.fillRect(398,625,143,86);
-    ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";
-    ctx.font='15px Georgia,"Times New Roman",serif';
-    ctx.fillText("PRAZOS",409,650,119);
-    ctx.font='11px Georgia,"Times New Roman",serif';
-    ctx.fillText("CONSULTE O",409,678,119);
-    ctx.fillText("CRONOGRAMA",409,694,119);
-  }
+ }
+ if(page===10){
+  ctx.fillStyle="rgb(207,198,195)";ctx.fillRect(346,778,218,33);
+  ctx.fillStyle="#625245";ctx.textBaseline="alphabetic";ctx.font='14px Georgia,"Times New Roman",serif';
+  ctx.fillText(dur,352,800,203);
+ }
 }
 function manualDrawCover(ctx,project){
   ctx.fillStyle="rgb(239,235,232)";
@@ -139,37 +224,39 @@ function manualDrawCover(ctx,project){
   ctx.fillStyle="#8B7663";ctx.font='12px Georgia,"Times New Roman",serif';
   ctx.fillText(manualDatePt(d),52,793,300);
 }
-function manualDrawSummary(ctx){
-  // Pág. 12: orientar o cliente a consultar o cronograma separado.
-  ctx.fillStyle="rgba(250,248,245,0.99)";ctx.fillRect(48,128,502,693);
-  ctx.strokeStyle="#CFC3BA";ctx.lineWidth=0.8;ctx.strokeRect(51.5,128.5,488,656);
-  ctx.fillStyle="#8B7663";ctx.font='25px Georgia,"Times New Roman",serif';
-  ctx.textBaseline="alphabetic";
-  ctx.fillText("PRAZOS DO PROJETO",72,196,448);
-  ctx.strokeStyle="#AFA094";ctx.beginPath();ctx.moveTo(72,215);ctx.lineTo(512,215);ctx.stroke();
-  ctx.font='17px Georgia,"Times New Roman",serif';ctx.fillStyle="#625245";
-  const lines=[
-    "O cronograma do seu projeto será enviado",
-    "separadamente e atualizado conforme o",
-    "andamento das etapas.",
-    "",
-    "Nele você poderá consultar os prazos",
-    "do escritório, os períodos de análise e",
-    "aprovação e as datas previstas de entrega.",
-    "",
-    "Todos os prazos são considerados em",
-    "dias úteis. As datas futuras poderão ser",
-    "revisadas após cada devolutiva ou aprovação."
-  ];
-  lines.forEach((line,i)=>{if(line)ctx.fillText(line,74,276+i*30,444)});
-  ctx.font='11px Arial,sans-serif';ctx.fillStyle="#7C6F65";
-  ctx.fillText("O cronograma atualizado é o documento de referência para as datas.",74,715,442);
+function manualDrawSummary(ctx,project){
+ // Mantém o grafismo do PDF original e insere os prazos na região textual.
+ ctx.fillStyle="rgba(243,238,233,0.95)";ctx.fillRect(208,471,348,334);
+ ctx.strokeStyle="#C4B5A8";ctx.lineWidth=0.8;ctx.beginPath();
+ ctx.moveTo(225,487);ctx.lineTo(225,785);ctx.stroke();
+ ctx.fillStyle="#8B7663";ctx.font='23px Georgia,"Times New Roman",serif';
+ ctx.textBaseline="alphabetic";ctx.fillText("PRAZOS DO PROJETO",244,518,300);
+ const rows=typeof manualPdfContractRows==="function"?manualPdfContractRows(project):[];
+ let y=552;
+ if(!rows.length){
+  ctx.fillStyle="#705C50";ctx.font='13px Arial,sans-serif';
+  ctx.fillText("Prazos a definir na ficha cadastral.",244,y,285);
+ }else{
+  for(const row of rows.slice(0,7)){
+   ctx.fillStyle="#705C50";ctx.font='bold 14px Arial,sans-serif';
+   ctx.fillText(String(row.name).toLocaleUpperCase("pt-BR"),244,y,274);
+   y+=18;ctx.fillStyle="#55483F";ctx.font='13px Arial,sans-serif';
+   ctx.fillText(row.main+" "+(row.main===1?"dia útil":"dias úteis"),247,y,260);
+   if(row.secondary>0){
+    y+=16;ctx.font='11px Arial,sans-serif';ctx.fillStyle="#837166";
+    ctx.fillText(row.secondary+" dias úteis — "+(row.compatibility?"compatibilização":"revisão opcional"),247,y,280);
+   }
+   y+=28;
+  }
+ }
+ ctx.fillStyle="#83766B";ctx.font='11px Arial,sans-serif';
+ ctx.fillText("Datas e devolutivas: consulte o cronograma individual atualizado.",244,780,291);
 }
 function manualApplyChanges(canvas,pageNumber,project,pageWidth){
   const ctx=canvas.getContext("2d",{willReadFrequently:false});
   const scale=canvas.width/pageWidth;ctx.save();ctx.scale(scale,scale);
   if(pageNumber===1)manualDrawCover(ctx,project);
-  if([5,6,7].includes(pageNumber))manualPatchNumbers(ctx,pageNumber,project);
+  if([5,6,7,10].includes(pageNumber))manualPatchNumbers(ctx,pageNumber,project);
   if(pageNumber===12)manualDrawSummary(ctx,project);
   ctx.restore();
 }
@@ -181,7 +268,7 @@ function manualFileName(project){
  const name=(project.clientRegistration?.name||project.client||"cliente").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9 -]/g,"").trim().replace(/\s+/g,"_").slice(0,50);
  return "Manual_do_Cliente_"+(name||"projeto")+".pdf";
 }
-async function manualRenderPdf(project,blob){
+async function manualBuildFromTemplate(project,blob){
   await loadManualLibraries();
   const bytes=new Uint8Array(await blob.arrayBuffer());
   const template=await window.pdfjsLib.getDocument({data:bytes}).promise;
@@ -202,8 +289,13 @@ async function manualRenderPdf(project,blob){
     await new Promise(resolve=>setTimeout(resolve,0));
   }
   await template.destroy();
-  output.save(manualFileName(project));
-  manualStatus("Manual gerado e enviado para download.");
+  return output;
+}
+async function manualRenderPdf(project,blob){
+ const doc=await manualBuildFromTemplate(project,blob);
+ doc.save(manualFileName(project));
+ manualStatus("Manual gerado e enviado para download.");
+ return doc;
 }
 async function generateManualPdf(id){
  if(typeof manualGenerateFromBuiltIn!=="function"){
