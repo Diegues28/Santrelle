@@ -88,7 +88,7 @@ function projectDashboardDocumentView(project,kind){
  +(!isManual?'<button class="secondary" type="button" onclick="editRegistration('+pid+')">Editar ficha cadastral</button>':'')
  +'<button class="secondary" type="button" onclick="projectDashboardRefreshPDF()">Atualizar visualização</button>'
  +'<span id="projectDocumentActions"></span></div>'
- +'<p class="project-document-help">'+(isManual?'O manual utiliza os dados cadastrados e o texto padrão do escritório. Os prazos estão no cronograma separado.':'Visualização gerada diretamente da ficha preenchida para este projeto. Para alterar os dados, use Editar ficha cadastral.')+'</p>'
+ +'<p class="project-document-help">'+(isManual?'O manual utiliza os nomes do cliente e do cônjuge e os prazos contratuais cadastrados para este projeto. As datas e revisões continuam no cronograma atualizado.':'Visualização gerada diretamente da ficha preenchida para este projeto. Para alterar os dados, use Editar ficha cadastral.')+'</p>'
  +'<div class="project-document-status" id="projectDocumentStatus">Preparando visualização do PDF...</div>'
  +'<div id="projectDocumentFrameContainer"><div class="project-document-loading">Preparando documento...</div></div></section>';
  return content;
@@ -208,8 +208,12 @@ function projectDashboardBuildFichaPDF(project,PDF){
   field("Início previsto",projectDashboardShortDate(project.startDate));
   for(const step of project.steps){
    const parts=registrationContractParts(step);
-   field(registrationStageLabel(step),parts.main+" dias úteis"
-    +(registrationHasSecondary(step)&&parts.secondary>0?" | "+registrationSecondaryLabel(step)+": "+parts.secondary+" dias úteis":""));
+   const mainLabel=parts.main===1?"dia útil":"dias úteis";
+   field(registrationStageLabel(step),parts.main+" "+mainLabel);
+   if(registrationHasSecondary(step)&&parts.secondary>0){
+    const kind=registrationIsCompatibility(step)?"complementar":"opcional, se solicitada";
+    field(registrationSecondaryLabel(step),parts.secondary+" "+(parts.secondary===1?"dia útil":"dias úteis")+" ("+kind+")");
+   }
   }
  }
  const n=doc.getNumberOfPages();
@@ -230,7 +234,12 @@ async function projectDashboardBuildManualPDF(project,PDF){
   if(i)doc.addPage();
   const item=SANTRELLE_MANUAL_PAGES[i];
   if(i===0)manualPdfCover(doc,project);
-  else {manualPdfDecorate(doc,i+1,item.title);manualPdfBody(doc,item.blocks)}
+  else {
+   manualPdfDecorate(doc,i+1,item.title);
+   const blocks=i===11?[...item.blocks,{type:"contractTable"}]:item.blocks;
+   manualPdfBody(doc,blocks,project,i);
+   manualPdfStageDuration(doc,manualPdfStageContract(project,i));
+  }
  }
  return doc;
 }
