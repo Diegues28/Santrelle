@@ -211,7 +211,8 @@ function manualPdfBody(doc,blocks,project,pageIndex){
   });
   const total=list.reduce((sum,b)=>sum+b.height,0);
   if(total<=bottom-top||size<=8.05){plan=list;break}
-  size-=.3;
+  // Evita que arredondamentos decimais pulem o mínimo de 8 pt e deixem o plano indefinido.
+  size=Math.max(8,size-.3);
  }
  let y=top;
  for(const block of plan){
