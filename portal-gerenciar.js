@@ -14,8 +14,9 @@
  async function checkStaff(){
   const {data:{user}}=await db.auth.getUser();
   if(!user){showPanel(false);return}
-  const rows=await get(db.from('portal_staff').select('user_id').eq('user_id',user.id));
+  const rows=await get(db.from('portal_staff').select('user_id,role').eq('user_id',user.id));
   if(!rows.length){showPanel(false);E('loginMessage').textContent='Esta conta ainda não foi autorizada como integrante da equipe Santrelle.';return}
+  document.querySelectorAll('.admin-only').forEach(x=>x.classList.toggle('hidden',rows[0].role!=='admin'));
   showPanel(true);await reloadProjects();
  }
  async function reloadProjects(){
@@ -75,6 +76,22 @@
   await checkStaff().catch(err=>E('loginMessage').textContent=err.message);
  });
  E('logout').onclick=async()=>{await db.auth.signOut();currentProject=null;showPanel(false)};
+ async function createAccess(kind,email,extra={}){
+  E('createdCredentials').classList.add('hidden');
+  const {data,error}=await db.functions.invoke('criar-acesso',{body:{kind,email,...extra}});
+  if(error||!data?.ok)throw new Error(data?.error||'A criação do acesso falhou. Confira a permissão de administrador.');
+  E('createdEmail').textContent=data.email;
+  E('createdPassword').value=data.password;
+  E('createdCredentials').classList.remove('hidden');
+  E('createdCredentials').scrollIntoView({behavior:'smooth',block:'center'});
+ }
+ E('copyPassword').onclick=async()=>{
+  try{await navigator.clipboard.writeText(E('createdPassword').value);note('Senha provisória copiada.')}
+  catch{E('createdPassword').select();note('Selecione e copie a senha provisória.')}
+ };
+ submit('newStaff',async()=>{await createAccess('staff',E('staffNewEmail').value.trim(),{staffRole:E('staffRole').value})});
+ submit('newClient',async()=>{await createAccess('client',E('clientNewEmail').value.trim(),{projectId:projectId()})});
+ submit('resetClient',async()=>{await createAccess('client',E('resetClientEmail').value.trim(),{projectId:projectId(),action:'reset'})});
  submit('newProject',async()=>{
   await write(db.from('portal_projects').insert({title:E('title').value.trim(),client_label:E('clientLabel').value.trim()}));
   await reloadProjects();

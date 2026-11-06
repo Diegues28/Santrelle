@@ -68,17 +68,7 @@
   if(error){message('E-mail ou senha inválidos, ou conta ainda não confirmada.');return}
   message('');await current();
  });
- el('resetButton').addEventListener('click',async()=>{
-  const email=el('email').value.trim();if(!email){message('Informe seu e-mail para recuperar a senha.');return}
-  await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
-  message('Se houver uma conta para esse e-mail, você receberá as instruções de recuperação.');
- });
- el('signupButton').addEventListener('click',async()=>{
-  const email=el('email').value.trim(),password=el('password').value;
-  if(!email||password.length<8){message('Informe seu e-mail e uma senha com pelo menos 8 caracteres.');return}
-  const {error}=await db.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
-  message(error?'Não foi possível cadastrar. Confira os dados ou fale com a Santrelle.':'Confira seu e-mail para confirmar o cadastro. Depois, a Santrelle vinculará seu projeto à conta.');
- });
+ el('changePassword').addEventListener('click',()=>{show(false);el('recoveryForm').classList.remove('hidden');message('Escolha uma senha nova com pelo menos 8 caracteres.')});
  el('recoveryForm').addEventListener('submit',async event=>{
   event.preventDefault();const {error}=await db.auth.updateUser({password:el('newPassword').value});
   message(error?'Não foi possível atualizar a senha.':'Senha atualizada. Faça login novamente.');

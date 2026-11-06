@@ -4,31 +4,37 @@ O projeto Supabase **Santrelle** já recebeu as tabelas e políticas do arquivo
 `portal_cliente_seguro.sql`. Todas as tabelas usam RLS; o bucket
 `santrelle-clientes` é privado. **Nunca publique uma chave secret/service_role.**
 
-## Antes de convidar clientes
+## Antes de ativar o login do escritório
 
 1. No Supabase, em **Authentication → URL Configuration**, definir:
    - Site URL: `https://diegues28.github.io/Santrelle/cliente.html`
    - Redirect URL: `https://diegues28.github.io/Santrelle/cliente.html`
-2. Configurar SMTP próprio em **Authentication → SMTP Settings**. O servidor
-   de e-mails padrão do Supabase não envia confirmações a usuários externos à
-   equipe. Resend e Brevo possuem opções gratuitas, sujeitas a cotas e domínio.
-   Guardar as credenciais **somente no painel do Supabase**.
-3. Cadastrar/confirmar o e-mail da primeira pessoa da equipe em
-   `cliente.html` (botão **Criar acesso**). O vínculo de equipe não acontece
-   automaticamente.
-4. No SQL Editor do projeto, **depois** da confirmação do e-mail, executar,
-   substituindo pelo endereço autorizado da Santrelle:
+2. Cadastrar a **primeira conta de administrador** pelo painel Supabase
+   (**Authentication → Users → Add user**) e marcar o e-mail como confirmado.
+   Esta etapa inicial é necessária para evitar criação pública de administradores.
+3. No SQL Editor do projeto, executar, substituindo pelo e-mail autorizado:
 
    ```sql
-   insert into public.portal_staff(user_id)
-   select id from auth.users where lower(email)=lower('EMAIL_DA_EQUIPE_AQUI');
+   insert into public.portal_staff(user_id,role)
+   select id,'admin' from auth.users where lower(email)=lower('EMAIL_DA_EQUIPE_AQUI');
    ```
 
-5. Abrir `portal-gerenciar.html`, entrar com a mesma conta e cadastrar os
-   projetos online. Os clientes criam as próprias contas em `cliente.html`,
-   confirmam o e-mail e a equipe vincula o e-mail ao projeto.
+4. Abrir `portal-gerenciar.html`, entrar com a conta administradora e criar
+   as demais contas da equipe e dos clientes. O sistema gera uma senha provisória
+   forte, exibida uma única vez ao administrador. Entregá-la por canal seguro e
+   orientar a pessoa a trocá-la após o primeiro acesso.
+5. O cliente entra em `cliente.html` com o e-mail cadastrado e a senha provisória.
+   Não precisa criar conta ou receber e-mail de confirmação.
 6. Para cada etapa, pasta e arquivo, usar **Liberar**. Nada é liberado por
    padrão. O formulário de documento aceita PDF, JPG e PNG, até 20 MB.
+
+O `index.html` também recebeu a tela de login do escritório. **Não mescle a
+branch enquanto o primeiro administrador não estiver criado e os testes não
+estiverem concluídos**, pois isso bloquearia a interface atual.
+
+Não é necessário SMTP para o cadastro com senha provisória. Caso a equipe
+queira recuperação automática de senha por e-mail no futuro, será necessário
+um serviço de SMTP próprio.
 
 ## Dados antigos
 
@@ -50,5 +56,5 @@ inatividade. Faça acompanhamento dos limites no painel. O envio de e-mail
 - O bucket `santrelle-clientes` foi confirmado como privado.
 - A auditoria Supabase de segurança não retornou alertas após a correção.
 - O código JavaScript passou em `node --check`.
-- **Pendente:** teste ponta a ponta com uma conta de equipe e outra de cliente,
+- **Pendente:** provisionamento da primeira administradora e teste ponta a ponta com outra conta de equipe e outra de cliente,
   incluindo download e tentativa de acesso ao projeto de terceiros.

@@ -13,12 +13,12 @@ header{padding:20px clamp(20px,5vw,80px);background:#625245;color:#fff;display:f
   <p>Acompanhe as etapas liberadas, consulte os documentos e veja suas próximas reuniões.</p>
   <form id="loginForm"><label for="email">E-mail</label><input id="email" type="email" autocomplete="email" required>
    <label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required minlength="6">
-   <div class="actions"><button type="submit" id="loginButton">Entrar</button><button class="secondary" id="signupButton" type="button">Criar acesso</button><button class="secondary" id="resetButton" type="button">Esqueci minha senha</button></div>
-  </form><p class="muted">O acesso é liberado pela equipe Santrelle. Se ainda não recebeu suas credenciais, entre em contato com o escritório.</p>
+   <div class="actions"><button type="submit" id="loginButton">Entrar</button></div>
+  </form><p class="muted">O acesso é cadastrado pela equipe Santrelle. Se esqueceu a senha, solicite uma senha provisória ao escritório.</p>
   <form id="recoveryForm" class="hidden"><label for="newPassword">Nova senha</label><input id="newPassword" type="password" minlength="8" autocomplete="new-password" required><button type="submit">Salvar nova senha</button></form>
   <p class="message" id="loginMessage" role="status"></p>
  </section>
- <section id="client" class="hidden"><div class="panel"><span class="eyebrow">Seu espaço exclusivo</span><h1>Meus projetos</h1><p>Somente os projetos vinculados à sua conta aparecem aqui.</p><div id="projects"></div></div></section>
+ <section id="client" class="hidden"><div class="panel"><span class="eyebrow">Seu espaço exclusivo</span><h1>Meus projetos</h1><p>Somente os projetos vinculados à sua conta aparecem aqui.</p><button id="changePassword" class="secondary" type="button">Alterar minha senha</button><div id="projects"></div></div></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="portal-supabase-config.js"></script>
