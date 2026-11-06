@@ -42,6 +42,85 @@ function manualPdfLine(doc,value,x,y,maxWidth,fontSize=10,lineHeight=5.3){
  for(const line of lines){doc.text(line,x,y);y+=lineHeight}
  return y;
 }
+
+/* Os prazos apresentados no manual saem exclusivamente da ficha deste projeto.
+   Não usamos quantidades fixas do modelo original nem somamos revisões opcionais
+   à duração principal. */
+function manualClientNames(project){
+ const client=String(project?.clientRegistration?.name||project?.client||project?.name||"CLIENTE").trim()||"CLIENTE";
+ const spouse=String(project?.clientRegistration?.spouseName||"").trim();
+ return spouse&&spouse.toLocaleLowerCase("pt-BR")!==client.toLocaleLowerCase("pt-BR")
+  ?[client,spouse]:[client];
+}
+function manualPdfStageContract(project,pageIndex){
+ const mapping={3:"levantamento",4:"estudo preliminar",5:"anteprojeto",6:"projeto executivo",7:"planejamento de obra",8:"acompanhamento de obra",9:"producao de ambientes"};
+ const target=mapping[pageIndex];
+ if(!target)return null;
+ const normal=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR");
+ const step=(project?.steps||[]).find(item=>{
+  const label=typeof registrationStageLabel==="function"?registrationStageLabel(item):item.name;
+  return normal(label).includes(target);
+ });
+ if(!step)return null;
+ const parts=typeof registrationContractParts==="function"?registrationContractParts(step):
+  (step.contractualParts||{main:Math.max(1,Number(step.contractualDays)||1),secondary:0});
+ const main=Math.max(1,Math.floor(Number(parts.main)||1));
+ const secondary=Math.max(0,Math.floor(Number(parts.secondary)||0));
+ const compatibility=pageIndex===6;
+ return {name:String(typeof registrationStageLabel==="function"?registrationStageLabel(step):step.name||"Etapa"),
+  main,secondary,compatibility,
+  secondaryName:compatibility?"Compatibilização com móveis planejados":pageIndex===4?"Revisão do estudo preliminar":"Revisão do anteprojeto"};
+}
+function manualPdfStageDuration(doc,contract){
+ if(!contract)return;
+ doc.setDrawColor(205,190,176);doc.setLineWidth(.26);doc.line(24,258,186,258);
+ doc.setFont("times","normal");doc.setTextColor(109,90,76);doc.setFontSize(12.2);
+ doc.text("PRAZO: "+contract.main+" "+(contract.main===1?"DIA ÚTIL":"DIAS ÚTEIS"),186,266,{align:"right"});
+ if(contract.secondary>0){
+  doc.setFont("helvetica","normal");doc.setFontSize(7.3);doc.setTextColor(136,119,108);
+  const second=contract.secondaryName+" — "+contract.secondary+" "+(contract.secondary===1?"dia útil":"dias úteis")
+    +(contract.compatibility?" (adicional)":" (se solicitada)");
+  doc.text(doc.splitTextToSize(second,158).slice(0,2),186,272,{align:"right",lineHeightFactor:1.07});
+ }
+}
+function manualPdfContractRows(project){
+ const rows=[];
+ for(const ix of [3,4,5,6,7,8,9]){
+  const contract=manualPdfStageContract(project,ix);
+  if(contract)rows.push(contract);
+ }
+ return rows;
+}
+function manualPdfContractTable(doc,project,startY){
+ const rows=manualPdfContractRows(project);
+ let y=startY+2;
+ if(!rows.length){
+  doc.setFont("helvetica","normal");doc.setFontSize(9.5);doc.setTextColor(116,99,87);
+  doc.text("Os prazos contratuais serão apresentados após o cadastro das etapas.",24,y+5);
+  return y+12;
+ }
+ doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(112,92,79);
+ doc.text("PRAZOS CONTRATUAIS DESTE PROJETO",24,y+5);
+ y+=11;
+ rows.forEach((row)=>{
+  doc.setFont("helvetica","normal");doc.setFontSize(9.3);doc.setTextColor(83,72,63);
+  doc.text(manualSafeText(row.name),24,y);
+  doc.setFont("helvetica","bold");doc.setTextColor(98,78,65);
+  doc.text(row.main+" "+(row.main===1?"dia útil":"dias úteis"),186,y,{align:"right"});
+  y+=6.5;
+  if(row.secondary>0){
+   doc.setFont("helvetica","normal");doc.setFontSize(7.8);doc.setTextColor(134,116,104);
+   const secondaryText=row.secondaryName+" ("+(row.compatibility?"complementar":"opcional")+")";
+   doc.text(doc.splitTextToSize(secondaryText,123).slice(0,2),30,y);
+   doc.text(row.secondary+" "+(row.secondary===1?"dia útil":"dias úteis"),186,y,{align:"right"});
+   y+=6.5;
+  }
+  doc.setDrawColor(231,223,217);doc.setLineWidth(.15);doc.line(24,y,186,y);
+  y+=4.0;
+ });
+ return y+2;
+}
+
 function manualPdfDecorate(doc,pageNo,title){
  const W=210,H=297;
  doc.setFillColor(250,248,245);doc.rect(0,0,W,H,"F");
@@ -57,8 +136,8 @@ function manualPdfDecorate(doc,pageNo,title){
  doc.text(titleLines,24,53,{lineHeightFactor:1.14});
  doc.setDrawColor(210,199,190);doc.line(24,70,186,70);
  doc.setFont("helvetica","normal");doc.setFontSize(7.2);doc.setTextColor(143,123,110);
- doc.text("SANTRELLE  |  MANUAL DO CLIENTE",24,275);
- doc.text(String(pageNo),186,275,{align:"right"});
+ doc.text("SANTRELLE  |  MANUAL DO CLIENTE",24,286);
+ doc.text(String(pageNo),186,286,{align:"right"});
  return 82;
 }
 function manualPdfCover(doc,project){
@@ -72,11 +151,16 @@ function manualPdfCover(doc,project){
  doc.setFont("times","normal");doc.setTextColor(112,93,81);doc.setFontSize(33);
  doc.text("MANUAL",27,103);doc.text("DO CLIENTE",27,116);
  doc.setDrawColor(186,169,154);doc.line(27,196,91,196);
- const client=project.clientRegistration?.name||project.client||project.name||"CLIENTE";
- const upper=manualSafeText(client).toLocaleUpperCase("pt-BR");
- doc.setFontSize(19);doc.setTextColor(119,102,90);
- const lines=doc.splitTextToSize(upper,106).slice(0,4);
- let y=214;for(const line of lines){doc.text(line,27,y);y+=9}
+ const names=manualClientNames(project).map(n=>manualSafeText(n).toLocaleUpperCase("pt-BR"));
+ doc.setFontSize(18.4);doc.setTextColor(119,102,90);
+ const lines=[];
+ names.forEach((name,index)=>{
+  if(index)lines.push("E");
+  lines.push(...doc.splitTextToSize(name,132));
+ });
+ // Reserva a região da data, inclusive quando os nomes forem longos.
+ const visible=lines.slice(0,6),start=Math.max(207,240-visible.length*8.3);
+ let y=start;for(const line of visible){doc.text(line,27,y);y+=8.3}
  const raw=project.manualCoverDate||project.registrationCreatedAt||"";
  let date="";
  if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){
@@ -110,13 +194,14 @@ function manualPdfStages(doc){
   doc.text(lines,x+5,y+18,{lineHeightFactor:1.18});
  }
 }
-function manualPdfBody(doc,blocks){
- const areaW=162,top=82,bottom=260;
+function manualPdfBody(doc,blocks,project,pageIndex){
+ const areaW=162,top=82,bottom=manualPdfStageContract(project,pageIndex)?252:260;
  let size=10.1,plan=null;
  while(size>=8.0){
   const lineHeight=size*.54;
   const list=blocks.map(b=>{
    if(b.type==="stages")return {kind:"stages",height:148};
+   if(b.type==="contractTable")return {kind:"contractTable",height:15+manualPdfContractRows(project).reduce((n,r)=>n+(r.secondary>0?17:11),0)};
    const section=b.type==="section",fontSize=section?size+1.2:size;
    doc.setFont(section?"helvetica":"helvetica",section?"bold":"normal");
    doc.setFontSize(fontSize);
@@ -131,6 +216,7 @@ function manualPdfBody(doc,blocks){
  let y=top;
  for(const block of plan){
   if(block.kind==="stages"){manualPdfStages(doc);y+=block.height;continue}
+  if(block.kind==="contractTable"){y=manualPdfContractTable(doc,project,y);continue}
   if(block.kind==="section"){
    y+=1.5;
    doc.setFont("helvetica","bold");doc.setTextColor(125,102,88);
@@ -166,7 +252,12 @@ async function manualGenerateFromBuiltIn(id){
    const page=SANTRELLE_MANUAL_PAGES[i];
    manualStatus("Montando o manual: página "+(i+1)+" de 16...");
    if(i===0)manualPdfCover(doc,project);
-   else{manualPdfDecorate(doc,i+1,page.title);manualPdfBody(doc,page.blocks)}
+   else{
+    manualPdfDecorate(doc,i+1,page.title);
+    const blocks=i===11?[...page.blocks,{type:"contractTable"}]:page.blocks;
+    manualPdfBody(doc,blocks,project,i);
+    manualPdfStageDuration(doc,manualPdfStageContract(project,i));
+   }
   }
   const name=project.clientRegistration?.name||project.client||project.name||"Cliente";
   doc.save("Manual_do_Cliente_"+manualNameForFile(name)+".pdf");
