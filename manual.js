@@ -250,13 +250,13 @@ function manualDrawSummary(ctx,project){
   for(const row of rows.slice(0,7)){
    ctx.fillStyle="#705C50";ctx.font='bold 14px Arial,sans-serif';
    ctx.fillText(String(row.name).toLocaleUpperCase("pt-BR"),244,y,274);
-   y+=18;ctx.fillStyle="#55483F";ctx.font='13px Arial,sans-serif';
+   y+=15;ctx.fillStyle="#55483F";ctx.font='13px Arial,sans-serif';
    ctx.fillText(row.main+" "+(row.main===1?"dia útil":"dias úteis"),247,y,260);
    if(row.secondary>0){
-    y+=16;ctx.font='11px Arial,sans-serif';ctx.fillStyle="#837166";
+    y+=14;ctx.font='11px Arial,sans-serif';ctx.fillStyle="#837166";
     ctx.fillText(row.secondary+" dias úteis — "+(row.compatibility?"compatibilização":"revisão opcional"),247,y,280);
    }
-   y+=28;
+   y+=18;
   }
  }
  ctx.fillStyle="#83766B";ctx.font='11px Arial,sans-serif';
