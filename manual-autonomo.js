@@ -246,6 +246,16 @@ async function manualGenerateFromBuiltIn(id){
  manualStatus("Preparando o manual. Não é necessário anexar nenhum arquivo...");
  try{
   const PDF=await manualEnsurePdfLibrary();
+  const template=typeof manualTemplateManagerInfo==="function"?manualTemplateManagerInfo():null;
+  if(template){
+   const file=await manualTemplateGet();
+   if(!file)throw new Error("O PDF padrão não está disponível. Envie novamente em Etapas e modelos.");
+   const original=await manualBuildFromTemplate(project,file);
+   const individual=manualClientNames(project).join("_");
+   original.save("Manual_do_Cliente_"+manualNameForFile(individual)+".pdf");
+   manualStatus("Manual gerado usando o PDF padrão do escritório e os dados deste projeto.");
+   return;
+  }
   const doc=new PDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
   doc.setProperties({title:"Manual do Cliente - Santrelle Arquitetura",author:"Santrelle Arquitetura e Interiores",subject:"Manual do Cliente"});
   for(let i=0;i<SANTRELLE_MANUAL_PAGES.length;i++){
