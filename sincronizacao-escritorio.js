@@ -70,7 +70,12 @@
    restore(remote.payload);rev=remote.revision;
   }catch(e){console.warn('Falha ao verificar atualização da Santrelle:',e)}
  },12000)}
- save=function(){oldSave();if(!active)return;changes++;dirty=true;clearTimeout(timer);timer=setTimeout(flush,650)};
+ function markChanged(){if(!active)return;changes++;dirty=true;clearTimeout(timer);timer=setTimeout(flush,650)}
+ save=function(){oldSave();markChanged()};
+ if(typeof portalSave==='function'){
+  const oldPortalSave=portalSave;
+  portalSave=function(){const result=oldPortalSave();if(result!==false)markChanged();return result}
+ }
  window.santrelleSyncStart=async function(client,currentUser){
   db=client;user=currentUser;active=false;blocked=false;
   let remote=await getRemote();
