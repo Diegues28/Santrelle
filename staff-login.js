@@ -37,7 +37,7 @@
   if(!button){button=document.createElement('button');button.id='staffLogout';button.className='staff-logout';document.body.appendChild(button)}
   button.textContent='Sair · '+user.email;
   button.hidden=false;
-  button.onclick=async()=>{await db.auth.signOut();lock()};
+  button.onclick=async()=>{await db.auth.signOut();lock();location.reload()};
  }
  function lock(){currentUser=null;document.body.classList.add('staff-lock');E('staffLoginLayer').hidden=false;const b=E('staffLogout');if(b)b.hidden=true}
  E('staffForm').addEventListener('submit',async event=>{
