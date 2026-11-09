@@ -1,7 +1,7 @@
 /* Santrelle — sincronização compartilhada, com migração explícita e proteção contra conflitos. */
 (function(){
  const KEYS=['santrelle_projects','santrelle_phases','santrelle_deliveries','santrelle_holidays','santrelle_employees','santrelle_hidden_team_members','santrelle_postobra','santrelle_portal_preview_v1'];
- let db,user,active=false,rev=0,dirty=false,writing=false,timer=null,poll=null,blocked=false;
+ let db,user,active=false,rev=0,dirty=false,writing=false,timer=null,poll=null,blocked=false,changes=0;
  const oldSave=save;
  const snapshot=()=>Object.fromEntries(KEYS.filter(k=>localStorage.getItem(k)!==null).map(k=>[k,JSON.parse(localStorage.getItem(k))]));
  const safeCount=()=>{try{return (JSON.parse(localStorage.getItem('santrelle_projects')||'[]')||[]).length}catch{return 0}};
@@ -52,12 +52,15 @@
   if(!active||blocked||writing||!dirty)return;
   writing=true;
   try{
+   const versionAtStart=changes;
    const payload=snapshot();
    if(JSON.stringify(payload).length>4000000)throw Error('Dados locais excedem 4 MB. A sincronização foi interrompida.');
    const {data,error}=await db.from('santrelle_workspace').update({payload,revision:rev+1,updated_at:new Date().toISOString(),updated_by:user.id}).eq('id',1).eq('revision',rev).select('revision');
    if(error)throw error;
    if(!data?.length){blocked=true;active=false;backup();alert('Outra pessoa atualizou a Santrelle ao mesmo tempo. Salvei um backup local; atualize a página para escolher a versão correta.');return}
-   rev=data[0].revision;dirty=false;
+   rev=data[0].revision;
+   dirty=changes!==versionAtStart;
+   if(dirty){clearTimeout(timer);timer=setTimeout(flush,700)}
   }catch(e){blocked=true;active=false;backup();alert('Não foi possível sincronizar com Supabase. Backup local salvo. '+e.message)}
   finally{writing=false}
  }
@@ -67,7 +70,7 @@
    restore(remote.payload);rev=remote.revision;
   }catch(e){console.warn('Falha ao verificar atualização da Santrelle:',e)}
  },12000)}
- save=function(){oldSave();if(!active)return;dirty=true;clearTimeout(timer);timer=setTimeout(flush,650)};
+ save=function(){oldSave();if(!active)return;changes++;dirty=true;clearTimeout(timer);timer=setTimeout(flush,650)};
  window.santrelleSyncStart=async function(client,currentUser){
   db=client;user=currentUser;active=false;blocked=false;
   let remote=await getRemote();
@@ -82,7 +85,8 @@
    backup();
    await uploadFirst();return true;
   }
-  const local=snapshot(),different=JSON.stringify(local)!==JSON.stringify(remote.payload);
+  const canonical=v=>JSON.stringify(v,(key,value)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.keys(value).sort().reduce((acc,k)=>(acc[k]=value[k],acc),{}):value);
+  const local=snapshot(),different=canonical(local)!==canonical(remote.payload);
   if(different&&safeCount()>0){
    const choice=await dialog('Dados locais diferentes dos dados compartilhados','Há cadastros neste navegador que diferem do Supabase. Faça backup antes de carregar a versão central. Não serão mesclados automaticamente para evitar perda de dados.',[
     {label:'Baixar backup local',value:'backup'},
