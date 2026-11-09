@@ -64,7 +64,7 @@
  function startPoll(){if(poll)clearInterval(poll);poll=setInterval(async()=>{
   if(!active||dirty||writing||blocked)return;
   try{const remote=await getRemote();if(!remote||remote.revision===rev)return;
-   backup();restore(remote.payload);rev=remote.revision;
+   restore(remote.payload);rev=remote.revision;
   }catch(e){console.warn('Falha ao verificar atualização da Santrelle:',e)}
  },12000)}
  save=function(){oldSave();if(!active)return;dirty=true;clearTimeout(timer);timer=setTimeout(flush,650)};
@@ -74,8 +74,9 @@
   if(!remote){
    const choice=await dialog('Primeira sincronização da Santrelle','O banco central ainda não recebeu os cadastros antigos. No computador PRINCIPAL, que possui os projetos e funcionários completos, escolha Enviar dados. Em outros computadores, escolha Voltar e acesse novamente depois.',[
     {label:'Baixar backup deste computador',value:'backup'},
-    {label:'Voltar, este não é o principal',value:'cancel'},
+    {label:'Continuar sem sincronizar por enquanto',value:'offline'},
     {label:'Enviar dados deste computador principal',value:'upload',primary:true}]);
+   if(choice==='offline')return true;
    if(choice!=='upload')return false;
    if(!confirm('Confirma que ESTE é o computador que contém os cadastros corretos e mais completos da Santrelle? Esses dados serão usados pelos demais computadores.'))return false;
    backup();
@@ -85,8 +86,9 @@
   if(different&&safeCount()>0){
    const choice=await dialog('Dados locais diferentes dos dados compartilhados','Há cadastros neste navegador que diferem do Supabase. Faça backup antes de carregar a versão central. Não serão mesclados automaticamente para evitar perda de dados.',[
     {label:'Baixar backup local',value:'backup'},
-    {label:'Voltar sem alterar',value:'cancel'},
+    {label:'Continuar somente neste navegador',value:'offline'},
     {label:'Carregar dados do Supabase',value:'download',primary:true}]);
+   if(choice==='offline')return true;
    if(choice!=='download')return false;
    backup();
   }
