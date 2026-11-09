@@ -24,6 +24,12 @@
   if(error||!user){lock();return}
   const {data:staff,error:staffError}=await db.from('portal_staff').select('role').eq('user_id',user.id).maybeSingle();
   if(staffError||!staff){lock();status('Sua conta não está autorizada para o aplicativo interno.');return}
+  try{
+   if(typeof window.santrelleSyncStart==='function'){
+    const ready=await window.santrelleSyncStart(db,user);
+    if(!ready){lock();status('Sincronização não concluída. Atualize a página para escolher novamente.');return}
+   }
+  }catch(syncError){lock();status('Não foi possível iniciar a sincronização: '+syncError.message);return}
   currentUser=user;
   document.body.classList.remove('staff-lock');
   E('staffLoginLayer').hidden=true;
