@@ -950,7 +950,7 @@ function calendarHTML(){
  const entries=window.santrelleCalendarVisibleEntries?window.santrelleCalendarVisibleEntries(calendarEntries()):[];
  const today=new Date(),todayISO=iso(today.getFullYear(),today.getMonth()+1,today.getDate());
  const kindClass=e=>e.kind==='start'?'cal-start':e.kind==='office'||e.kind==='suboffice'?'cal-office':e.kind==='client'?'cal-client':'';
- const eventHTML=e=>'<button class="cal-event '+kindClass(e)+(!e.completed&&e.date<todayISO?' overdue':'')+'" title="'+esc(e.name+' · '+e.owner)+'" onclick="'+(e.kind==='appointment'?'santrelleCalendarOpenEvent(\''+e.eventId+'\')':'calendarOpen(\''+e.id+'\')')+'"><span class="cal-owner">'+esc(e.owner||'Sem responsável')+'</span><span>'+esc(e.name)+'</span></button>';
+ const eventHTML=e=>'<button class="cal-event '+kindClass(e)+(!e.completed&&e.date<todayISO?' overdue':'')+'" title="'+esc(e.name+' · '+e.owner)+'" onclick="'+(e.kind==='appointment'?'santrelleCalendarOpenEvent(\''+e.eventId+'\')':e.kind==='meeting'?'santrelleCalendarOpenMeeting('+JSON.stringify(String(e.projectId))+','+JSON.stringify(String(e.meetingId))+')':'calendarOpen(\''+e.id+'\')')+'"><span class="cal-owner">'+esc(e.owner||'Sem responsável')+'</span><span>'+esc(e.name)+'</span></button>';
  let days='';
  for(let i=0;i<Math.ceil((offset+total)/7)*7;i++){
   const date=offsetDay(first,i-offset),parsed=parseISO(date),n=parsed.getDate();
@@ -1347,14 +1347,14 @@ function attentionActiveEntries(entries){
   if(e.kind==='delivery'&&!e.projectId)selected.push(e);
   else if(e.kind==='postwork'&&!e.projectId)selected.push(e);
  }
- selected.push(...entries.filter(e=>e.kind==='appointment'));return selected.sort((a,b)=>a.date.localeCompare(b.date));
+ selected.push(...entries.filter(e=>e.kind==='appointment'||e.kind==='meeting'));return selected.sort((a,b)=>a.date.localeCompare(b.date));
 }
 function attentionHTML(entries,today){
- let visible=attentionActiveEntries(entries).filter(e=>e.kind==='appointment'||(window.santrelleCalendarIsAdmin?.()||window.santrelleCalendarOwnName?.())&&entries.some(v=>v.id===e.id)).filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);
+ let visible=attentionActiveEntries(entries).filter(e=>(e.kind==='appointment'||e.kind==='meeting')||(window.santrelleCalendarIsAdmin?.()||window.santrelleCalendarOwnName?.())&&entries.some(v=>v.id===e.id)).filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);
  if(!visible.length)return '<p class="muted">Nenhuma entrega atrasada ou prevista para os próximos 14 dias.</p>';
  const fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';
  return '<div class="table-scroll"><table><thead><tr><th>Entrega / projeto</th><th>Responsável</th><th>Prazo</th><th>Prazo inicial</th><th>Situação</th></tr></thead><tbody>'
- +visible.map(e=>'<tr><td><a class="click" onclick="'+(e.kind==='appointment'?'santrelleCalendarOpenEvent(\''+e.eventId+'\')':e.kind==='suboffice'&&!entries.some(item=>item.id===e.id)?'openProject('+Number(e.projectId)+')':'calendarOpen(\''+e.id+'\')')+'">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+fmt(e.date)+'</td><td>'+fmt(attentionStartDate(e))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')
+ +visible.map(e=>'<tr><td><a class="click" onclick="'+(e.kind==='appointment'?'santrelleCalendarOpenEvent(\''+e.eventId+'\')':e.kind==='meeting'?'santrelleCalendarOpenMeeting('+JSON.stringify(String(e.projectId))+','+JSON.stringify(String(e.meetingId))+')':e.kind==='suboffice'&&!entries.some(item=>item.id===e.id)?'openProject('+Number(e.projectId)+')':'calendarOpen(\''+e.id+'\')')+'">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+fmt(e.date)+'</td><td>'+fmt(attentionStartDate(e))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')
  +'</tbody></table></div>';
 }
 
