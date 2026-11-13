@@ -3,6 +3,17 @@
  const money=n=>Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const date=s=>s?new Date(s+'T12:00:00').toLocaleDateString('pt-BR'):'Não informado';
+ const explain=(stage)=>{
+  if(stage.description?.trim())return stage.description.trim();
+  const n=(stage.label||'').toLocaleLowerCase('pt-BR');
+  if(n.includes('briefing'))return 'Reunião para entender necessidades, preferências, prioridades e expectativas para o projeto.';
+  if(n.includes('levantamento'))return 'Conferência das medidas, condições e informações do imóvel para orientar o desenvolvimento.';
+  if(n.includes('estudo preliminar'))return 'Apresentação das primeiras soluções de layout, organização dos ambientes e imagens do projeto.';
+  if(n.includes('anteprojeto'))return 'Definição e compatibilização das soluções, materiais, equipamentos e estimativas de investimento.';
+  if(n.includes('executivo'))return 'Detalhamento técnico do projeto para orientar fornecedores e execução da obra.';
+  if(n.includes('obra'))return 'Planejamento, acompanhamento e relatórios sobre o andamento dos serviços contratados.';
+  return '';
+ };
  const query=async q=>{const {data,error}=await q;if(error)throw error;return data||[]};
  async function fileButton(db,path,label){
   const b=document.createElement('button');b.type='button';b.className='secondary';b.textContent=label;
@@ -19,13 +30,13 @@
    query(db.from('portal_payments').select('id,scope,description,amount,due_date,paid_at,receipt_path,pix_code').eq('project_id',p.id).order('due_date'))
   ]);
   const now=stages.find(s=>s.label.toLocaleLowerCase('pt-BR')===(p.current_stage||'').toLocaleLowerCase('pt-BR'));
-  if(now&&now.description){const info=document.createElement('p');info.className='muted';info.textContent=now.description;wrap.querySelector('h2')?.after(info)}
+  if(now&&explain(now)){const info=document.createElement('p');info.className='muted';info.textContent=explain(now);wrap.querySelector('h2')?.after(info)}
   if(stages.length){
    const s=section('Etapas do projeto e aprovações');
    for(const stage of stages){
     const panel=document.createElement('div');panel.className='tile';panel.style.marginBottom='10px';
     const h=document.createElement('strong');h.textContent=stage.label;panel.append(h);
-    if(stage.description){const d=document.createElement('p');d.textContent=stage.description;panel.append(d)}
+    if(explain(stage)){const d=document.createElement('p');d.textContent=explain(stage);panel.append(d)}
     const approved=approvals.find(a=>a.stage_id===stage.id);
     const status=document.createElement('p');status.className='muted';status.textContent=approved?'✓ Sua aprovação foi registrada em '+new Date(approved.approved_at).toLocaleString('pt-BR'):stage.requires_approval?'Aguardando sua aprovação':'Etapa disponível para consulta';panel.append(status);
     if(stage.requires_approval&&!approved){
