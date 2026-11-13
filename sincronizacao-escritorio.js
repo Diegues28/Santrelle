@@ -88,31 +88,33 @@
  }
  window.santrelleSyncStart=async function(client,currentUser){
   db=client;user=currentUser;active=false;blocked=false;status('Verificando banco da Santrelle...','#8B7663');
-  let remote=await getRemote();
+  // O Supabase é a fonte única dos dados. Nenhum computador precisa confirmar
+  // migração ou escolher entre versões quando entra no aplicativo.
+  const remote=await getRemote();
   if(!remote){
-   const choice=await dialog('Primeira sincronização da Santrelle','O banco central ainda não recebeu os cadastros antigos. No computador PRINCIPAL, que possui os projetos e funcionários completos, escolha Enviar dados. Em outros computadores, escolha Voltar e acesse novamente depois.',[
-    {label:'Baixar backup deste computador',value:'backup'},
-    {label:'Continuar sem sincronizar por enquanto',value:'offline'},
-    {label:'Enviar dados deste computador principal',value:'upload',primary:true}]);
-   if(choice==='offline'){status('Modo local — não sincronizado','#A14E48');return true;}
-   if(choice!=='upload')return false;
-   if(!confirm('Confirma que ESTE é o computador que contém os cadastros corretos e mais completos da Santrelle? Esses dados serão usados pelos demais computadores.'))return false;
-   if(safeCount()===0){alert('Não encontrei nenhum projeto neste navegador. Por segurança, faça o envio no computador principal que já contém o CIEM e os outros projetos.');status('Aguardando computador principal','#A14E48');return false}
-   backup();
-   await uploadFirst();return true;
+   status('Banco central indisponível — acesso bloqueado','#A14E48');
+   throw Error('O banco compartilhado da Santrelle não foi encontrado. Nenhuma versão local foi enviada; peça ao administrador para verificar o Supabase.');
   }
   const canonical=v=>JSON.stringify(v,(key,value)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.keys(value).sort().reduce((acc,k)=>(acc[k]=value[k],acc),{}):value);
-  const local=snapshot(),different=canonical(local)!==canonical(remote.payload);
-  if(different&&safeCount()>0){
-   const choice=await dialog('Dados locais diferentes dos dados compartilhados','Há cadastros neste navegador que diferem do Supabase. Faça backup antes de carregar a versão central. Não serão mesclados automaticamente para evitar perda de dados.',[
-    {label:'Baixar backup local',value:'backup'},
-    {label:'Continuar somente neste navegador',value:'offline'},
-    {label:'Carregar dados do Supabase',value:'download',primary:true}]);
-   if(choice==='offline'){status('Modo local — não sincronizado','#A14E48');return true;}
-   if(choice!=='download')return false;
-   backup();
+  const local=snapshot();
+  if(Object.keys(local).length&&canonical(local)!==canonical(remote.payload)){
+   // Preserva dados divergentes sem interromper a entrada nem substituir a nuvem.
+   // Guarda apenas uma versão anterior por navegador; não faz download automático.
+   try{
+    const saved=JSON.parse(localStorage.getItem('santrelle_local_recovery_snapshot')||'null');
+    if(!saved||canonical(saved.data)!==canonical(local)){
+     localStorage.setItem('santrelle_local_recovery_snapshot',JSON.stringify({
+      savedAt:new Date().toISOString(),reason:'Dados antigos encontrados antes da sincronização automática',data:local
+     }));
+    }
+   }catch(e){console.warn('Cópia local de recuperação não disponível',e)}
   }
-  restore(remote.payload);rev=remote.revision;active=true;dirty=false;status('Sincronizado com Supabase ✓','#507656');startPoll();return true;
+  restore(remote.payload);
+  rev=remote.revision;
+  active=true;dirty=false;blocked=false;
+  status('Sincronizado com Supabase ✓','#507656');
+  startPoll();
+  return true;
  };
  document.addEventListener('visibilitychange',async()=>{
   if(document.visibilityState!=='visible'||!active||dirty||writing||blocked)return;
