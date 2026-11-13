@@ -2,6 +2,7 @@
  * Proteção de dados reais será mantida pelo RLS quando a gestão migrar para o banco.
  */
 (()=>{
+ window.santrelleIsAdmin=false;
  document.body.classList.add('staff-lock');
  const css=document.createElement('link');css.rel='stylesheet';css.href='staff-login.css';document.head.appendChild(css);
  const cfg=window.SANTRELLE_PORTAL_CONFIG||{};
@@ -31,6 +32,9 @@
    }
   }catch(syncError){lock();status('Não foi possível iniciar a sincronização: '+syncError.message);return}
   currentUser=user;
+  window.santrelleIsAdmin=staff.role==='admin';
+  document.body.classList.toggle('santrelle-admin-verified',window.santrelleIsAdmin);
+  if(typeof render==='function')render();
   document.body.classList.remove('staff-lock');
   E('staffLoginLayer').hidden=true;
   let button=E('staffLogout');
@@ -39,7 +43,7 @@
   button.hidden=false;
   button.onclick=async()=>{await db.auth.signOut();lock();location.reload()};
  }
- function lock(){currentUser=null;document.body.classList.add('staff-lock');E('staffLoginLayer').hidden=false;const b=E('staffLogout');if(b)b.hidden=true}
+ function lock(){currentUser=null;window.santrelleIsAdmin=false;document.body.classList.remove('santrelle-admin-verified');document.body.classList.add('staff-lock');E('staffLoginLayer').hidden=false;const b=E('staffLogout');if(b)b.hidden=true}
  E('staffForm').addEventListener('submit',async event=>{
   event.preventDefault();const button=E('staffEnter');button.disabled=true;status('Verificando acesso...');
   try{
