@@ -1092,7 +1092,7 @@ async function santrelleCalendarRefreshConnectionStatus(){
 function saveOfficeCalendarEmail(){
  if(!window.santrelleIsAdmin){alert('Apenas administradores podem alterar a agenda central.');return}
  const value=String(document.getElementById('santrelleGoogleCalendarEmail')?.value||'').trim().toLowerCase();
- if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)){alert('Informe um e-mail válido.');return}
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)){alert('Informe um e-mail válido.');return}
  const key='santrelle_office_settings';
  const current=JSON.parse(localStorage.getItem(key)||'{}');
  localStorage.setItem(key,JSON.stringify({...current,googleCalendarEmail:value}));
