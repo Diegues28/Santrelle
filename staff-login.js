@@ -25,6 +25,12 @@
   if(error||!user){lock();return}
   const {data:staff,error:staffError}=await db.from('portal_staff').select('role').eq('user_id',user.id).maybeSingle();
   if(staffError||!staff){lock();status('Sua conta não está autorizada para o aplicativo interno.');return}
+  const {data:pendingRecord,error:pendingError}=await db.from('santrelle_first_access')
+    .select('must_change_password').eq('user_id',user.id).maybeSingle();
+  if(pendingError){lock();status('Não foi possível validar a senha provisória.');return}
+  if(pendingRecord?.must_change_password){
+   lock();E('staffLoginLayer').hidden=true;showPasswordChange();return;
+  }
   try{
    if(typeof window.santrelleSyncStart==='function'){
     const ready=await window.santrelleSyncStart(db,user);
@@ -42,6 +48,45 @@
   button.textContent='Sair · '+user.email;
   button.hidden=false;
   button.onclick=async()=>{await db.auth.signOut();lock();location.reload()};
+ }
+ async function showPasswordChange(){
+  if(document.getElementById('staffFirstPasswordLayer'))return;
+  const wrap=document.createElement('div');wrap.id='staffFirstPasswordLayer';
+  wrap.style.cssText='position:fixed;inset:0;z-index:20002;background:#203b3deb;display:flex;align-items:center;justify-content:center;padding:18px;font-family:Inter,Arial,sans-serif';
+  wrap.innerHTML='<form id="staffFirstPasswordForm" style="background:#FAF8F5;width:100%;max-width:470px;padding:30px;border-radius:16px;color:#3F3832;box-shadow:0 20px 75px #0004">'+
+   '<h2 style="font:26px Georgia,serif;margin:0 0 10px">Altere sua senha provisória</h2>'+
+   '<p style="line-height:1.6;color:#625245">Este é seu primeiro acesso. Crie uma senha pessoal para continuar. Ela deve ter ao menos 12 caracteres, com letras e números. Não compartilhe sua senha.</p>'+
+   '<label style="display:block;margin:18px 0 7px">Nova senha</label>'+
+   '<input id="staffFirstNewPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required style="width:100%;padding:12px;border:1px solid #CFC3B9;border-radius:8px">'+
+   '<label style="display:block;margin:18px 0 7px">Confirme a nova senha</label>'+
+   '<input id="staffFirstConfirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required style="width:100%;padding:12px;border:1px solid #CFC3B9;border-radius:8px">'+
+   '<p id="staffFirstPasswordMessage" role="alert" style="color:#A14E48;min-height:20px;margin:13px 0"></p>'+
+   '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">'+
+   '<button id="staffFirstLogout" type="button" class="secondary">Sair</button>'+
+   '<button id="staffFirstSubmit" type="submit" class="primary">Salvar minha senha</button></div></form>';
+  document.body.append(wrap);
+  const form=wrap.querySelector('form'),message=wrap.querySelector('#staffFirstPasswordMessage');
+  wrap.querySelector('#staffFirstLogout').onclick=async()=>{await db.auth.signOut();wrap.remove();lock();location.reload()};
+  form.onsubmit=async(event)=>{
+   event.preventDefault();
+   const first=wrap.querySelector('#staffFirstNewPassword');
+   const second=wrap.querySelector('#staffFirstConfirmPassword');
+   const password=first.value;
+   if(password!==second.value){message.textContent='As senhas digitadas não coincidem.';return}
+   if(password.length<12||!/[A-Za-zÀ-ÿ]/.test(password)||!/[0-9]/.test(password)){
+    message.textContent='Use pelo menos 12 caracteres, com letras e números.';return;
+   }
+   const button=wrap.querySelector('#staffFirstSubmit');button.disabled=true;message.textContent='Salvando senha pessoal...';
+   try{
+    const {data,error}=await db.functions.invoke('trocar-senha-provisoria',{body:{newPassword:password}});
+    first.value='';second.value='';
+    if(error||!data?.ok)throw Error(data?.error||error?.message||'Não foi possível alterar a senha.');
+    wrap.remove();
+    await verify();
+   }catch(err){message.textContent=err.message||'Não foi possível alterar a senha.'}
+   finally{button.disabled=false}
+  };
+  wrap.querySelector('#staffFirstNewPassword').focus();
  }
  function lock(){currentUser=null;window.santrelleIsAdmin=false;document.body.classList.remove('santrelle-admin-verified');document.body.classList.add('staff-lock');E('staffLoginLayer').hidden=false;const b=E('staffLogout');if(b)b.hidden=true}
  E('staffForm').addEventListener('submit',async event=>{
