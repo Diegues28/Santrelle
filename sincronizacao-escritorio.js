@@ -119,5 +119,11 @@
   try{const remote=await getRemote();if(remote&&remote.revision!==rev){restore(remote.payload);rev=remote.revision;status('Atualizado pelo Supabase ✓','#507656')}}
   catch(e){status('Conexão instável — tentando novamente','#B08B50')}
  });
+ window.santrelleSyncReadyForDestructiveAction=()=>!!(active&&!dirty&&!writing&&!blocked);
+ window.santrelleSyncReloadFromCloud=async()=>{
+  if(dirty||writing||blocked)throw Error('Há alterações locais pendentes. Aguarde a sincronização antes de atualizar.');
+  const remote=await getRemote();if(!remote)throw Error('Banco compartilhado indisponível.');
+  restore(remote.payload);rev=remote.revision;active=true;dirty=false;status('Sincronizado com Supabase ✓','#507656');return true;
+ };
  window.addEventListener('beforeunload',e=>{if(dirty&&active){e.preventDefault();e.returnValue=''}});
 })();
