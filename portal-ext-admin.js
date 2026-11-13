@@ -42,7 +42,7 @@
   form('extrasCurrentForm',async()=>{
    const [rows,project]=await Promise.all([
     query(db.from('portal_stages').select('id,label,requires_approval,position').eq('project_id',projectId).order('position')),
-    query(db.from('portal_projects').select('current_stage').eq('id',projectId).single())
+    query(db.from('portal_projects').select('current_stage').eq('id',projectId))
    ]);
    const next=E('extrasCurrentStage').value;
    const newIndex=rows.findIndex(x=>x.label===next);
