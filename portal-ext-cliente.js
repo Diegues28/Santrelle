@@ -29,7 +29,7 @@
     const approved=approvals.find(a=>a.stage_id===stage.id);
     const status=document.createElement('p');status.className='muted';status.textContent=approved?'✓ Sua aprovação foi registrada em '+new Date(approved.approved_at).toLocaleString('pt-BR'):stage.requires_approval?'Aguardando sua aprovação':'Etapa disponível para consulta';panel.append(status);
     if(stage.requires_approval&&!approved){
-     const button=document.createElement('button');button.type='button';button.textContent='✓ Li e aprovo esta etapa';
+     const button=document.createElement('button');button.type='button';button.textContent='📄 Li e aprovo esta etapa';
      button.onclick=async()=>{
       const ok=confirm('Confirma que você analisou o material apresentado pela Santrelle e aprova a etapa "'+stage.label+'"? Esta confirmação ficará registrada com sua conta e data/hora, e não poderá ser desfeita por este botão.');
       if(!ok)return;button.disabled=true;
@@ -65,7 +65,7 @@
     const p=document.createElement('p');p.className='muted';p.textContent='Pix copia e cola fornecido pelo escritório:';card.append(p);
     const code=document.createElement('textarea');code.readOnly=true;code.value=pmt.pix_code;code.rows=3;code.style.cssText='display:block;width:100%;font:12px monospace;padding:10px';card.append(code);
     const copy=document.createElement('button');copy.className='secondary';copy.textContent='Copiar código Pix';copy.onclick=async()=>{try{await navigator.clipboard.writeText(pmt.pix_code);copy.textContent='Copiado!'}catch{code.select()}};card.append(copy);
-    if(window.QRCode){const qr=document.createElement('div');qr.style.cssText='margin-top:16px;max-width:190px';card.append(qr);new window.QRCode(qr,{text:pmt.pix_code,width:170,height:170})}
+    if(window.QRCode){const qr=document.createElement('div');qr.style.cssText='margin-top:16px;max-width:190px';card.append(qr);try{new window.QRCode(qr,{text:pmt.pix_code,width:170,height:170})}catch(e){qr.textContent='QR Code indisponível. Utilize o código copia e cola.'}}
    }
    finance.append(card);
   }
