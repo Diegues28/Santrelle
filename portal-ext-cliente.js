@@ -89,7 +89,7 @@
    const h=document.createElement('strong');h.textContent=pmt.description+' · '+money(pmt.amount);card.append(h);
    const info=document.createElement('p');info.className='muted';info.textContent=(pmt.scope==='projeto'?'Projeto':'Acompanhamento de obra')+' · '+(pmt.paid_at?'Pago em '+date(pmt.paid_at):'A pagar'+(pmt.due_date?' até '+date(pmt.due_date):''));card.append(info);
    if(pmt.receipt_path){card.append(await fileButton(db,pmt.receipt_path,'Ver comprovante'))}
-   if(pmt.pix_code&&!pmt.paid_at){
+   if(pmt.pix_code&&!pmt.paid_at&&!p.pix_qr_path){
     const p=document.createElement('p');p.className='muted';p.textContent='Pix copia e cola fornecido pelo escritório:';card.append(p);
     const code=document.createElement('textarea');code.readOnly=true;code.value=pmt.pix_code;code.rows=3;code.style.cssText='display:block;width:100%;font:12px monospace;padding:10px';card.append(code);
     const copy=document.createElement('button');copy.className='secondary';copy.textContent='Copiar código Pix';copy.onclick=async()=>{try{await navigator.clipboard.writeText(pmt.pix_code);copy.textContent='Copiado!'}catch{code.select()}};card.append(copy);
