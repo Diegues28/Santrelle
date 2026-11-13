@@ -1,6 +1,6 @@
 /* Santrelle — sincronização compartilhada, com migração explícita e proteção contra conflitos. */
 (function(){
- const KEYS=['santrelle_projects','santrelle_phases','santrelle_deliveries','santrelle_holidays','santrelle_employees','santrelle_hidden_team_members','santrelle_postobra','santrelle_portal_preview_v1'];
+ const KEYS=['santrelle_projects','santrelle_phases','santrelle_deliveries','santrelle_holidays','santrelle_employees','santrelle_hidden_team_members','santrelle_postobra','santrelle_portal_preview_v1','santrelle_office_settings'];
  let db,user,active=false,rev=0,dirty=false,writing=false,timer=null,poll=null,blocked=false,changes=0;
 
  let stateNode=null;
