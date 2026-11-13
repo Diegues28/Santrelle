@@ -1343,12 +1343,13 @@ function attentionActiveEntries(entries){
  const validDate=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'');
  for(const p of projects){
   if(p.status==='Concluído')continue;
-  let next=null,hasPendingSubstep=false;
+  let next=null,hasPendingSubstep=false,hasScheduledSubsteps=false;
   const steps=projectSteps(p);
   search:
   for(let i=0;i<steps.length;i++){
    const stage=p.schedule?.[i];
    if(!stage)continue;
+   if((steps[i].subs||[]).length)hasScheduledSubsteps=true;
    for(let j=0;j<(steps[i].subs||[]).length;j++){
     const sub=steps[i].subs[j],review=subIsOptionalRevision(steps[i],sub);
     if(review&&!stage.revisionRequested)continue;
@@ -1369,7 +1370,7 @@ function attentionActiveEntries(entries){
    }
   }
   // Projetos antigos sem subetapas aproveitam o primeiro marco ainda pendente.
-  if(!hasPendingSubstep){
+  if(!hasPendingSubstep&&!hasScheduledSubsteps){
    next=entries.filter(e=>String(e.projectId)===String(p.id)&&!e.completed
      &&(e.kind==='office'||e.kind==='client'||e.kind==='suboffice'))
      .sort((a,b)=>a.date.localeCompare(b.date))[0]||null;
@@ -1392,7 +1393,7 @@ function attentionHTML(entries,today){
  if(!visible.length)return '<p class="muted">Nenhuma entrega atrasada ou prevista para os próximos 14 dias.</p>';
  const fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';
  return '<div class="table-scroll"><table><thead><tr><th>Entrega / projeto</th><th>Responsável</th><th>Prazo</th><th>Prazo inicial</th><th>Situação</th></tr></thead><tbody>'
- +visible.map(e=>'<tr><td><a class="click" onclick="calendarOpen(\''+e.id+'\')">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+fmt(e.date)+'</td><td>'+fmt(attentionStartDate(e))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')
+ +visible.map(e=>'<tr><td><a class="click" onclick="'+(e.kind==='suboffice'&&!entries.some(item=>item.id===e.id)?'openProject('+Number(e.projectId)+')':'calendarOpen(\''+e.id+'\')')+'">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+fmt(e.date)+'</td><td>'+fmt(attentionStartDate(e))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')
  +'</tbody></table></div>';
 }
 
