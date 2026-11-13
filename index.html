@@ -676,66 +676,15 @@ function reopenProject(id){
  if(next)p.phase=next.name;
  save();render();
 }
-/* Exclusão deliberada de projetos de teste, sem alterar modelos globais.
-   Remove referências locais do mesmo projeto; nunca apaga outros projetos. */
+/* Todas as exclusões usam a senha validada pelo Supabase, inclusive as iniciadas
+   pela ficha do projeto. Nenhuma exclusão definitiva pode ser apenas local. */
 async function deleteProject(id){
- const p=projects.find(x=>String(x.id)===String(id));
- if(!p)return;
- const name=String(p.clientRegistration?.name||p.client||p.name||'Projeto');
- const relatedDeliveries=deliveries.filter(x=>String(x.projectId)===String(p.id));
- const relatedWorks=postWorks.filter(x=>String(x.projectId)===String(p.id));
- const issues=relatedWorks.reduce((n,w)=>n+(w.items||[]).length,0);
- const scope='Ficha cadastral, cronograma, subetapas, histórico e dados do portal deste projeto'
-  +(relatedDeliveries.length?', '+relatedDeliveries.length+' entrega(s) vinculada(s)':'')
-  +(relatedWorks.length?', '+relatedWorks.length+' acompanhamento(s) de pós-obra com '+issues+' pendência(s)':'');
- if(!confirm('Excluir DEFINITIVAMENTE o projeto de "'+name+'"?\n\nSerão apagados deste navegador:\n'+scope+'.\n\nEsta ação NÃO pode ser desfeita e não é o mesmo que arquivar.\n\nOs modelos padrão de Etapas e Subetapas dos demais projetos serão mantidos.'))return;
- const answer=prompt('Para confirmar a exclusão definitiva de "'+name+'", digite EXCLUIR em letras maiúsculas:');
- if(answer!=='EXCLUIR'){
-  if(answer!==null)alert('Exclusão cancelada. Nenhum projeto foi apagado.');
-  return;
+ if(typeof window.portalDeleteClientProject!=='function'){
+  alert('Controle administrativo de exclusão indisponível. Atualize o aplicativo.');return;
  }
- // Registra cópias para poder restaurar a sessão caso a gravação falhe.
- const oldProjects=projects,oldDeliveries=deliveries,oldPostWorks=postWorks;
- const portalKey=String(p.id);
- const hasPortal=typeof portalPreviewData!=='undefined'&&Object.prototype.hasOwnProperty.call(portalPreviewData,portalKey);
- const oldPortal=hasPortal?portalPreviewData[portalKey]:undefined;
- try{
-  projects=projects.filter(x=>String(x.id)!==String(p.id));
-  deliveries=deliveries.filter(x=>String(x.projectId)!==String(p.id));
-  postWorks=postWorks.filter(x=>String(x.projectId)!==String(p.id));
-  save();
-  if(hasPortal){
-   delete portalPreviewData[portalKey];
-   if(typeof portalSave==='function'&&portalSave()===false)
-    throw new Error('Não foi possível atualizar o registro da área do cliente.');
-  }
- }catch(err){
-  projects=oldProjects;deliveries=oldDeliveries;postWorks=oldPostWorks;
-  if(hasPortal)portalPreviewData[portalKey]=oldPortal;
-  try{save();if(hasPortal&&typeof portalSave==='function')portalSave()}catch(recoveryError){console.error('Falha ao restaurar após exclusão:',recoveryError)}
-  alert('Não foi possível concluir a exclusão. Confira o armazenamento do navegador.\n'+(err.message||err));
-  return;
- }
- // Anexos de versões anteriores do pós-obra podem continuar no IndexedDB.
- // A limpeza é seletiva por ID de pendência e não afeta anexos de outros projetos.
- const failed=[];
- if(typeof pwFileDeleteForItem==='function'){
-  for(const w of relatedWorks){
-   for(const item of w.items||[]){
-    try{await pwFileDeleteForItem(item.id)}
-    catch(err){failed.push(item.id);console.warn('Falha na limpeza de anexo antigo:',err)}
-   }
-  }
- }
- if(typeof portalProjectId!=='undefined'&&String(portalProjectId)===String(p.id)){
-  portalProjectId=null;portalView='manager';portalFolderId=null;
- }
- schedulePreviewState=null;
- go('projetos');
- alert('Projeto "'+name+'" excluído deste navegador.'
-  +(failed.length?'\n\nAtenção: alguns anexos antigos do pós-obra não puderam ser removidos do armazenamento local.':'')
-  +'\n\nOs modelos e subetapas padrão do escritório foram preservados.');
+ return window.portalDeleteClientProject(id);
 }
+
 function projectArchiveBanner(p){
  const isDone=p.status==='Concluído';
  const history=(p.projectStatusHistory||[]).filter(h=>h.from==='Concluído'||h.to==='Concluído').slice().reverse();
