@@ -745,7 +745,7 @@ function projectArchiveBanner(p){
  +(history.length?'<details class="project-history-details"><summary>Histórico de conclusões e reaberturas ('+history.length+')</summary><div>'+history.map(h=>'<p><strong>'+esc(h.to==='Concluído'?'Projeto concluído':'Projeto reaberto')+'</strong> · '+esc(projectCompleteDate({completedAt:h.at}))+(h.reason?' · '+esc(h.reason):'')+'</p>').join('')+'</div></details>':'');
 }
 function rows(list){let fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';return '<div class="table-scroll"><table><thead><tr><th>Projeto / cliente</th><th>Etapa</th><th>Equipe das subetapas</th><th>Início</th><th>Prazo escritório</th><th>Prazo cliente</th><th>Situação</th></tr></thead><tbody>'+list.map(p=>{let owners=projectAssignedOwners(p);return '<tr><td><a class="click" onclick="openProject('+p.id+')">'+esc(p.name)+'</a><div class="muted">'+esc(p.clientRegistration?.constructionAddress||p.client)+'</div></td><td>'+esc(p.phase)+'</td><td>'+esc(owners.join(', ')|| (p.owner&&p.owner!=='Não definido'?p.owner:'A definir'))+'</td><td>'+fmt(p.startDate)+'</td><td>'+fmt(p.officeDate)+'</td><td>'+fmt(p.clientDate||p.deadline)+'</td><td>'+tag(p.status)+'</td></tr>'}).join('')+'</tbody></table></div>'}
-function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?(typeof projectDashboardTitle==='function'?projectDashboardTitle():'Detalhes do projeto'):({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos',concluidos:'Projetos concluídos',postobra:'Pós-obra',portal:'Área do Cliente'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Atrasadas primeiro, depois as próximas entregas da equipe</div></div></div>'+attentionHTML(entries,today)+'</section>'+calendarHTML()}if(page==='projetos'){let list=projects.filter(p=>p.status!=='Concluído'&&(filter==='Todos'||p.status===filter));el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='concluidos')renderArchive();if(page==='postobra')renderPostWork();if(page==='portal')renderClientPortalManager();if(page==='equipe')renderTeam();if(page==='modelos')models()}
+function render(){document.getElementById('title').textContent=page==='cadastro'?(registrationEditId===null?'Ficha cadastral do cliente':'Editar ficha cadastral'):selected?(typeof projectDashboardTitle==='function'?projectDashboardTitle():'Detalhes do projeto'):({painel:'Painel geral',projetos:'Projetos',equipe:'Equipe',modelos:'Etapas e modelos',concluidos:'Projetos concluídos',postobra:'Pós-obra',portal:'Área do Cliente'})[page];if(page==='cadastro'){registrationForm();return}if(selected){detail();return}if(page==='painel'){let entries=calendarEntries().filter(e=>!e.completed).sort((a,b)=>a.date.localeCompare(b.date));let today=iso(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate());let overdue=entries.filter(e=>e.date<today);let soon=entries.filter(e=>e.date>=today&&e.date<=offsetDay(parseISO(today),7));const metrics=[['Projetos ativos',projects.filter(p=>p.status!=='Concluído').length,'Todos'],['Entregas atrasadas',overdue.length,'Atrasado'],['Próximos 7 dias',soon.length,'Todos'],['Aguardando aprovação',projects.filter(p=>p.status==='Aguardando aprovação').length,'Aguardando aprovação']];el.innerHTML='<div class="cards">'+metrics.map(m=>'<button class="card" onclick="filter=\''+m[2]+'\';go(\'projetos\')"><span>'+m[0]+'</span><strong>'+m[1]+'</strong><span class="muted">Ver projetos →</span></button>').join('')+'</div>'+'<section class="panel"><div class="calendar-head"><div><h3 style="margin-bottom:5px">Entregas que precisam de atenção</h3><div class="muted">Somente a atividade pendente atual de cada projeto · atrasadas e próximas entregas</div></div></div>'+attentionHTML(entries,today)+'</section>'+calendarHTML()}if(page==='projetos'){let list=projects.filter(p=>p.status!=='Concluído'&&(filter==='Todos'||p.status===filter));el.innerHTML='<section class="panel"><div class="inline"><strong>Filtrar por situação</strong><select id="filter" onchange="filter=this.value;render()">'+['Todos','Em andamento','Atrasado','Aguardando aprovação'].map(x=>'<option '+(filter===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>'+rows(list)+'</section>'}if(page==='concluidos')renderArchive();if(page==='postobra')renderPostWork();if(page==='portal')renderClientPortalManager();if(page==='equipe')renderTeam();if(page==='modelos')models()}
 
 
 /* Responsabilidade pertence a cada subetapa do projeto, nunca à etapa inteira. */
@@ -1334,8 +1334,61 @@ function attentionStartDate(entry){
  const candidate=stage?.startDate||stage?.start||entry.startDate||project.startDate;
  return valid(candidate)?candidate:(valid(project.startDate)?project.startDate:'');
 }
+/* Painel de atenção: uma única atividade ativa por projeto, na ordem das subetapas.
+   As tarefas posteriores não entram na lista enquanto a anterior estiver pendente.
+   O calendário completo continua preservado. */
+function attentionActiveEntries(entries){
+ const selected=[],linked=new Set();
+ const byId=new Map(entries.map(e=>[String(e.id),e]));
+ const validDate=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'');
+ for(const p of projects){
+  if(p.status==='Concluído')continue;
+  let next=null,hasPendingSubstep=false;
+  const steps=projectSteps(p);
+  search:
+  for(let i=0;i<steps.length;i++){
+   const stage=p.schedule?.[i];
+   if(!stage)continue;
+   for(let j=0;j<(steps[i].subs||[]).length;j++){
+    const sub=steps[i].subs[j],review=subIsOptionalRevision(steps[i],sub);
+    if(review&&!stage.revisionRequested)continue;
+    const done=sub.completed===true||(sub.completed===undefined&&(review?!!stage.revisionCompleted:!!stage.completed));
+    if(done)continue;
+    hasPendingSubstep=true;
+    const due=substepDueDate(p,i,j);
+    if(validDate(due)){
+     const id='u'+p.id+'_'+i+'_'+j;
+     const original=byId.get(id);
+     next=original||{
+      id,name:(sub.name||'Subetapa')+' · '+steps[i].name+' · '+p.name,
+      owner:projectSubOwner(p,i,j)||'Não definido',date:due,
+      projectId:p.id,stageIndex:i,subIndex:j,kind:'suboffice',completed:false
+     };
+    }
+    break search;
+   }
+  }
+  // Projetos antigos sem subetapas aproveitam o primeiro marco ainda pendente.
+  if(!hasPendingSubstep){
+   next=entries.filter(e=>String(e.projectId)===String(p.id)&&!e.completed
+     &&(e.kind==='office'||e.kind==='client'||e.kind==='suboffice'))
+     .sort((a,b)=>a.date.localeCompare(b.date))[0]||null;
+  }
+  if(next)selected.push(next);
+  linked.add(String(p.id));
+ }
+ // Entregas avulsas sem projeto permanecem como lembretes independentes.
+ // Para projetos concluídos não há alertas.
+ for(const e of entries){
+  if(e.completed||e.kind==='start')continue;
+  if(e.projectId!==null&&e.projectId!==undefined&&e.projectId!==''&&linked.has(String(e.projectId)))continue;
+  if(e.kind==='delivery'&&!e.projectId)selected.push(e);
+  else if(e.kind==='postwork'&&!e.projectId)selected.push(e);
+ }
+ return selected.sort((a,b)=>a.date.localeCompare(b.date));
+}
 function attentionHTML(entries,today){
- let visible=entries.filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);
+ let visible=attentionActiveEntries(entries).filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);
  if(!visible.length)return '<p class="muted">Nenhuma entrega atrasada ou prevista para os próximos 14 dias.</p>';
  const fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';
  return '<div class="table-scroll"><table><thead><tr><th>Entrega / projeto</th><th>Responsável</th><th>Prazo</th><th>Prazo inicial</th><th>Situação</th></tr></thead><tbody>'
