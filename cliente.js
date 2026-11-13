@@ -13,7 +13,7 @@
  async function showProjects(){
   el('projects').textContent='Carregando projetos...';
   try{
-   const projects=await result(db.from('portal_projects').select('id,title,client_label,current_stage,cover_path').order('created_at',{ascending:false}));
+   const projects=await result(db.from('portal_projects').select('id,title,client_label,current_stage,cover_path,pix_qr_path').order('created_at',{ascending:false}));
    if(!projects.length){el('projects').innerHTML='<p class="empty">Seu acesso foi criado. A equipe ainda precisa vincular o projeto à sua conta.</p>';return}
    el('projects').innerHTML='';
    for(const p of projects){
