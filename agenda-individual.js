@@ -1,0 +1,109 @@
+/* Agenda do painel por colaborador, com preferências por conta e eventos pessoais em tabela separada. */
+(()=>{
+ const state={db:null,user:null,role:'colaborador',selfName:'',visibleOwners:[],events:[],loaded:false};
+ const normalize=s=>String(s||'').trim().toLocaleLowerCase('pt-BR');
+ const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+ const validDate=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'');
+ const isAdmin=()=>state.role==='admin';
+ const colleagues=()=>Array.from(new Set(employees.map(e=>e.name).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+ function myName(){
+  const emp=employees.find(e=>normalize(e.email)===normalize(state.user?.email));
+  return emp?.name||'';
+ }
+ function allowed(name){return !!name&&(isAdmin()?(state.visibleOwners.length===0||state.visibleOwners.some(n=>normalize(n)===normalize(name))):normalize(name)===normalize(state.selfName))}
+ function ownEvents(){
+  return state.events.filter(e=>e.user_id===state.user?.id);
+ }
+ function calendarEventEntries(){
+  const owners=employees.filter(e=>e.email).map(e=>({email:normalize(e.email),name:e.name}));
+  return state.events.filter(e=>{
+   if(e.user_id===state.user?.id)return true;
+   if(!isAdmin()||e.private)return false;
+   const match=owners.find(x=>x.email===normalize(e.staff_email));
+   return match?allowed(match.name):true;
+  }).map(e=>({
+   id:'evt'+e.id,kind:'appointment',name:e.title+(e.event_time?' · '+String(e.event_time).slice(0,5):''),
+   owner:e.user_id===state.user?.id?(state.selfName||'Minha agenda'):(e.staff_name||'Equipe'),
+   date:e.event_date,completed:false,private:e.private,userId:e.user_id,
+   eventId:e.id,category:e.category
+  }));
+ }
+ // Entries already assigned to an owner; a synthetic owner "Equipe" is not an individual's assignment.
+ function scoped(entries){
+  if(!state.user)return [];
+  const office=entries.filter(e=>allowed(e.owner));
+  return office.concat(calendarEventEntries());
+ }
+ window.santrelleCalendarVisibleEntries=scoped;
+ window.santrelleCalendarScopeLabel=()=>isAdmin()?'Agendas da equipe selecionadas':state.selfName?'Minha agenda · '+state.selfName:'Minha agenda · e-mail não vinculado à Equipe';
+ window.santrelleCalendarIsAdmin=isAdmin;
+ window.santrelleCalendarOwnName=()=>state.selfName;
+ window.santrelleCalendarHasStaffMapping=()=>!!state.selfName;
+ window.santrelleCalendarOwnerControls=function(){
+  if(!isAdmin())return '';
+  const choices=colleagues();
+  return '<div class="cal-team-select"><strong style="display:block;margin-bottom:8px">Agendas visíveis (administrador)</strong>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+    choices.map(n=>'<label style="display:flex;gap:5px;align-items:center;font-size:13px"><input type="checkbox" '+(state.visibleOwners.length===0||state.visibleOwners.some(x=>normalize(x)===normalize(n))?'checked':'')+' onchange="santrelleCalendarToggleOwner('+JSON.stringify(n).replace(/"/g,'&quot;')+',this.checked)">'+escape(n)+'</label>').join('')+
+    '</div><p class="muted" style="font-size:12px;margin:6px 0 0">Desmarque uma agenda para ocultá-la apenas do seu painel. Os dados originais não são alterados.</p></div>';
+ };
+ window.santrelleCalendarToggleOwner=async function(name,checked){
+  if(!isAdmin())return;
+  const options=colleagues();
+  const current=state.visibleOwners.length?new Set(state.visibleOwners):new Set(options);
+  if(checked)current.add(name);else current.delete(name);
+  state.visibleOwners=[...current];
+  const {error}=await state.db.from('santrelle_calendar_preferences').upsert({user_id:state.user.id,visible_owner_names:state.visibleOwners,updated_at:new Date().toISOString()});
+  if(error)alert('Não foi possível salvar a seleção de agendas: '+error.message);
+  render();
+ };
+ window.santrelleCalendarNewEvent=async function(){
+  if(!state.user){alert('Faça login para cadastrar compromissos.');return}
+  const title=prompt('Nome do compromisso ou reunião:');
+  if(!title?.trim())return;
+  const date=prompt('Data (AAAA-MM-DD):',new Date().toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'}));
+  if(date===null)return;
+  if(!validDate(date)){alert('Data inválida. Use AAAA-MM-DD.');return}
+  const time=prompt('Horário (HH:MM, opcional):','');
+  if(time===null)return;
+  if(time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)){alert('Horário inválido.');return}
+  const kind=prompt('Tipo: reunião, compromisso ou pessoal','compromisso');
+  if(kind===null)return;
+  const category=normalize(kind)==='reunião'||normalize(kind)==='reuniao'?'reuniao':normalize(kind)==='pessoal'?'pessoal':'compromisso';
+  const personal=category==='pessoal'||!confirm('Este compromisso poderá ser visto por administradores?\nOK = compromisso da equipe\nCancelar = privado, apenas meu');
+  const {error}=await state.db.from('santrelle_calendar_events').insert({
+   user_id:state.user.id,title:title.trim(),event_date:date,
+   event_time:time||null,category,private:personal
+  });
+  if(error){alert('Não foi possível adicionar o compromisso: '+error.message);return}
+  await reloadEvents();render();
+ };
+ window.santrelleCalendarOpenEvent=async function(id){
+  const ev=state.events.find(x=>x.id===id);if(!ev)return;
+  const mine=ev.user_id===state.user?.id;
+  if(!mine){alert((ev.title||'Compromisso')+'\n'+ev.event_date+(ev.event_time?' às '+ev.event_time.slice(0,5):''));return}
+  if(!confirm('Compromisso: '+ev.title+'\nData: '+ev.event_date+'\n\nDeseja excluir este compromisso da agenda?'))return;
+  const {error}=await state.db.from('santrelle_calendar_events').delete().eq('id',id).eq('user_id',state.user.id);
+  if(error)alert('Não foi possível excluir: '+error.message);
+  else{await reloadEvents();render()}
+ };
+ async function reloadEvents(){
+  if(!state.db||!state.user)return;
+  const {data,error}=await state.db.from('santrelle_calendar_events')
+   .select('id,user_id,title,event_date,event_time,category,private').gte('event_date','2024-01-01').order('event_date',{ascending:true}).limit(1000);
+  if(error){console.warn('Falha ao carregar agenda individual',error.message);return}
+  const ownerMap=new Map();
+  for(const e of employees){if(e.email)ownerMap.set(normalize(e.email),e.name)}
+  state.events=(data||[]).map(e=>({...e,staff_name:e.user_id===state.user.id?state.selfName:''}));
+  // Outros eventos de equipe exigem identificação adicional, feita via RPC específico de visualização no futuro.
+  state.events=state.events.filter(e=>e.user_id===state.user.id);
+ }
+ window.santrelleCalendarAfterLogin=async(db,user,role)=>{
+  state.db=db;state.user=user;state.role=role;state.selfName=myName();
+  const {data:pref}=await db.from('santrelle_calendar_preferences').select('visible_owner_names').eq('user_id',user.id).maybeSingle();
+  state.visibleOwners=pref?.visible_owner_names||[];
+  await reloadEvents();
+  state.loaded=true;
+ };
+ window.santrelleCalendarAfterLogout=()=>{state.db=null;state.user=null;state.events=[];state.loaded=false;state.selfName='';state.visibleOwners=[]};
+})();
