@@ -6,7 +6,22 @@
   if(!cfg.url||!cfg.publishableKey||!window.supabase?.createClient)throw Error('A conexão com o Supabase não está disponível.');
   return window.supabase.createClient(cfg.url,cfg.publishableKey);
  };
- window.teamSetEmployeeEmail=function(owner){
+ window.santrelleProvisionEmployeeLogin=async function(email){
+  if(!email)return {ok:false,reason:'Informe o e-mail para preparar o acesso.'};
+  if(!window.santrelleIsAdmin)return {ok:false,reason:'A criação de acessos exige uma conta administradora.'};
+  try{
+   const db=database();
+   const {data,error}=await db.functions.invoke('criar-acesso',{body:{
+    kind:'staff',action:'create',staffRole:'colaborador',staffTemporary:true,email
+   }});
+   if(error||!data?.ok){
+    const reason=data?.error||error?.message||'Não foi possível criar a conta.';
+    return {ok:false,reason};
+   }
+   return {ok:true};
+  }catch(err){return {ok:false,reason:err.message||'Falha na conexão com o Supabase.'}}
+ };
+ window.teamSetEmployeeEmail=async function(owner){
   if(!window.santrelleIsAdmin){alert('Somente administradores podem configurar e-mails.');return}
   const key=teamMemberKey(owner);
   const existing=employees.find(e=>teamMemberKey(e.name)===key);
@@ -21,7 +36,14 @@
   if(existing)existing.email=email;
   else employees.push({name:owner,email});
   hiddenTeamMembers=hiddenTeamMembers.filter(k=>k!==key);
-  try{save();render();alert('E-mail registrado para o funcionário. Para ele entrar, ainda será necessário ativar a conta no Supabase Auth com uma senha definida posteriormente.')}
+  try{
+    save();render();
+    if(!email){alert('O e-mail foi removido do cadastro. Contas de login antigas não são removidas automaticamente.');return}
+    const result=await window.santrelleProvisionEmployeeLogin(email);
+    alert(result.ok
+      ?'E-mail registrado e acesso provisório criado! No primeiro login, o funcionário será obrigado a escolher uma senha pessoal.'
+      :'E-mail salvo na Equipe, mas o login não foi criado: '+result.reason+' Se este e-mail já tem uma conta, a senha anterior não foi alterada.');
+   }
   catch(err){employees=old;alert('Não foi possível salvar o e-mail: '+err.message)}
  };
  function askDeletion(name,targets){
