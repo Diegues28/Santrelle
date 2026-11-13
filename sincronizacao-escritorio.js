@@ -109,6 +109,7 @@
   writing=true;status('Salvando alterações no Supabase...','#8B7663');
   try{
    let payload=snapshot(),versionAtStart=changes,updated=false;
+   const originalLocal=structuredClone(payload);
    for(let attempt=0;attempt<4;attempt++){
     if(JSON.stringify(payload).length>4000000)throw Error('Dados locais excedem 4 MB.');
     const {data,error}=await db.from('santrelle_workspace').update({
@@ -117,8 +118,13 @@
     if(error)throw error;
     if(data?.length){
      rev=data[0].revision;basePayload=structuredClone(payload);updated=true;
-     status('Sincronizado com Supabase ✓','#507656');
-     dirty=changes!==versionAtStart;
+     // Atualiza o navegador com eventos que foram mesclados de outros usuários.
+     // Se houve uma edição local durante o envio, preserva-a sobre a versão gravada.
+     const changedDuringUpload=changes!==versionAtStart;
+     const latestLocal=changedDuringUpload?mergeThree(originalLocal,snapshot(),payload):payload;
+     restore(latestLocal);
+     dirty=changedDuringUpload;
+     status(dirty?'Alterações pendentes...':'Sincronizado com Supabase ✓',dirty?'#B08B50':'#507656');
      if(dirty){clearTimeout(timer);timer=setTimeout(flush,700)}
      break;
     }
