@@ -53,6 +53,7 @@
   for(const f of folders)docs.push(...await get(db.from('portal_documents').select('id,folder_id,title,released').eq('folder_id',f.id)));
   E('docList').innerHTML=docs.map(d=>toggleRow('portal_documents',{...d,label:d.title},folders.find(f=>f.id===d.folder_id)?.label||'Documento')).join('');
   E('projectEditor').querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggle(b));
+  if(window.portalExtrasAdminRefresh)await window.portalExtrasAdminRefresh(pid);
  }
  function toggleRow(table,row,type){
   return '<div class="item"><span><span class="pill">'+escape(type)+'</span> '+escape(row.label)+' <span class="pill">'+(row.released?'Liberado':'Oculto')+'</span></span><button class="secondary" data-toggle="'+table+'" data-id="'+row.id+'" data-release="'+(!row.released)+'">'+(row.released?'Ocultar':'Liberar')+'</button></div>';
