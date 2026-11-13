@@ -10,17 +10,15 @@
   const emp=employees.find(e=>normalize(e.email)===normalize(state.user?.email));
   return emp?.name||'';
  }
- function allowed(name){return !!name&&(isAdmin()?(state.visibleOwners.length===0||state.visibleOwners.some(n=>normalize(n)===normalize(name))):normalize(name)===normalize(state.selfName))}
+ function allowed(name){return !!name&&(isAdmin()?(!state.visibleOwners.includes('__none__')&&(state.visibleOwners.length===0||state.visibleOwners.some(n=>normalize(n)===normalize(name)))):normalize(name)===normalize(state.selfName))}
  function ownEvents(){
   return state.events.filter(e=>e.user_id===state.user?.id);
  }
  function calendarEventEntries(){
-  const owners=employees.filter(e=>e.email).map(e=>({email:normalize(e.email),name:e.name}));
   return state.events.filter(e=>{
    if(e.user_id===state.user?.id)return true;
    if(!isAdmin()||e.private)return false;
-   const match=owners.find(x=>x.email===normalize(e.staff_email));
-   return match?allowed(match.name):true;
+   return allowed(e.staff_name);
   }).map(e=>({
    id:'evt'+e.id,kind:'appointment',name:e.title+(e.event_time?' · '+String(e.event_time).slice(0,5):''),
    owner:e.user_id===state.user?.id?(state.selfName||'Minha agenda'):(e.staff_name||'Equipe'),
@@ -44,15 +42,15 @@
   const choices=colleagues();
   return '<div class="cal-team-select"><strong style="display:block;margin-bottom:8px">Agendas visíveis (administrador)</strong>'+
     '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
-    choices.map(n=>'<label style="display:flex;gap:5px;align-items:center;font-size:13px"><input type="checkbox" '+(state.visibleOwners.length===0||state.visibleOwners.some(x=>normalize(x)===normalize(n))?'checked':'')+' onchange="santrelleCalendarToggleOwner('+JSON.stringify(n).replace(/"/g,'&quot;')+',this.checked)">'+escape(n)+'</label>').join('')+
+    choices.map(n=>'<label style="display:flex;gap:5px;align-items:center;font-size:13px"><input type="checkbox" '+((state.visibleOwners.length===0||state.visibleOwners.some(x=>normalize(x)===normalize(n)))&&!state.visibleOwners.includes('__none__')?'checked':'')+' onchange="santrelleCalendarToggleOwner('+JSON.stringify(n).replace(/"/g,'&quot;')+',this.checked)">'+escape(n)+'</label>').join('')+
     '</div><p class="muted" style="font-size:12px;margin:6px 0 0">Desmarque uma agenda para ocultá-la apenas do seu painel. Os dados originais não são alterados.</p></div>';
  };
  window.santrelleCalendarToggleOwner=async function(name,checked){
   if(!isAdmin())return;
   const options=colleagues();
-  const current=state.visibleOwners.length?new Set(state.visibleOwners):new Set(options);
+  const current=state.visibleOwners.length?new Set(state.visibleOwners.filter(x=>x!=='__none__')):new Set(options);
   if(checked)current.add(name);else current.delete(name);
-  state.visibleOwners=[...current];
+  state.visibleOwners=current.size?[...current]:['__none__'];
   const {error}=await state.db.from('santrelle_calendar_preferences').upsert({user_id:state.user.id,visible_owner_names:state.visibleOwners,updated_at:new Date().toISOString()});
   if(error)alert('Não foi possível salvar a seleção de agendas: '+error.message);
   render();
@@ -90,13 +88,18 @@
  async function reloadEvents(){
   if(!state.db||!state.user)return;
   const {data,error}=await state.db.from('santrelle_calendar_events')
-   .select('id,user_id,title,event_date,event_time,category,private').gte('event_date','2024-01-01').order('event_date',{ascending:true}).limit(1000);
+   .select('id,user_id,title,event_date,event_time,category,private')
+   .gte('event_date','2024-01-01').order('event_date',{ascending:true}).limit(1000);
   if(error){console.warn('Falha ao carregar agenda individual',error.message);return}
-  const ownerMap=new Map();
-  for(const e of employees){if(e.email)ownerMap.set(normalize(e.email),e.name)}
-  state.events=(data||[]).map(e=>({...e,staff_name:e.user_id===state.user.id?state.selfName:''}));
-  // Outros eventos de equipe exigem identificação adicional, feita via RPC específico de visualização no futuro.
-  state.events=state.events.filter(e=>e.user_id===state.user.id);
+  const personal=(data||[]).filter(e=>e.user_id===state.user.id)
+   .map(e=>({...e,staff_name:state.selfName||'Minha agenda'}));
+  if(!isAdmin()){state.events=personal;return}
+  const {data:teamData,error:teamError}=await state.db.rpc('santrelle_calendar_team_events');
+  if(teamError){console.warn('Falha ao carregar compromissos compartilhados',teamError.message);state.events=personal;return}
+  const merged=new Map();
+  for(const ev of teamData||[])merged.set(ev.id,{...ev,private:false});
+  for(const ev of personal)merged.set(ev.id,ev);
+  state.events=[...merged.values()];
  }
  window.santrelleCalendarAfterLogin=async(db,user,role)=>{
   state.db=db;state.user=user;state.role=role;state.selfName=myName();
