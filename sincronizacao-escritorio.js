@@ -1,4 +1,4 @@
-/* Santrelle — sincronização compartilhada, com migração explícita e proteção contra conflitos. */
+/* Santrelle — sincronização automática pelo Supabase; banco central como fonte única. */
 (function(){
  const KEYS=['santrelle_projects','santrelle_phases','santrelle_deliveries','santrelle_holidays','santrelle_employees','santrelle_hidden_team_members','santrelle_postobra','santrelle_portal_preview_v1','santrelle_office_settings'];
  let db,user,active=false,rev=0,dirty=false,writing=false,timer=null,poll=null,blocked=false,changes=0,basePayload=null;
@@ -14,13 +14,6 @@
  }
  const oldSave=save;
  const snapshot=()=>Object.fromEntries(KEYS.filter(k=>localStorage.getItem(k)!==null).map(k=>[k,JSON.parse(localStorage.getItem(k))]));
- const safeCount=()=>{try{return (JSON.parse(localStorage.getItem('santrelle_projects')||'[]')||[]).length}catch{return 0}};
- function backup(){
-  const data={exportedAt:new Date().toISOString(),origin:'Santrelle - navegador',data:snapshot()};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='santrelle-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
- }
  function restore(payload){
   if(!payload||typeof payload!=='object'||Array.isArray(payload))throw Error('Cópia inválida');
   const backupData=snapshot();
@@ -37,27 +30,7 @@
    render();
   }catch(e){for(const k of KEYS){if(Object.prototype.hasOwnProperty.call(backupData,k))localStorage.setItem(k,JSON.stringify(backupData[k]));else localStorage.removeItem(k)}throw e}
  }
- function dialog(title,description,actions){
-  return new Promise(resolve=>{
-   let cover=document.getElementById('santrelleSyncPrompt');if(cover)cover.remove();
-   cover=document.createElement('div');cover.id='santrelleSyncPrompt';
-   cover.style.cssText='position:fixed;inset:0;z-index:10001;background:#3f3832bb;display:flex;align-items:center;justify-content:center;padding:20px;font:15px Arial,sans-serif';
-   const box=document.createElement('section');box.style.cssText='max-width:550px;width:100%;background:#FAF8F5;border-radius:16px;padding:28px;box-shadow:0 12px 60px #0003;color:#3F3832';
-   const h=document.createElement('h2');h.textContent=title;h.style.cssText='font:27px Georgia,serif;color:#625245;margin:0 0 12px';box.append(h);
-   const p=document.createElement('p');p.textContent=description;p.style.cssText='line-height:1.6';box.append(p);
-   const buttons=document.createElement('div');buttons.style.cssText='display:flex;flex-wrap:wrap;gap:9px;margin-top:19px';
-   actions.forEach(a=>{const b=document.createElement('button');b.textContent=a.label;b.style.cssText='padding:12px 15px;border-radius:8px;border:1px solid #8B7663;cursor:pointer;background:'+(a.primary?'#625245':'#fff')+';color:'+(a.primary?'#fff':'#625245');
-    b.onclick=()=>{if(a.value==='backup'){backup();return}cover.remove();resolve(a.value)};buttons.append(b)});
-   box.append(buttons);cover.append(box);document.body.append(cover);
-  });
- }
  async function getRemote(){const {data,error}=await db.from('santrelle_workspace').select('payload,revision').eq('id',1).maybeSingle();if(error)throw error;return data}
- async function uploadFirst(){
-  const payload=snapshot(),size=JSON.stringify(payload).length;
-  if(size>4000000)throw Error('Os dados ultrapassam 4 MB. Faça o backup e revise os anexos antes da migração.');
-  const {data,error}=await db.from('santrelle_workspace').insert({id:1,payload,revision:1,updated_by:user.id}).select('revision').single();
-  if(error)throw error;rev=data.revision;active=true;status('Dados enviados ao Supabase ✓','#507656');startPoll();
- }
  const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
  function preserveRecovery(data,reason){
   try{
