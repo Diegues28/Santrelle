@@ -13,12 +13,19 @@
  async function showProjects(){
   el('projects').textContent='Carregando projetos...';
   try{
-   const projects=await result(db.from('portal_projects').select('id,title,client_label,current_stage').order('created_at',{ascending:false}));
+   const projects=await result(db.from('portal_projects').select('id,title,client_label,current_stage,cover_path').order('created_at',{ascending:false}));
    if(!projects.length){el('projects').innerHTML='<p class="empty">Seu acesso foi criado. A equipe ainda precisa vincular o projeto à sua conta.</p>';return}
    el('projects').innerHTML='';
    for(const p of projects){
     const wrap=document.createElement('article');wrap.className='panel block';
-    wrap.innerHTML='<span class="eyebrow">'+escape(p.current_stage||'Projeto em andamento')+'</span><h2>'+escape(p.title)+'</h2><p>'+escape(p.client_label)+'</p><div class="projects-detail">Carregando documentos...</div>';
+    wrap.innerHTML='<div class="portal-project-welcome"><span class="eyebrow">Seu espaço exclusivo</span><h2>Olá, '+escape(p.client_label||'Cliente')+'!</h2><p>'+escape(p.title)+'</p><p class="muted">Etapa atual: '+escape(p.current_stage||'Aguardando atualização')+'</p></div><div class="projects-detail">Carregando documentos...</div>';
+    if(p.cover_path){
+     const {data:cover,error:coverError}=await db.storage.from('santrelle-clientes').createSignedUrl(p.cover_path,3600);
+     if(!coverError&&cover?.signedUrl){
+      const hero=wrap.querySelector('.portal-project-welcome');
+      hero.style.backgroundImage='linear-gradient(90deg,rgba(250,248,245,.97),rgba(250,248,245,.73)),url("'+cover.signedUrl.replace(/"/g,'%22')+'")';
+     }
+    }
     el('projects').appendChild(wrap);
     const target=wrap.querySelector('.projects-detail');
     const [stages,meetings]=await Promise.all([
