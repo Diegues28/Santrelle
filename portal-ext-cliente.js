@@ -62,6 +62,23 @@
    const row=document.createElement('div');row.className='doc';const span=document.createElement('span');span.textContent=(a.kind==='cronograma_obra'?'Cronograma · ':'Relatório · ')+a.title;row.append(span,await fileButton(db,a.storage_path,'Abrir PDF'));obra.append(row);
   }
   const finance=section('Financeiro · Pagamentos');
+  if(p.pix_qr_path){
+   const qrCard=document.createElement('div');qrCard.className='tile';qrCard.style.cssText='margin:12px 0 19px;padding:20px;background:#FAF8F5';
+   const heading=document.createElement('strong');heading.textContent='Pague com Pix — QR Code do escritório';qrCard.append(heading);
+   const description=document.createElement('p');description.className='muted';description.textContent='Escaneie o QR Code pelo aplicativo do seu banco e informe o valor do pagamento. Confira o destinatário e o valor antes de confirmar.';qrCard.append(description);
+   const {data:pixSigned,error:pixError}=await db.storage.from('santrelle-clientes').createSignedUrl(p.pix_qr_path,300);
+   if(!pixError&&pixSigned?.signedUrl){
+    const picture=document.createElement('img');picture.src=pixSigned.signedUrl;
+    picture.alt='QR Code Pix estático da Santrelle, sem valor predefinido';
+    picture.style.cssText='display:block;max-width:250px;width:100%;height:auto;aspect-ratio:1;object-fit:contain;border:1px solid #E2D6CB;padding:12px;border-radius:10px;background:#fff;margin:14px auto';
+    qrCard.append(picture);
+    const actions=document.createElement('div');actions.style.cssText='display:flex;justify-content:center;gap:8px;flex-wrap:wrap';
+    const open=document.createElement('a');open.href=pixSigned.signedUrl;open.target='_blank';open.rel='noopener noreferrer';open.textContent='Abrir QR Code em outra aba';open.style.cssText='color:#625245;text-decoration:underline;font-size:13px';actions.append(open);qrCard.append(actions);
+   }else{
+    const warning=document.createElement('p');warning.className='muted';warning.textContent='Imagem do Pix temporariamente indisponível. Entre em contato com o escritório.';qrCard.append(warning);
+   }
+   finance.append(qrCard);
+  }
   if(!payments.length){const t=document.createElement('p');t.className='muted';t.textContent='Ainda não há informações financeiras liberadas.';finance.append(t);return}
   const total=payments.reduce((a,x)=>a+Number(x.amount),0),paid=payments.filter(x=>x.paid_at).reduce((a,x)=>a+Number(x.amount),0);
   const summary=document.createElement('p');summary.innerHTML='<strong>Total informado:</strong> '+money(total)+' · <strong>Pago:</strong> '+money(paid)+' · <strong>A pagar:</strong> '+money(total-paid);
@@ -72,7 +89,7 @@
    const h=document.createElement('strong');h.textContent=pmt.description+' · '+money(pmt.amount);card.append(h);
    const info=document.createElement('p');info.className='muted';info.textContent=(pmt.scope==='projeto'?'Projeto':'Acompanhamento de obra')+' · '+(pmt.paid_at?'Pago em '+date(pmt.paid_at):'A pagar'+(pmt.due_date?' até '+date(pmt.due_date):''));card.append(info);
    if(pmt.receipt_path){card.append(await fileButton(db,pmt.receipt_path,'Ver comprovante'))}
-   if(pmt.pix_code&&!pmt.paid_at){
+   if(pmt.pix_code&&!pmt.paid_at&&!p.pix_qr_path){
     const p=document.createElement('p');p.className='muted';p.textContent='Pix copia e cola fornecido pelo escritório:';card.append(p);
     const code=document.createElement('textarea');code.readOnly=true;code.value=pmt.pix_code;code.rows=3;code.style.cssText='display:block;width:100%;font:12px monospace;padding:10px';card.append(code);
     const copy=document.createElement('button');copy.className='secondary';copy.textContent='Copiar código Pix';copy.onclick=async()=>{try{await navigator.clipboard.writeText(pmt.pix_code);copy.textContent='Copiado!'}catch{code.select()}};card.append(copy);
