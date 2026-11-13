@@ -70,7 +70,7 @@
    teamSelectedOwner=null;
    await window.santrelleSyncReloadFromCloud();
    render();
-   alert('Funcionário removido do cadastro da Equipe.'+(choices.replacement?' Responsabilidades transferidas para '+choices.replacement+'.':' As atribuições históricas foram preservadas.')+'\n\nSe ele já tiver uma conta ativa no Supabase Auth, o administrador deverá revogar seu acesso separadamente.');
+   alert('Funcionário removido do cadastro da Equipe.'+(choices.replacement?' Responsabilidades transferidas para '+choices.replacement+'.':' As atribuições históricas foram preservadas.')+'\n\nSe o funcionário tinha acesso comum associado a esse e-mail, a permissão interna foi revogada no Supabase. A conta de autenticação continua existente; acessos administradores exigem revisão separada.');
   }catch(err){choices.password='';alert('Não foi possível excluir o funcionário: '+err.message)}
  };
 })();
