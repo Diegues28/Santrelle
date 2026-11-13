@@ -26,11 +26,38 @@
    eventId:e.id,category:e.category
   }));
  }
+ function clientMeetings(){
+  const result=[];
+  if(typeof portalPreviewData==='undefined')return result;
+  for(const p of projects){
+   if(p.status==='Concluído')continue;
+   const config=portalPreviewData[String(p.id)];
+   if(!Array.isArray(config?.meetings))continue;
+   for(const meeting of config.meetings){
+    if(!validDate(meeting.date))continue;
+    const owner=String(meeting.owner||'');
+    if(!owner&&!isAdmin())continue;
+    if(owner&&!allowed(owner))continue;
+    if(!owner&&isAdmin()&&state.visibleOwners.includes('__none__'))continue;
+    result.push({id:'meet'+p.id+'_'+meeting.id,kind:'meeting',name:'Reunião: '+(meeting.subject||'Cliente')+' · '+p.name+
+     (meeting.time?' · '+meeting.time:''),owner:owner||'Sem responsável',date:meeting.date,
+     projectId:p.id,meetingId:meeting.id,completed:false});
+   }
+  }
+  return result;
+ }
+ window.santrelleCalendarOpenMeeting=function(projectId,meetingId){
+  const c=portalPreviewData?.[String(projectId)];
+  const m=c?.meetings?.find(x=>String(x.id)===String(meetingId));
+  if(!m)return;
+  alert('Reunião: '+m.subject+'\\nData: '+m.date+(m.time?' às '+m.time:'')+
+   (m.place?'\\nLocal: '+m.place:'')+(m.owner?'\\nResponsável: '+m.owner:''));
+ };
  // Entries already assigned to an owner; a synthetic owner "Equipe" is not an individual's assignment.
  function scoped(entries){
   if(!state.user)return [];
   const office=entries.filter(e=>allowed(e.owner));
-  return office.concat(calendarEventEntries());
+  return office.concat(clientMeetings(),calendarEventEntries());
  }
  window.santrelleCalendarVisibleEntries=scoped;
  window.santrelleCalendarScopeLabel=()=>isAdmin()?'Agendas da equipe selecionadas':state.selfName?'Minha agenda · '+state.selfName:'Minha agenda · e-mail não vinculado à Equipe';
