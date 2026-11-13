@@ -37,6 +37,8 @@
     if(!ready){lock();status('Sincronização não concluída. Atualize a página para escolher novamente.');return}
    }
   }catch(syncError){lock();status('Não foi possível iniciar a sincronização: '+syncError.message);return}
+  try{if(typeof window.santrelleCalendarAfterLogin==='function')await window.santrelleCalendarAfterLogin(db,user,staff.role)}
+  catch(err){console.warn('Não foi possível carregar as agendas:',err.message)}
   currentUser=user;
   window.santrelleIsAdmin=staff.role==='admin';
   document.body.classList.toggle('santrelle-admin-verified',window.santrelleIsAdmin);
@@ -88,7 +90,7 @@
   };
   wrap.querySelector('#staffFirstNewPassword').focus();
  }
- function lock(){currentUser=null;window.santrelleIsAdmin=false;document.body.classList.remove('santrelle-admin-verified');document.body.classList.add('staff-lock');E('staffLoginLayer').hidden=false;const b=E('staffLogout');if(b)b.hidden=true}
+ function lock(){if(typeof window.santrelleCalendarAfterLogout==='function')window.santrelleCalendarAfterLogout();currentUser=null;window.santrelleIsAdmin=false;document.body.classList.remove('santrelle-admin-verified');document.body.classList.add('staff-lock');E('staffLoginLayer').hidden=false;const b=E('staffLogout');if(b)b.hidden=true}
  E('staffForm').addEventListener('submit',async event=>{
   event.preventDefault();const button=E('staffEnter');button.disabled=true;status('Verificando acesso...');
   try{

@@ -263,6 +263,7 @@ function portalMeetingSubmit(event){
  event?.preventDefault?.();
  const cfg=portalPrefs(portalProjectId),value=id=>String(document.getElementById(id)?.value||'').trim();
  const subject=value('portalMeetingSubject'),date=value('portalMeetingDate'),time=value('portalMeetingTime'),place=value('portalMeetingPlace');
+ const owner=value('portalMeetingOwner');
  const visible=document.getElementById('portalMeetingVisible')?.checked===true;
  if(!subject||!date||!time){alert('Preencha o assunto, a data e o horário da reunião.');return}
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!/^\d{2}:\d{2}$/.test(time)||Number.isNaN(new Date(date+'T'+time+':00').getTime())){alert('Informe uma data e horário válidos.');return}
@@ -270,8 +271,8 @@ function portalMeetingSubmit(event){
  if(!old&&new Date(date+'T'+time+':00').getTime()<Date.now()){
   alert('Cadastre uma reunião futura. Reuniões passadas não aparecem na Área do Cliente.');return
  }
- if(old){Object.assign(old,{subject,date,time,place,visible})}
- else cfg.meetings.push({id:portalId(),subject,date,time,place,visible,createdAt:new Date().toISOString()});
+ if(old){Object.assign(old,{subject,date,time,place,visible,owner})}
+ else cfg.meetings.push({id:portalId(),subject,date,time,place,visible,owner,createdAt:new Date().toISOString()});
  portalEditingMeeting=null;portalSave();render()
 }
 function portalMeetingEdit(id){
@@ -281,6 +282,7 @@ function portalMeetingEdit(id){
  document.getElementById('portalMeetingDate').value=m.date||'';
  document.getElementById('portalMeetingTime').value=m.time||'';
  document.getElementById('portalMeetingPlace').value=m.place||'';
+ document.getElementById('portalMeetingOwner').value=m.owner||'';
  document.getElementById('portalMeetingVisible').checked=m.visible===true;
  document.getElementById('portalMeetingSubject')?.focus()
 }
@@ -401,7 +403,7 @@ function portalManagerMeetings(cfg){
  const rows=meetings.map(m=>{
   const upcoming=portalIsFuture(m),shown=upcoming&&m.visible===true;
   return '<div class="client-portal-meeting-row"><div class="client-portal-meeting-date"><strong>'+esc(portalDate(m.date))+'</strong><span>'+esc(m.time||'')+'</span></div>'
-   +'<div class="client-portal-meeting-description"><strong>'+esc(m.subject||'Reunião')+'</strong><span>'+esc(m.place||'Local a definir')+'</span></div>'
+   +'<div class="client-portal-meeting-description"><strong>'+esc(m.subject||'Reunião')+'</strong><span>'+esc(m.place||'Local a definir')+(m.owner?' · Responsável: '+esc(m.owner):'')+'</span></div>'
    +'<span class="client-portal-meeting-status '+(shown?'client-portal-state-visible':'')+'">'+(shown?'Visível ao cliente':upcoming?'Oculta':'Passada')+'</span>'
    +'<div class="client-portal-row-actions"><label><input type="checkbox" '+(m.visible?'checked ':'')+'onchange="portalMeetingToggle('+portalSafeAction(m.id)+',this.checked)"> Mostrar</label>'
    +'<button class="secondary" onclick="portalMeetingEdit('+portalSafeAction(m.id)+')">Editar</button><button class="secondary" onclick="portalMeetingDelete('+portalSafeAction(m.id)+')">Excluir</button></div></div>'
@@ -412,7 +414,8 @@ function portalManagerMeetings(cfg){
   +'<label>Assunto *<input id="portalMeetingSubject" required maxlength="120" placeholder="Ex.: Apresentação do anteprojeto"></label>'
   +'<label>Data *<input id="portalMeetingDate" required type="date" min="'+portalToday()+'"></label>'
   +'<label>Horário *<input id="portalMeetingTime" required type="time"></label>'
-  +'<label>Local ou acesso à reunião<input id="portalMeetingPlace" maxlength="240" placeholder="Ex.: Escritório / videoconferência"></label></div>'
+  +'<label>Local ou acesso à reunião<input id="portalMeetingPlace" maxlength="240" placeholder="Ex.: Escritório / videoconferência"></label>'
+  +'<label>Responsável pela reunião<select id="portalMeetingOwner"><option value="">Sem responsável</option>'+employees.map(e=>'<option value="'+esc(e.name)+'">'+esc(e.name)+'</option>').join('')+'</select></label></div>'
   +'<div class="client-portal-form-bottom"><label class="client-portal-check"><input type="checkbox" id="portalMeetingVisible" checked> Mostrar ao cliente</label>'
   +'<div><button class="primary" type="submit">'+(edit?'Salvar reunião':'Adicionar reunião')+'</button>'
   +(edit?'<button class="secondary" type="button" onclick="portalMeetingCancel()">Cancelar</button>':'')+'</div></div></form>'
