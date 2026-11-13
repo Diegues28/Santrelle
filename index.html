@@ -1048,6 +1048,13 @@ function addEmployee(){
  }
  teamSelectedOwner=null;
  render();
+ if(email&&typeof window.santrelleProvisionEmployeeLogin==='function'){
+  window.santrelleProvisionEmployeeLogin(email).then(result=>{
+   alert(result.ok
+    ?'Funcionário cadastrado! O primeiro acesso foi preparado com senha provisória. Será obrigatório trocá-la no login.'
+    :'Funcionário e e-mail salvos, mas o acesso não foi criado: '+result.reason+' Se já existe uma conta com esse e-mail, a senha antiga não foi redefinida.');
+  });
+ }
 }
 function removeEmployee(name){
  if(!window.teamDeleteEmployeeSecure){alert('Controle de exclusão ainda não foi carregado. Atualize a página.');return}
