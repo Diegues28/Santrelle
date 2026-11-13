@@ -17,7 +17,7 @@
   root.innerHTML=`
    <section class="card"><h2>Descrição e aprovação das etapas</h2>
    <p class="muted">Explique cada etapa para o cliente. Ele poderá registrar a aprovação diretamente pelo portal.</p>
-   <div id="extrasStages"></div></section>
+   <form id="extrasCurrentForm" class="row"><label>Etapa atual do projeto<select id="extrasCurrentStage"></select></label><button>Atualizar etapa atual</button></form><div id="extrasStages"></div></section>
    <section class="card"><h2>Obra · Cronogramas e relatórios</h2>
    <p class="muted">Anexe os PDFs do cronograma de obra e os relatórios de acompanhamento. O cliente só vê documentos liberados.</p>
    <form id="extrasAssetForm" class="row">
@@ -39,6 +39,7 @@
    </form><div id="extrasPayments"></div></section>
    <p class="message" id="extrasMessage" role="status"></p>`;
   editor.append(root);
+  form('extrasCurrentForm',async()=>{await write(db.from('portal_projects').update({current_stage:E('extrasCurrentStage').value}).eq('id',projectId))});
   form('extrasAssetForm',async()=>{
    const f=E('extrasAssetFile').files[0];if(!f||f.type!=='application/pdf'||f.size>20*1024*1024)throw Error('Envie um PDF de até 20 MB.');
    const path=await upload(f,'obra');
@@ -67,6 +68,10 @@
    query(db.from('portal_project_assets').select('*').eq('project_id',id).order('created_at',{ascending:false})),
    query(db.from('portal_payments').select('*').eq('project_id',id).order('due_date'))
   ]);
+  E('extrasCurrentStage').innerHTML='<option value="">Não informado</option>'+stages.map(x=>'<option value="'+esc(x.label)+'">'+esc(x.label)+'</option>').join('');
+  const {data:projectData,error:projectError}=await db.from('portal_projects').select('current_stage').eq('id',id).single();
+  if(projectError)throw projectError;
+  E('extrasCurrentStage').value=projectData.current_stage||'';
   const profiles=approvals.length?await query(db.from('portal_profiles').select('user_id,email').in('user_id',[...new Set(approvals.map(x=>x.user_id))])):[];
   E('extrasStages').innerHTML=stages.map(s=>`<div class="item" style="display:block"><strong>${esc(s.label)}</strong> · <span class="pill">${approvals.filter(a=>a.stage_id===s.id).length} aprovação(ões)</span><p class="muted">${approvals.filter(a=>a.stage_id===s.id).map(a=>esc(profiles.find(p=>p.user_id===a.user_id)?.email||'Cliente')+' — '+new Date(a.approved_at).toLocaleString('pt-BR')).join('<br>')||'Aguardando aprovação'}</p><form class="row extrasStageEdit" data-id="${s.id}"><label>Descrição para o cliente<input name="description" value="${esc(s.description)}" placeholder="O que acontece nesta etapa?"></label><label>Exige aprovação?<select name="approval"><option value="true"${s.requires_approval?' selected':''}>Sim</option><option value="false"${!s.requires_approval?' selected':''}>Não</option></select></label><button>Salvar descrição</button></form></div>`).join('')||'<p class="muted">Crie etapas para configurar a aprovação.</p>';
   E('extrasStages').querySelectorAll('form').forEach(f=>f.onsubmit=async e=>{e.preventDefault();try{await write(db.from('portal_stages').update({description:f.elements.description.value.trim(),requires_approval:f.elements.approval.value==='true'}).eq('id',f.dataset.id));await refresh(id);msg('Descrição e regra da etapa salvas.')}catch(err){msg(err.message)}});
