@@ -29,6 +29,15 @@
     <label>Descrição<input id="extrasAssetTitle" required placeholder="Ex.: Cronograma novembro"></label>
     <label>Arquivo PDF<input id="extrasAssetFile" type="file" accept=".pdf" required></label><button>Enviar</button>
    </form><div id="extrasAssets"></div></section>
+   <section class="card"><h2>Pix do escritório · QR Code sem valor fixo</h2>
+   <p class="muted">Anexe a imagem de um QR Code Pix estático gerado pelo banco, configurado SEM valor. O cliente poderá escanear e informar o valor no aplicativo bancário. Confira o QR Code antes de liberar aos clientes.</p>
+   <form id="extrasPixQrForm" class="row">
+    <label>Imagem do QR Code (PNG ou JPG)<input id="extrasPixQrFile" type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required></label>
+    <button type="submit">Salvar imagem Pix</button>
+   </form>
+   <div id="extrasPixQrStatus" class="muted"></div>
+   <div id="extrasPixQrPreview" style="margin-top:12px"></div>
+   </section>
    <section class="card"><h2>Financeiro · Projeto e acompanhamento de obra</h2>
    <p class="muted">Registre parcelas, vencimentos, pagamentos realizados e comprovantes. A liberação é individual.</p>
    <form id="extrasPaymentForm" class="row">
@@ -86,6 +95,18 @@
    try{await write(db.from('portal_project_assets').insert({project_id:projectId,kind:E('extrasKind').value,title:E('extrasAssetTitle').value.trim(),storage_path:path,released:false}))}
    catch(err){await db.storage.from('santrelle-clientes').remove([path]);throw err}
   });
+  form('extrasPixQrForm',async()=>{
+   const f=E('extrasPixQrFile').files[0];
+   if(!f||!['image/png','image/jpeg'].includes(f.type))throw Error('Selecione uma imagem PNG ou JPG.');
+   if(f.size>5*1024*1024)throw Error('A imagem do QR Code deve ter até 5 MB.');
+   // Um caminho novo evita cache desatualizado sem substituir o arquivo anterior.
+   const path=await upload(f,'pix-qr');
+   try{
+    await write(db.from('portal_projects').update({pix_qr_path:path}).eq('id',projectId));
+   }catch(err){
+    await db.storage.from('santrelle-clientes').remove([path]);throw err;
+   }
+  });
   form('extrasPaymentForm',async()=>{
    const f=E('extrasReceipt').files[0];let path=null;
    if(f){if(!['application/pdf','image/png','image/jpeg'].includes(f.type)||f.size>20*1024*1024)throw Error('Comprovante deve ser PDF, JPG ou PNG de até 20 MB.');path=await upload(f,'financeiro')}
@@ -115,6 +136,21 @@
   const {data:coverProject,error:coverError}=await db.from('portal_projects').select('cover_path').eq('id',id).single();
   if(coverError)throw coverError;
   E('extrasCoverStatus').textContent=coverProject.cover_path?'Capa configurada para o cliente. Envie outro PDF para substituí-la.':'Nenhuma capa configurada.';
+  const {data:pixProject,error:pixError}=await db.from('portal_projects').select('pix_qr_path').eq('id',id).single();
+  if(pixError)throw pixError;
+  E('extrasPixQrStatus').textContent=pixProject.pix_qr_path?'QR Code do Pix cadastrado. Você pode substituir a imagem acima.':'Nenhuma imagem de QR Code Pix cadastrada.';
+  E('extrasPixQrPreview').replaceChildren();
+  if(pixProject.pix_qr_path){
+   const {data:signed,error:signError}=await db.storage.from('santrelle-clientes').createSignedUrl(pixProject.pix_qr_path,120);
+   if(!signError&&signed?.signedUrl){
+    const picture=document.createElement('img');
+    picture.src=signed.signedUrl;
+    picture.alt='QR Code Pix cadastrado para este projeto';
+    picture.style.cssText='width:190px;height:190px;object-fit:contain;background:white;border:1px solid #e2d6cb;border-radius:8px;padding:8px';
+    E('extrasPixQrPreview').append(picture);
+   }
+  }
+
 
   const profiles=approvals.length?await query(db.from('portal_profiles').select('user_id,email').in('user_id',[...new Set(approvals.map(x=>x.user_id))])):[];
   E('extrasStages').innerHTML=stages.map(s=>`<div class="item" style="display:block"><strong>${esc(s.label)}</strong> · <span class="pill">${approvals.filter(a=>a.stage_id===s.id).length} aprovação(ões)</span><p class="muted">${approvals.filter(a=>a.stage_id===s.id).map(a=>esc(profiles.find(p=>p.user_id===a.user_id)?.email||'Cliente')+' — '+new Date(a.approved_at).toLocaleString('pt-BR')).join('<br>')||'Aguardando aprovação'}</p><form class="row extrasStageEdit" data-id="${s.id}"><label>Descrição para o cliente<input name="description" value="${esc(s.description)}" placeholder="O que acontece nesta etapa?"></label><label>Exige aprovação?<select name="approval"><option value="true"${s.requires_approval?' selected':''}>Sim</option><option value="false"${!s.requires_approval?' selected':''}>Não</option></select></label><button>Salvar descrição</button></form></div>`).join('')||'<p class="muted">Crie etapas para configurar a aprovação.</p>';
