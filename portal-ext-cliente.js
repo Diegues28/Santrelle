@@ -35,7 +35,7 @@
       if(!ok)return;button.disabled=true;
       try{
        const {data:{user},error:authError}=await db.auth.getUser();if(authError||!user)throw Error('Sua sessão expirou.');
-       const {error}=await db.from('portal_stage_approvals').insert({stage_id:stage.id,user_id:user.id,statement:'Li e concordo com a aprovação desta etapa do projeto.'});
+       const {error}=await db.from('portal_stage_approvals').insert({stage_id:stage.id,user_id:user.id});
        if(error)throw error;
        status.textContent='✓ Sua aprovação foi registrada com sucesso.';button.remove();
       }catch(e){alert('Não foi possível registrar a aprovação: '+e.message);button.disabled=false}
