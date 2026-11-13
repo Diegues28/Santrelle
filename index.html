@@ -1323,7 +1323,25 @@ function detail(){
  }
  projectDashboardRender(selected);
 }
-function attentionHTML(entries,today){let visible=entries.filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);if(!visible.length)return '<p class="muted">Nenhuma entrega atrasada ou prevista para os próximos 14 dias.</p>';return '<table><thead><tr><th>Entrega / projeto</th><th>Responsável</th><th>Prazo</th><th>Situação</th></tr></thead><tbody>'+visible.map(e=>'<tr><td><a class="click" onclick="calendarOpen(\''+e.id+'\')">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+esc(e.date.split('-').reverse().join('/'))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')+'</tbody></table>'}
+function attentionStartDate(entry){
+ const valid=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'');
+ // Prioriza o início da etapa quando há uma etapa identificável;
+ // caso contrário usa a data de início cadastrada para o projeto.
+ const project=projects.find(p=>String(p.id)===String(entry.projectId));
+ if(!project)return valid(entry.startDate)?entry.startDate:'';
+ const match=String(entry.id||'').match(/^[sur]\d+_(\d+)/);
+ const stage=match?project.schedule?.[Number(match[1])]:null;
+ const candidate=stage?.startDate||stage?.start||entry.startDate||project.startDate;
+ return valid(candidate)?candidate:(valid(project.startDate)?project.startDate:'');
+}
+function attentionHTML(entries,today){
+ let visible=entries.filter(e=>e.date<=offsetDay(parseISO(today),14)).slice(0,15);
+ if(!visible.length)return '<p class="muted">Nenhuma entrega atrasada ou prevista para os próximos 14 dias.</p>';
+ const fmt=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')?x.split('-').reverse().join('/'):'—';
+ return '<div class="table-scroll"><table><thead><tr><th>Entrega / projeto</th><th>Responsável</th><th>Prazo</th><th>Prazo inicial</th><th>Situação</th></tr></thead><tbody>'
+ +visible.map(e=>'<tr><td><a class="click" onclick="calendarOpen(\''+e.id+'\')">'+esc(e.name)+'</a></td><td>'+esc(e.owner||'Não definido')+'</td><td>'+fmt(e.date)+'</td><td>'+fmt(attentionStartDate(e))+'</td><td><span class="tag '+(e.date<today?'late':'waiting')+'">'+(e.date<today?'Atrasada':'Próxima')+'</span></td></tr>').join('')
+ +'</tbody></table></div>';
+}
 
 function setProjectSubOwner(id,i,j,owner){
  const p=projects.find(x=>x.id===id);if(!p)return;
