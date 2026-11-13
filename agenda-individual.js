@@ -1,6 +1,6 @@
 /* Agenda do painel por colaborador, com preferências por conta e eventos pessoais em tabela separada. */
 (()=>{
- const state={db:null,user:null,role:'colaborador',selfName:'',visibleOwners:[],events:[],loaded:false};
+ const state={db:null,user:null,role:'colaborador',selfName:'',visibleOwners:[],events:[],loaded:false,poll:null};
  const normalize=s=>String(s||'').trim().toLocaleLowerCase('pt-BR');
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const validDate=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'');
@@ -141,6 +141,13 @@
   state.visibleOwners=pref?.visible_owner_names||[];
   await reloadEvents();
   state.loaded=true;
+  if(state.poll)clearInterval(state.poll);
+  state.poll=setInterval(async()=>{
+   if(document.visibilityState==='hidden'||!state.user||!state.db)return;
+   const previous=JSON.stringify(state.events);
+   await reloadEvents();
+   if(JSON.stringify(state.events)!==previous&&typeof render==='function')render();
+  },30000);
  };
- window.santrelleCalendarAfterLogout=()=>{state.db=null;state.user=null;state.events=[];state.loaded=false;state.selfName='';state.visibleOwners=[]};
+ window.santrelleCalendarAfterLogout=()=>{if(state.poll){clearInterval(state.poll);state.poll=null}state.db=null;state.user=null;state.events=[];state.loaded=false;state.selfName='';state.visibleOwners=[]};
 })();
