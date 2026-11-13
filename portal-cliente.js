@@ -508,7 +508,7 @@ function portalManagerProject(project,cfg){
   +'<span id="portalCoverUploadStatus" class="muted" aria-live="polite"></span>'
   +(cfg.coverImage?'<div class="client-portal-cover-row"><strong>Capa configurada: '+esc(cfg.coverFileName||'PDF do projeto')+'</strong><button class="secondary" onclick="portalCoverRemove()">Remover capa</button></div>':'<p class="muted">Nenhuma capa escolhida para este projeto.</p>')
   +'</section>'
-  +portalManagerMeetings(cfg)+portalManagerStages(cfg)+portalManagerDocs(cfg)+'</div>'
+  +portalManagerMeetings(cfg)+portalManagerStages(cfg)+portalManagerDocs(cfg)+(window.portalClientActionsHTML?window.portalClientActionsHTML(project):'')+'</div>'
 }
 function portalPreviewMeetings(cfg){
  const meetings=portalUpcoming(cfg);
