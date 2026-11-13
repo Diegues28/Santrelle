@@ -15,6 +15,10 @@
   const editor=E('projectEditor');if(!editor||E('portalExtras'))return;
   const root=document.createElement('div');root.id='portalExtras';
   root.innerHTML=`
+   <section class="card"><h2>Capa do projeto · Área do Cliente</h2>
+   <p class="muted">Envie um PDF. A primeira página será usada como imagem ilustrativa de fundo no portal deste cliente.</p>
+   <form id="extrasCoverForm" class="row"><label>PDF da capa<input id="extrasCoverFile" type="file" accept=".pdf,application/pdf" required></label><button>Atualizar capa</button></form><div id="extrasCoverStatus" class="muted"></div>
+   </section>
    <section class="card"><h2>Descrição e aprovação das etapas</h2>
    <p class="muted">Explique cada etapa para o cliente. Ele poderá registrar a aprovação diretamente pelo portal.</p>
    <form id="extrasCurrentForm" class="row"><label>Etapa atual do projeto<select id="extrasCurrentStage"></select></label><button>Atualizar etapa atual</button></form><div id="extrasStages"></div></section>
@@ -57,6 +61,25 @@
    }
    await write(db.from('portal_projects').update({current_stage:next}).eq('id',projectId));
   });
+  form('extrasCoverForm',async()=>{
+   const f=E('extrasCoverFile').files[0];
+   if(!f||!(/\\.pdf$/i.test(f.name)||f.type==='application/pdf')||f.size>15*1024*1024)throw Error('Selecione um PDF de até 15 MB.');
+   if(!window.pdfjsLib)throw Error('Leitor de PDF indisponível. Atualize a página e tente novamente.');
+   window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+   const pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
+   const page=await pdf.getPage(1),original=page.getViewport({scale:1});
+   const viewport=page.getViewport({scale:Math.min(1.8,1200/original.width,900/original.height)});
+   const canvas=document.createElement('canvas');canvas.width=Math.round(viewport.width);canvas.height=Math.round(viewport.height);
+   const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+   await page.render({canvasContext:ctx,viewport}).promise;
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.75));
+   if(!blob)throw Error('Não foi possível gerar a imagem de capa.');
+   const path=projectId+'/capas/'+crypto.randomUUID()+'.jpg';
+   const {error:uploadError}=await db.storage.from('santrelle-clientes').upload(path,blob,{upsert:false,contentType:'image/jpeg'});
+   if(uploadError)throw uploadError;
+   try{await write(db.from('portal_projects').update({cover_path:path}).eq('id',projectId))}
+   catch(e){await db.storage.from('santrelle-clientes').remove([path]);throw e}
+  });
   form('extrasAssetForm',async()=>{
    const f=E('extrasAssetFile').files[0];if(!f||f.type!=='application/pdf'||f.size>20*1024*1024)throw Error('Envie um PDF de até 20 MB.');
    const path=await upload(f,'obra');
@@ -89,6 +112,10 @@
   const {data:projectData,error:projectError}=await db.from('portal_projects').select('current_stage').eq('id',id).single();
   if(projectError)throw projectError;
   E('extrasCurrentStage').value=projectData.current_stage||'';
+  const {data:coverProject,error:coverError}=await db.from('portal_projects').select('cover_path').eq('id',id).single();
+  if(coverError)throw coverError;
+  E('extrasCoverStatus').textContent=coverProject.cover_path?'Capa configurada para o cliente. Envie outro PDF para substituí-la.':'Nenhuma capa configurada.';
+
   const profiles=approvals.length?await query(db.from('portal_profiles').select('user_id,email').in('user_id',[...new Set(approvals.map(x=>x.user_id))])):[];
   E('extrasStages').innerHTML=stages.map(s=>`<div class="item" style="display:block"><strong>${esc(s.label)}</strong> · <span class="pill">${approvals.filter(a=>a.stage_id===s.id).length} aprovação(ões)</span><p class="muted">${approvals.filter(a=>a.stage_id===s.id).map(a=>esc(profiles.find(p=>p.user_id===a.user_id)?.email||'Cliente')+' — '+new Date(a.approved_at).toLocaleString('pt-BR')).join('<br>')||'Aguardando aprovação'}</p><form class="row extrasStageEdit" data-id="${s.id}"><label>Descrição para o cliente<input name="description" value="${esc(s.description)}" placeholder="O que acontece nesta etapa?"></label><label>Exige aprovação?<select name="approval"><option value="true"${s.requires_approval?' selected':''}>Sim</option><option value="false"${!s.requires_approval?' selected':''}>Não</option></select></label><button>Salvar descrição</button></form></div>`).join('')||'<p class="muted">Crie etapas para configurar a aprovação.</p>';
   E('extrasStages').querySelectorAll('form').forEach(f=>f.onsubmit=async e=>{e.preventDefault();try{await write(db.from('portal_stages').update({description:f.elements.description.value.trim(),requires_approval:f.elements.approval.value==='true'}).eq('id',f.dataset.id));await refresh(id);msg('Descrição e regra da etapa salvas.')}catch(err){msg(err.message)}});
