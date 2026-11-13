@@ -39,9 +39,9 @@
     (done?'<p class="muted">Projeto concluído e preservado em Projetos concluídos.</p>':'')+
     '</section>'+
     '<section class="panel client-portal-admin-section" style="border-color:#E5C9C2">'+
-    '<h3>Excluir cliente</h3><p class="muted">Ação restrita ao administrador. A exclusão do cadastro e do histórico interno depende da senha de exclusão e de uma confirmação adicional. Para finalizar normalmente, use a opção de pós-obra acima.</p>'+
+    '<h3>Excluir cliente</h3><p class="muted">Ação restrita ao administrador. Remove o cadastro e o histórico interno deste projeto; contas e projetos separados do portal online não são apagados automaticamente. Exige senha e confirmação adicional. Para finalizar normalmente, use a opção de pós-obra acima.</p>'+
     '<div class="inline"><button class="secondary" onclick="portalConfigureDeletionPassword()">Cadastrar / trocar senha de exclusão</button>'+
-    '<button class="secondary" style="color:#963F35;border-color:#DAB0A8" onclick="portalDeleteClientProject('+JSON.stringify(String(p.id)).replace(/"/g,'&quot;')+')">Excluir cliente definitivamente</button></div>'+
+    '<button class="secondary" style="color:#963F35;border-color:#DAB0A8" onclick="portalDeleteClientProject('+JSON.stringify(String(p.id)).replace(/"/g,'&quot;')+')">Excluir cadastro interno do cliente</button></div>'+
     '</section>';
  };
  window.portalConcludeClientProject=function(id){
