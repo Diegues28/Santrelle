@@ -56,7 +56,14 @@
  // Entries already assigned to an owner; a synthetic owner "Equipe" is not an individual's assignment.
  function scoped(entries){
   if(!state.user)return [];
-  const office=entries.filter(e=>allowed(e.owner));
+  const office=entries.filter(e=>{
+   if(allowed(e.owner))return true;
+   if(!isAdmin())return false;
+   if(state.visibleOwners.includes('__none__'))return false;
+   if(state.visibleOwners.length===0)return true;
+   const project=projects.find(p=>String(p.id)===String(e.projectId));
+   return project?projectAssignedOwners(project).some(name=>allowed(name)):false;
+  });
   return office.concat(clientMeetings(),calendarEventEntries());
  }
  window.santrelleCalendarVisibleEntries=scoped;
