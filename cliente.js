@@ -55,6 +55,7 @@
      if(section.children.length>1)target.appendChild(section);
     }
     if(!count)target.insertAdjacentHTML('beforeend','<p class="empty">Ainda não há documentos liberados para consulta.</p>');
+    if(window.portalExtrasClientRender)await window.portalExtrasClientRender(p,wrap,db);
    }
   }catch(err){el('projects').textContent='Não foi possível carregar seus projetos. Tente sair e entrar novamente.';console.error('Portal:',err.message)}
  }
