@@ -134,6 +134,41 @@ function portalFolderMove(id,stageId){
 function portalStageOptions(cfg,current){
  return cfg.stages.map(s=>'<option value="'+esc(s.id)+'"'+(s.id===current?' selected':'')+'>'+esc(s.name)+'</option>').join('')
 }
+async function portalCoverPdfSelected(input){
+ const file=input.files&&input.files[0];
+ if(!file)return;
+ if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){alert('Selecione um PDF.');input.value='';return}
+ if(file.size>15*1024*1024){alert('O PDF deve ter no máximo 15 MB.');input.value='';return}
+ if(!window.pdfjsLib){alert('O leitor de PDF não carregou. Recarregue o aplicativo e tente novamente.');return}
+ const button=document.getElementById('portalCoverUploadStatus');
+ if(button)button.textContent='Preparando a capa do projeto...';
+ try{
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  const buffer=await file.arrayBuffer();
+  const task=window.pdfjsLib.getDocument({data:new Uint8Array(buffer)});
+  const pdf=await task.promise,first=await pdf.getPage(1);
+  const view=first.getViewport({scale:1});
+  const scale=Math.min(1.7,1100/view.width,760/view.height);
+  const viewport=first.getViewport({scale});
+  const canvas=document.createElement('canvas');canvas.width=Math.round(viewport.width);canvas.height=Math.round(viewport.height);
+  const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  await first.render({canvasContext:ctx,viewport}).promise;
+  let cover=canvas.toDataURL('image/jpeg',0.68);
+  if(cover.length>600000)cover=canvas.toDataURL('image/jpeg',0.42);
+  if(cover.length>600000)throw Error('A página é muito grande. Use um PDF de capa com menos detalhes.');
+  const cfg=portalPrefs(portalProjectId);
+  cfg.coverImage=cover;cfg.coverFileName=file.name;
+  if(!portalSave())throw Error('Não foi possível salvar a imagem da capa.');
+  render();
+ }catch(err){alert('Não foi possível preparar a capa a partir do PDF: '+err.message)}
+ finally{if(button)button.textContent='';input.value=''}
+}
+function portalCoverRemove(){
+ const cfg=portalPrefs(portalProjectId);
+ if(!cfg.coverImage)return;
+ if(!confirm('Remover a imagem de fundo deste projeto?'))return;
+ delete cfg.coverImage;delete cfg.coverFileName;portalSave();render()
+}
 function portalSave(){
  try{localStorage.setItem(PORTAL_PREVIEW_STORAGE,JSON.stringify(portalPreviewData));return true}
  catch(err){alert('Não foi possível salvar as alterações da prévia neste navegador: '+err.message);return false}
@@ -467,6 +502,12 @@ function portalManagerProject(project,cfg){
   +'<div class="client-portal-stage-form"><input id="portalStageName" maxlength="80" value="'+esc(cfg.stage)+'" placeholder="Ex.: Anteprojeto">'
   +'<button class="primary" onclick="portalStageSave()">Salvar etapa</button></div>'
   +'<p class="client-portal-helper">Você escolhe manualmente quando atualizar o nome da etapa.</p></section>'
+  +'<section class="panel client-portal-admin-section"><h3>Capa do projeto · Fundo da Área do Cliente</h3>'
+  +'<p class="muted">Selecione o PDF do projeto. A primeira página será transformada em uma imagem de fundo, individual para este cliente. O PDF original não será publicado por este campo; a capa ilustrativa ficará salva na prévia compartilhada da Santrelle.</p>'
+  +'<label for="portalCoverPdf" class="client-portal-cover-picker">Selecionar PDF da capa<input id="portalCoverPdf" type="file" accept=".pdf,application/pdf" onchange="portalCoverPdfSelected(this)"></label>'
+  +'<span id="portalCoverUploadStatus" class="muted" aria-live="polite"></span>'
+  +(cfg.coverImage?'<div class="client-portal-cover-row"><strong>Capa configurada: '+esc(cfg.coverFileName||'PDF do projeto')+'</strong><button class="secondary" onclick="portalCoverRemove()">Remover capa</button></div>':'<p class="muted">Nenhuma capa escolhida para este projeto.</p>')
+  +'</section>'
   +portalManagerMeetings(cfg)+portalManagerStages(cfg)+portalManagerDocs(cfg)+'</div>'
 }
 function portalPreviewMeetings(cfg){
@@ -525,7 +566,7 @@ function portalPreviewProject(project,cfg){
    ?name+' e '+spouse:name;
  return '<div class="client-portal-preview-bar"><span>◉ Modo de prévia · O cliente ainda não tem acesso real</span><button onclick="portalGoManager()">← Voltar ao escritório</button></div>'
   +'<div class="client-portal-client">'
-  +'<section class="client-portal-client-hero"><div class="client-portal-watermark" aria-hidden="true"></div><div class="client-portal-client-hero-content"><div class="client-portal-eyebrow">Seu espaço exclusivo</div><h1>Olá, '+esc(greeting)+'!</h1><p>Seja bem-vindo ao espaço dedicado ao seu projeto. Aqui você poderá consultar os documentos disponibilizados pelo escritório.</p></div></section>'
+  +'<section class="client-portal-client-hero'+(cfg.coverImage?' has-project-cover':'')+'"'+(/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(cfg.coverImage||'')?' style="--portal-project-cover:url(\\\''+cfg.coverImage+'\\\')"':'')+'><div class="client-portal-watermark" aria-hidden="true"></div><div class="client-portal-client-hero-content"><div class="client-portal-eyebrow">Seu espaço exclusivo</div><h1>Olá, '+esc(greeting)+'!</h1><p>Seja bem-vindo ao espaço dedicado ao seu projeto. Aqui você poderá consultar os documentos disponibilizados pelo escritório.</p></div></section>'
   +'<div class="client-portal-client-top-grid"><section class="client-portal-client-stage"><span class="client-portal-client-section-eyebrow">ETAPA DO PROJETO</span>'
   +'<div class="client-portal-client-stage-name">'+(cfg.stage?esc(cfg.stage):'Aguardando atualização')+'</div>'
   +'<p>Acompanhe aqui o nome da etapa compartilhada pelo escritório.</p></section>'
