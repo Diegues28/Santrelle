@@ -1,6 +1,6 @@
 /* Agenda do painel por colaborador, com preferências por conta e eventos pessoais em tabela separada. */
 (()=>{
- const state={db:null,user:null,role:'colaborador',selfName:'',visibleOwners:[],events:[],loaded:false,poll:null};
+ const state={db:null,user:null,role:'colaborador',selfName:'',visibleOwners:[],events:[],googleEvents:[],googleStatus:'',loaded:false,poll:null,syncPoll:null,syncBusy:false};
  const normalize=s=>String(s||'').trim().toLocaleLowerCase('pt-BR');
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const validDate=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'');
@@ -26,6 +26,63 @@
    eventId:e.id,category:e.category
   }));
  }
+ function googleEntries(){
+  return state.googleEvents.filter(e=>{
+    if(e.is_deleted)return false;
+    if(isAdmin())return !state.visibleOwners.includes('__none__')&&
+     (state.visibleOwners.length===0||e.assigned_owner&&allowed(e.assigned_owner));
+    return !!state.selfName&&normalize(e.assigned_owner)===normalize(state.selfName);
+  }).map(e=>({
+    id:'google'+e.google_id,kind:'google',name:'Google: '+e.title+(e.event_time?' · '+String(e.event_time).slice(0,5):''),
+    owner:e.assigned_owner||'Agenda central',date:e.event_date,completed:false,
+    googleId:e.google_id,googleLocation:e.location||'',googleDescription:e.description||''
+  }));
+ }
+ async function loadGoogleEvents(){
+  if(!state.db||!state.user)return;
+  const {data,error}=await state.db.from('santrelle_google_events')
+   .select('google_id,title,event_date,event_time,end_date,end_time,location,description,assigned_owner,is_deleted')
+   .gte('event_date','2025-01-01').order('event_date',{ascending:true}).limit(2000);
+  if(error){console.warn('Não foi possível consultar eventos do Google',error.message);return}
+  state.googleEvents=data||[];
+ }
+ window.santrelleGoogleEventOpen=async function(id){
+  const e=state.googleEvents.find(x=>x.google_id===id);if(!e)return;
+  const detail=e.title+'\\n'+e.event_date+(e.event_time?' às '+String(e.event_time).slice(0,5):'')+
+   (e.location?'\\nLocal: '+e.location:'')+(e.description?'\\n'+e.description:'');
+  if(!isAdmin()){alert(detail);return}
+  const choices=colleagues();
+  const selected=prompt(detail+'\\n\\nPara atribuir esta reunião a alguém, escreva o nome exato do funcionário.\\n'+
+   'Funcionários: '+choices.join(', ')+'\\nDeixe vazio para a agenda geral.',e.assigned_owner||'');
+  if(selected===null)return;
+  const name=selected.trim();
+  if(name&&!choices.some(x=>normalize(x)===normalize(name))){alert('Selecione um nome cadastrado na Equipe.');return}
+  const {data,error}=await state.db.rpc('santrelle_google_set_event_owner',{p_google_id:id,p_owner:name});
+  if(error||!data){alert('Não foi possível atribuir o compromisso: '+(error?.message||'Evento não encontrado'));return}
+  await loadGoogleEvents();render();
+ };
+ window.santrelleGoogleSyncNow=async function(silent=false){
+  if(!state.db||!state.user||state.syncBusy)return;
+  state.syncBusy=true;
+  try{
+   const {data,error}=await state.db.functions.invoke('google-calendar-sync',{body:{}});
+   if(error||data?.error)throw Error(data?.error||error?.message||'Falha de comunicação');
+   if(data?.busy)return;
+   if(!data?.connected){state.googleStatus='Google Agenda ainda não conectado';return}
+   state.googleStatus='Última atualização: '+new Date().toLocaleString('pt-BR')+
+    ' · '+(data.imported||0)+' eventos atualizados · '+(data.pushed||0)+' enviados';
+   await loadGoogleEvents();
+   await reloadEvents();
+   if(typeof render==='function'&&isAdmin())render();
+   if(!silent)alert('Google Agenda sincronizado com a Santrelle!\\n'+
+    (data.imported||0)+' eventos importados/atualizados e '+(data.pushed||0)+' eventos enviados.');
+  }catch(err){
+   state.googleStatus='Sincronização do Google pendente: '+(err.message||String(err));
+   console.warn(state.googleStatus);
+   if(!silent)alert(state.googleStatus);
+  }finally{state.syncBusy=false}
+ };
+ window.santrelleGoogleSyncStatus=()=>state.googleStatus||'A sincronização automática ocorre enquanto a Santrelle estiver aberta.';
  function clientMeetings(){
   const result=[];
   if(typeof portalPreviewData==='undefined')return result;
@@ -64,7 +121,7 @@
    const project=projects.find(p=>String(p.id)===String(e.projectId));
    return project?projectAssignedOwners(project).some(name=>allowed(name)):false;
   });
-  return office.concat(clientMeetings(),calendarEventEntries());
+  return office.concat(clientMeetings(),calendarEventEntries(),googleEntries());
  }
  window.santrelleCalendarVisibleEntries=scoped;
  window.santrelleCalendarScopeLabel=()=>isAdmin()?'Agendas da equipe selecionadas':state.selfName?'Minha agenda · '+state.selfName:'Minha agenda · e-mail não vinculado à Equipe';
@@ -109,6 +166,7 @@
   });
   if(error){alert('Não foi possível adicionar o compromisso: '+error.message);return}
   await reloadEvents();render();
+  if(!personal)window.santrelleGoogleSyncNow(true);
  };
  window.santrelleCalendarOpenEvent=async function(id){
   const ev=state.events.find(x=>x.id===id);if(!ev)return;
@@ -140,14 +198,21 @@
   const {data:pref}=await db.from('santrelle_calendar_preferences').select('visible_owner_names').eq('user_id',user.id).maybeSingle();
   state.visibleOwners=pref?.visible_owner_names||[];
   await reloadEvents();
+  await loadGoogleEvents();
   state.loaded=true;
+  window.santrelleGoogleSyncNow(true);
   if(state.poll)clearInterval(state.poll);
   state.poll=setInterval(async()=>{
    if(document.visibilityState==='hidden'||!state.user||!state.db)return;
    const previous=JSON.stringify(state.events);
    await reloadEvents();
+   await loadGoogleEvents();
    if(JSON.stringify(state.events)!==previous&&typeof render==='function')render();
   },30000);
+  if(state.syncPoll)clearInterval(state.syncPoll);
+  state.syncPoll=setInterval(()=>{
+   if(document.visibilityState!=='hidden')window.santrelleGoogleSyncNow(true);
+  },90000);
  };
- window.santrelleCalendarAfterLogout=()=>{if(state.poll){clearInterval(state.poll);state.poll=null}state.db=null;state.user=null;state.events=[];state.loaded=false;state.selfName='';state.visibleOwners=[]};
+ window.santrelleCalendarAfterLogout=()=>{if(state.poll){clearInterval(state.poll);state.poll=null}if(state.syncPoll){clearInterval(state.syncPoll);state.syncPoll=null}state.googleEvents=[];state.googleStatus='';state.db=null;state.user=null;state.events=[];state.loaded=false;state.selfName='';state.visibleOwners=[]};
 })();
