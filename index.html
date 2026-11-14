@@ -1340,10 +1340,26 @@ let old=projects.find(x=>x.id===registrationEditId),steps=registrationSteps().ma
  let secondary=registrationHasSecondary(step)?Math.max(0,Math.floor(Number(val('contract_'+i+'_secondary'))||0)):0;
  return {...step,contractualParts:{main,secondary},contractualDays:main+(registrationIsCompatibility(step)?secondary:0),clientExtraDays:0};
 });
-let contractChanged=!!old&&steps.some((step,i)=>{
- let previous=registrationContractParts((old.steps||[])[i]||step);
+let stageStructureChanged=!!old&&(
+ (old.steps||[]).length!==steps.length||
+ steps.some((step,i)=>String(step.name)!==String(old.steps?.[i]?.name))
+);
+let contractChanged=!!old&&steps.some(step=>{
+ const before=(old.steps||[]).find(previous=>previous.name===step.name);
+ if(!before)return true;
+ const previous=registrationContractParts(before);
  return step.contractualParts.main!==previous.main||step.contractualParts.secondary!==previous.secondary;
 });
+if(stageStructureChanged&&old?.clientTimelineDates){
+ const oldDates=old.clientTimelineDates;
+ const migrated={...oldDates};
+ steps.forEach((step,i)=>{
+  const former=(old.steps||[]).findIndex(previous=>previous.name===step.name);
+  if(former>=0&&oldDates['step_'+former])migrated['step_'+i]=structuredClone(oldDates['step_'+former]);
+  else delete migrated['step_'+i];
+ });
+ old.clientTimelineDates=migrated;
+}
 let keys=['cpf','rg','phone','email','birthDate','profession','spouseName','maritalStatus','residentialAddress','constructionAddress','source'];
 let clientRegistration={name};keys.forEach(k=>clientRegistration[k]=k==='birthDate'?birthDateISO:val(k));clientRegistration.children=Array.from({length:5},(_,i)=>val('child_'+i));
 let condominium={};['managerName','managerContact','conciergeName','conciergeContact','hasRules','rulesNotes'].forEach(k=>condominium[k]=val(k));
@@ -1351,7 +1367,7 @@ let addressTitle=clientRegistration.constructionAddress.split(',')[0].trim();
 let displayName=addressTitle?name+' · '+addressTitle:name+' · Projeto';
 let startDate=requestedStartISO,p=old||{id:Date.now(),status:'Em andamento',schedule:[],deadline:'A definir',owner:'Não definido',phase:'Levantamento'};
 if(startDate&&!businessDay(startDate)){let adjusted=nextBusiness(startDate);if(!confirm('A data de início escolhida não é um dia útil. Usar '+formatDateBR(adjusted)+'?'))return;startDate=adjusted}
-let needsRecalculation=!!old&&!!startDate&&(!old.schedule?.length||old.startDate!==startDate||contractChanged||old.scheduleVersion!==3||old.holidayCalendarVersion!==SANTRELLE_HOLIDAY_CALENDAR_VERSION);
+let needsRecalculation=!!old&&!!startDate&&(!old.schedule?.length||old.startDate!==startDate||contractChanged||stageStructureChanged||old.scheduleVersion!==3||old.holidayCalendarVersion!==SANTRELLE_HOLIDAY_CALENDAR_VERSION);
 if(needsRecalculation&&old.schedule?.length&&!confirm('Recalcular o cronograma considerando os feriados nacionais, de São Paulo e Santos? Os responsáveis e as revisões já solicitadas serão preservados, mas as datas poderão mudar.'))return;
 p.name=displayName;p.client=name;p.clientRegistration=clientRegistration;p.condominium=condominium;
 p.steps=steps;
@@ -1359,8 +1375,14 @@ if(!old){p.startDate=startDate||'';if(startDate){buildScheduleForRegistration(p,
 else if(needsRecalculation){
 buildScheduleForRegistration(p,startDate);p.scheduleVersion=3
 }else if(!startDate){p.startDate=''}
-if(old){p.registrationUpdatedAt=new Date().toISOString()}
-if(!p.manualCoverDate){let now=new Date();p.manualCoverDate=iso(now.getFullYear(),now.getMonth()+1,now.getDate())}save();registrationEditId=null;openProject(p.id);if(typeof maybeAutoGenerateManual==='function')maybeAutoGenerateManual(p.id)
+if(old){
+ p.registrationUpdatedAt=new Date().toISOString();
+ if(stageStructureChanged&&!startDate&&old.schedule?.length){
+  // Sem início válido não é seguro manter prazos indexados a etapas removidas.
+  p.schedule=[];p.officeDate='';p.clientDate='';p.deadline='A definir';
+ }
+}
+if(!p.manualCoverDate){let now=new Date();p.manualCoverDate=iso(now.getFullYear(),now.getMonth()+1,now.getDate())}save();registrationResetDraft();registrationEditId=null;openProject(p.id);if(typeof maybeAutoGenerateManual==='function')maybeAutoGenerateManual(p.id)
 }
 function openProject(id){selected=projects.find(p=>p.id===id);if(!selected)return;if(typeof projectDashboardReset==='function')projectDashboardReset();page=selected.status==='Concluído'?'concluidos':'projetos';document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));render()}
 function subownerOptions(current){
