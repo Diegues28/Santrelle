@@ -1350,26 +1350,28 @@ let contractChanged=!!old&&steps.some(step=>{
  const previous=registrationContractParts(before);
  return step.contractualParts.main!==previous.main||step.contractualParts.secondary!==previous.secondary;
 });
-if(stageStructureChanged&&old?.clientTimelineDates){
- const oldDates=old.clientTimelineDates;
- const migrated={...oldDates};
- steps.forEach((step,i)=>{
-  const former=(old.steps||[]).findIndex(previous=>previous.name===step.name);
-  if(former>=0&&oldDates['step_'+former])migrated['step_'+i]=structuredClone(oldDates['step_'+former]);
-  else delete migrated['step_'+i];
- });
- old.clientTimelineDates=migrated;
-}
 let keys=['cpf','rg','phone','email','birthDate','profession','spouseName','maritalStatus','residentialAddress','constructionAddress','source'];
 let clientRegistration={name};keys.forEach(k=>clientRegistration[k]=k==='birthDate'?birthDateISO:val(k));clientRegistration.children=Array.from({length:5},(_,i)=>val('child_'+i));
 let condominium={};['managerName','managerContact','conciergeName','conciergeContact','hasRules','rulesNotes'].forEach(k=>condominium[k]=val(k));
 let addressTitle=clientRegistration.constructionAddress.split(',')[0].trim();
 let displayName=addressTitle?name+' · '+addressTitle:name+' · Projeto';
-let startDate=requestedStartISO,p=old||{id:Date.now(),status:'Em andamento',schedule:[],deadline:'A definir',owner:'Não definido',phase:'Levantamento'};
+let startDate=requestedStartISO,p=old||{id:Date.now(),status:'Em andamento',schedule:[],deadline:'A definir',owner:'Não definido',phase:steps[0]?.name||'A definir'};
 if(startDate&&!businessDay(startDate)){let adjusted=nextBusiness(startDate);if(!confirm('A data de início escolhida não é um dia útil. Usar '+formatDateBR(adjusted)+'?'))return;startDate=adjusted}
 let needsRecalculation=!!old&&!!startDate&&(!old.schedule?.length||old.startDate!==startDate||contractChanged||stageStructureChanged||old.scheduleVersion!==3||old.holidayCalendarVersion!==SANTRELLE_HOLIDAY_CALENDAR_VERSION);
 if(needsRecalculation&&old.schedule?.length&&!confirm('Recalcular o cronograma considerando os feriados nacionais, de São Paulo e Santos? Os responsáveis e as revisões já solicitadas serão preservados, mas as datas poderão mudar.'))return;
 p.name=displayName;p.client=name;p.clientRegistration=clientRegistration;p.condominium=condominium;
+if(stageStructureChanged&&old?.clientTimelineDates){
+ const oldDates=old.clientTimelineDates;
+ const migrated={};
+ for(const [key,value] of Object.entries(oldDates)){
+  if(!/^step_\d+$/.test(key))migrated[key]=value;
+ }
+ steps.forEach((step,i)=>{
+  const former=(old.steps||[]).findIndex(previous=>previous.name===step.name);
+  if(former>=0&&oldDates['step_'+former])migrated['step_'+i]=structuredClone(oldDates['step_'+former]);
+ });
+ p.clientTimelineDates=migrated;
+}
 p.steps=steps;
 if(!old){p.startDate=startDate||'';if(startDate){buildScheduleForRegistration(p,startDate);p.scheduleVersion=3}projects.push(p)}
 else if(needsRecalculation){
