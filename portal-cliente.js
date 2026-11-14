@@ -265,14 +265,15 @@ function portalMeetingSubmit(event){
  const subject=value('portalMeetingSubject'),date=value('portalMeetingDate'),time=value('portalMeetingTime'),place=value('portalMeetingPlace');
  const owner=value('portalMeetingOwner');
  const visible=document.getElementById('portalMeetingVisible')?.checked===true;
+ const syncGoogle=document.getElementById('portalMeetingGoogleSync')?.checked===true;
  if(!subject||!date||!time){alert('Preencha o assunto, a data e o horário da reunião.');return}
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!/^\d{2}:\d{2}$/.test(time)||Number.isNaN(new Date(date+'T'+time+':00').getTime())){alert('Informe uma data e horário válidos.');return}
  const old=cfg.meetings.find(m=>String(m.id)===String(portalEditingMeeting));
  if(!old&&new Date(date+'T'+time+':00').getTime()<Date.now()){
   alert('Cadastre uma reunião futura. Reuniões passadas não aparecem na Área do Cliente.');return
  }
- if(old){Object.assign(old,{subject,date,time,place,visible,owner})}
- else cfg.meetings.push({id:portalId(),subject,date,time,place,visible,owner,createdAt:new Date().toISOString()});
+ if(old){Object.assign(old,{subject,date,time,place,visible,owner,syncGoogle})}
+ else cfg.meetings.push({id:portalId(),subject,date,time,place,visible,owner,syncGoogle,createdAt:new Date().toISOString()});
  portalEditingMeeting=null;portalSave();render()
 }
 function portalMeetingEdit(id){
@@ -284,6 +285,7 @@ function portalMeetingEdit(id){
  document.getElementById('portalMeetingPlace').value=m.place||'';
  document.getElementById('portalMeetingOwner').value=m.owner||'';
  document.getElementById('portalMeetingVisible').checked=m.visible===true;
+ document.getElementById('portalMeetingGoogleSync').checked=m.syncGoogle===true;
  document.getElementById('portalMeetingSubject')?.focus()
 }
 function portalMeetingCancel(){portalEditingMeeting=null;render()}
@@ -403,7 +405,7 @@ function portalManagerMeetings(cfg){
  const rows=meetings.map(m=>{
   const upcoming=portalIsFuture(m),shown=upcoming&&m.visible===true;
   return '<div class="client-portal-meeting-row"><div class="client-portal-meeting-date"><strong>'+esc(portalDate(m.date))+'</strong><span>'+esc(m.time||'')+'</span></div>'
-   +'<div class="client-portal-meeting-description"><strong>'+esc(m.subject||'Reunião')+'</strong><span>'+esc(m.place||'Local a definir')+(m.owner?' · Responsável: '+esc(m.owner):'')+'</span></div>'
+   +'<div class="client-portal-meeting-description"><strong>'+esc(m.subject||'Reunião')+'</strong><span>'+esc(m.place||'Local a definir')+(m.owner?' · Responsável: '+esc(m.owner):'')+(m.syncGoogle?' · Google Agenda':'')+'</span></div>'
    +'<span class="client-portal-meeting-status '+(shown?'client-portal-state-visible':'')+'">'+(shown?'Visível ao cliente':upcoming?'Oculta':'Passada')+'</span>'
    +'<div class="client-portal-row-actions"><label><input type="checkbox" '+(m.visible?'checked ':'')+'onchange="portalMeetingToggle('+portalSafeAction(m.id)+',this.checked)"> Mostrar</label>'
    +'<button class="secondary" onclick="portalMeetingEdit('+portalSafeAction(m.id)+')">Editar</button><button class="secondary" onclick="portalMeetingDelete('+portalSafeAction(m.id)+')">Excluir</button></div></div>'
@@ -416,7 +418,8 @@ function portalManagerMeetings(cfg){
   +'<label>Horário *<input id="portalMeetingTime" required type="time"></label>'
   +'<label>Local ou acesso à reunião<input id="portalMeetingPlace" maxlength="240" placeholder="Ex.: Escritório / videoconferência"></label>'
   +'<label>Responsável pela reunião<select id="portalMeetingOwner"><option value="">Sem responsável</option>'+employees.map(e=>'<option value="'+esc(e.name)+'">'+esc(e.name)+'</option>').join('')+'</select></label></div>'
-  +'<div class="client-portal-form-bottom"><label class="client-portal-check"><input type="checkbox" id="portalMeetingVisible" checked> Mostrar ao cliente</label>'
+  +'<div class="client-portal-form-bottom"><div><label class="client-portal-check"><input type="checkbox" id="portalMeetingVisible" checked> Mostrar ao cliente</label>'+
+  '<label class="client-portal-check" style="margin-top:8px"><input type="checkbox" id="portalMeetingGoogleSync" '+(edit?.syncGoogle===true||!edit?'checked ':'')+'> Enviar ao Google Agenda do escritório</label></div>'
   +'<div><button class="primary" type="submit">'+(edit?'Salvar reunião':'Adicionar reunião')+'</button>'
   +(edit?'<button class="secondary" type="button" onclick="portalMeetingCancel()">Cancelar</button>':'')+'</div></div></form>'
   +'<div class="client-portal-meeting-rows">'+(rows||'<p class="client-portal-empty-small">Nenhuma reunião cadastrada.</p>')+'</div></section>'
