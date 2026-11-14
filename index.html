@@ -426,7 +426,18 @@ tbody tr:hover{background:#FCFAF8}
 @media(max-width:600px){.flex-item-top{align-items:flex-start;flex-direction:column;gap:4px}.flex-detail-row{flex-direction:column;align-items:flex-start}}
 
 body:not(.santrelle-admin-verified) nav button[data-admin-only]{display:none!important}
-nav .nav-settings-button{display:flex;align-items:center;justify-content:center;min-height:43px;width:47px;padding:9px;margin-top:8px;border:1px solid rgba(220,232,228,.22);border-radius:10px}nav .nav-settings-button svg{display:block}nav .nav-settings-button.active{border-color:#9ab6ac}</style><link rel="stylesheet" href="portal-cliente.css"><link rel="stylesheet" href="projeto-painel.css"></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos ativos</button><button data-page="concluidos">✓ Projetos concluídos</button><button data-page="postobra">▣ Pós-obra</button><button data-page="portal">◫ Área do Cliente</button><button data-page="equipe" data-admin-only="true">♙ Equipe</button><button data-page="modelos" data-admin-only="true">▤ Etapas e modelos</button><button data-page="configuracoes" data-admin-only="true" aria-label="Configurações gerais" title="Configurações gerais" class="nav-settings-button"><svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.05 1.56V21h-3v-.79A1.7 1.7 0 0 0 10.65 18.65a1.7 1.7 0 0 0-1.87.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 0 0 7 15a1.7 1.7 0 0 0-1.56-1.05H4.65v-3h.79A1.7 1.7 0 0 0 7 9.9a1.7 1.7 0 0 0-.34-1.87L6.6 7.97l2.12-2.12.06.06a1.7 1.7 0 0 0 1.87.34A1.7 1.7 0 0 0 11.7 4.7V4h3v.7A1.7 1.7 0 0 0 15.75 6.25a1.7 1.7 0 0 0 1.87-.34l.06-.06 2.12 2.12-.06.06a1.7 1.7 0 0 0-.34 1.87 1.7 1.7 0 0 0 1.56 1.05h.79v3h-.79A1.7 1.7 0 0 0 19.4 15Z"/></svg></button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div></main><script>
+nav .nav-settings-button{display:flex;align-items:center;justify-content:center;min-height:43px;width:47px;padding:9px;margin-top:8px;border:1px solid rgba(220,232,228,.22);border-radius:10px}nav .nav-settings-button svg{display:block}nav .nav-settings-button.active{border-color:#9ab6ac}</style><link rel="stylesheet" href="portal-cliente.css"><link rel="stylesheet" href="projeto-painel.css"><style id="registration-stage-custom-style">
+.reg-stage-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+.reg-stage-sortable{border-bottom:1px solid #e6d9cc;background:#fff;transition:background .15s}
+.reg-stage-sortable:hover{background:#fcf8f4}
+.reg-stage-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.reg-stage-actions strong{flex:1;min-width:90px}
+.reg-stage-actions button{font-size:12px;padding:5px 8px}
+.reg-stage-actions button:disabled{opacity:.3;cursor:not-allowed}
+.reg-drag-handle{cursor:grab;user-select:none;font-size:22px;color:#8B7663;display:inline-block;padding:4px 8px}
+.reg-drag-handle:active{cursor:grabbing}
+@media(max-width:740px){.reg-stage-actions strong{flex-basis:65%}.reg-stage-actions button{padding:5px}}
+</style></head><body><aside><h2>SANTRELLE</h2><small>ARQUITETURA · Gestão</small><nav id="nav"><button data-page="painel" class="active">▦ Painel geral</button><button data-page="projetos">▤ Projetos ativos</button><button data-page="concluidos">✓ Projetos concluídos</button><button data-page="postobra">▣ Pós-obra</button><button data-page="portal">◫ Área do Cliente</button><button data-page="equipe" data-admin-only="true">♙ Equipe</button><button data-page="modelos" data-admin-only="true">▤ Etapas e modelos</button><button data-page="configuracoes" data-admin-only="true" aria-label="Configurações gerais" title="Configurações gerais" class="nav-settings-button"><svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.05 1.56V21h-3v-.79A1.7 1.7 0 0 0 10.65 18.65a1.7 1.7 0 0 0-1.87.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 0 0 7 15a1.7 1.7 0 0 0-1.56-1.05H4.65v-3h.79A1.7 1.7 0 0 0 7 9.9a1.7 1.7 0 0 0-.34-1.87L6.6 7.97l2.12-2.12.06.06a1.7 1.7 0 0 0 1.87.34A1.7 1.7 0 0 0 11.7 4.7V4h3v.7A1.7 1.7 0 0 0 15.75 6.25a1.7 1.7 0 0 0 1.87-.34l.06-.06 2.12 2.12-.06.06a1.7 1.7 0 0 0-.34 1.87 1.7 1.7 0 0 0 1.56 1.05h.79v3h-.79A1.7 1.7 0 0 0 19.4 15Z"/></svg></button></nav></aside><main><div class="top"><div><h1 id="title">Painel geral</h1><div class="muted">Acompanhe projetos, responsáveis e prazos em um só lugar.</div></div><button class="primary" onclick="newProject()">+ Novo projeto</button></div><div id="content"></div></main><script>
 // Novas instalações começam sem projetos demonstrativos; projetos existentes no navegador permanecem intactos.
 const seed=[];
 const initial=[{name:'Briefing',days:3,subs:[{name:'Conversa com cliente',days:1},{name:'Levantamento de necessidades e materiais',days:1},{name:'Consolidar briefing e encaminhar para projeto',days:1}]},{name:'Levantamento',days:2,subs:[{name:'Medição no local',days:1},{name:'Organizar levantamento',days:1}]},{name:'Anteprojeto',days:10,subs:[{name:'Desenvolver proposta',days:7},{name:'Revisão interna',days:3}]},{name:'Projeto executivo',days:20,subs:[{name:'Compatibilizar medidas',days:4},{name:'Detalhamentos técnicos',days:16}]},{name:'Acompanhamento de obra',days:60,subs:[{name:'Planejamento da obra',days:5},{name:'Acompanhamento e visitas',days:55}]}];
@@ -1121,37 +1132,100 @@ function renderOfficeSettings(){
   '</section>';
 }
 function models(){el.innerHTML='<section class="panel"><h3>Modelo padrão de etapas e subetapas</h3><p class="muted">O prazo do escritório é a soma das subetapas. O prazo do cliente soma os dias adicionais ao prazo interno. Todos em dias úteis.</p>'+phases.map((p,i)=>'<div class="phase"><div class="inline"><strong>'+esc(p.name)+'</strong><span class="muted">Prazo do escritório: <strong>'+phaseOfficeDays(p)+' dias úteis</strong></span><label>Dias adicionais até entrega ao cliente <input type="number" min="0" style="width:75px" value="'+(p.clientExtraDays||0)+'" onchange="setClientExtraDays('+i+',this.value)"> dias</label><span class="muted">Total cliente: '+(phaseOfficeDays(p)+Number(p.clientExtraDays||0))+' dias úteis</span><button class="secondary" onclick="renamePhase('+i+')">Renomear</button><button class="secondary" onclick="movePhase('+i+',-1)">↑</button><button class="secondary" onclick="movePhase('+i+',1)">↓</button><button class="secondary" onclick="removePhase('+i+')">Excluir</button></div>'+p.subs.map((s,j)=>'<div class="sub"><span>'+esc(s.name)+'</span><div class="inline"><input aria-label="Dias úteis" type="number" min="1" style="width:75px" value="'+s.days+'" onchange="setSubDays('+i+','+j+',this.value)"> dias <button class="secondary" onclick="renameSub('+i+','+j+')">Editar</button><button class="secondary" onclick="moveSub('+i+','+j+')">Mover</button><button class="secondary" onclick="removeSub('+i+','+j+')">×</button></div></div>').join('')+'<button class="secondary" onclick="addSub('+i+')">+ Adicionar subetapa</button></div>').join('')+'<button class="primary" onclick="addPhase()">+ Adicionar etapa</button></section>'+(typeof manualTemplateManagerHTML==="function"?manualTemplateManagerHTML():"")}function setClientExtraDays(i,v){phases[i].clientExtraDays=Math.max(0,Math.floor(Number(v)||0));save();render()}function setSubDays(i,j,v){phases[i].subs[j].days=Math.max(1,+v||1);save();render()}function addPhase(){let name=prompt('Nome da nova etapa:');if(!name?.trim())return;let days=+(prompt('Duração prevista em dias úteis:', '3')||3);phases.push({name:name.trim(),days:Math.max(1,days),clientExtraDays:0,subs:[]});save();render()}function addSub(i){let name=prompt('Nome da nova subetapa:');if(!name?.trim())return;let days=+(prompt('Duração prevista em dias úteis:', '1')||1);phases[i].subs.push({name:name.trim(),days:Math.max(1,days)});save();render()}function renamePhase(i){let v=prompt('Nome da etapa:',phases[i].name);if(v?.trim()){phases[i].name=v.trim();save();render()}}function renameSub(i,j){let v=prompt('Nome da subetapa:',phases[i].subs[j].name);if(v?.trim()){phases[i].subs[j].name=v.trim();save();render()}}function removePhase(i){if(confirm('Excluir etapa e todas as subetapas?')){phases.splice(i,1);save();render()}}function removeSub(i,j){phases[i].subs.splice(j,1);save();render()}function movePhase(i,d){let n=i+d;if(n<0||n>=phases.length)return;[phases[i],phases[n]]=[phases[n],phases[i]];save();render()}function moveSub(i,j){let to=prompt('Mover para qual etapa?\n'+phases.map((p,k)=>(k+1)+' - '+p.name).join('\n'),String(i+1));let k=+to-1;if(!phases[k])return;phases[k].subs.push(phases[i].subs.splice(j,1)[0]);save();render()}
-function newProject(){registrationEditId=null;selected=null;page='cadastro';render();window.scrollTo(0,0)}
-function editRegistration(id){if(!projects.some(p=>p.id===id))return;registrationEditId=id;selected=null;page='cadastro';render();window.scrollTo(0,0)}
-function cancelRegistration(){registrationEditId=null;go('projetos')}
+/* Alterações da ficha ficam em rascunho até clicar em Salvar. */
+let registrationStageDraft=null,registrationInputDraft=null,registrationDragIndex=null;
+function registrationResetDraft(){registrationStageDraft=null;registrationInputDraft=null;registrationDragIndex=null}
+function registrationCaptureDraft(){
+ if(!registrationStageDraft)registrationStageDraft=structuredClone(registrationSteps());
+ const form=document.getElementById('registrationForm');if(!form)return;
+ registrationInputDraft={};
+ form.querySelectorAll('[id^="reg_"]').forEach(input=>{
+  if(/^reg_contract_\d+_(main|secondary)$/.test(input.id))return;
+  registrationInputDraft[input.id]=input.value;
+ });
+ registrationStageDraft.forEach((stage,index)=>{
+  const current=registrationContractParts(stage);
+  const mainField=document.getElementById('reg_contract_'+index+'_main');
+  const secondField=document.getElementById('reg_contract_'+index+'_secondary');
+  const main=mainField?Math.max(1,Math.floor(Number(mainField.value)||1)):current.main;
+  const secondary=secondField?Math.max(0,Math.floor(Number(secondField.value)||0)):current.secondary;
+  stage.contractualParts={main,secondary};
+  stage.contractualDays=main+(registrationIsCompatibility(stage)?secondary:0);
+ });
+}
+function registrationRepaintDraft(){
+ registrationForm();
+ if(registrationInputDraft)for(const [id,value] of Object.entries(registrationInputDraft)){
+  const el=document.getElementById(id);if(el)el.value=value;
+ }
+}
+function registrationAddStage(){
+ registrationCaptureDraft();
+ const entered=prompt('Nome da nova etapa deste cliente:');
+ if(entered===null||!entered.trim())return;
+ const name=entered.trim();
+ if(registrationStageDraft.some(s=>s.name.trim().toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'))){
+  alert('Já existe uma etapa com esse nome neste projeto.');return;
+ }
+ const input=prompt('Prazo contratual (dias úteis):','3');
+ if(input===null)return;
+ const days=Number(input);
+ if(!Number.isInteger(days)||days<1){alert('Informe uma quantidade válida de dias úteis.');return}
+ registrationStageDraft.push({name,subs:[{name:'Desenvolvimento de '+name,days,owner:'Não definido'}],
+  contractualParts:{main:days,secondary:0},contractualDays:days,clientExtraDays:0});
+ registrationRepaintDraft();
+}
+function registrationRemoveStage(index){
+ registrationCaptureDraft();
+ const step=registrationStageDraft[index];if(!step)return;
+ if(registrationStageDraft.length===1){alert('Mantenha pelo menos uma etapa no projeto.');return}
+ if(!confirm('Excluir a etapa "'+step.name+'" e suas subetapas deste projeto?\nO modelo padrão e os outros clientes não serão alterados.'))return;
+ registrationStageDraft.splice(index,1);
+ registrationRepaintDraft();
+}
+function registrationMoveStage(from,to){
+ registrationCaptureDraft();
+ if(!Number.isInteger(from)||!Number.isInteger(to)||from===to||from<0||to<0||
+  from>=registrationStageDraft.length||to>=registrationStageDraft.length)return;
+ const [step]=registrationStageDraft.splice(from,1);
+ registrationStageDraft.splice(to,0,step);
+ registrationRepaintDraft();
+}
+function registrationDragStart(event,index){
+ registrationDragIndex=index;
+ event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',String(index));
+}
+function registrationDragOver(event){event.preventDefault();event.dataTransfer.dropEffect='move'}
+function registrationDropStage(event,to){
+ event.preventDefault();
+ const from=registrationDragIndex;
+ registrationDragIndex=null;
+ if(Number.isInteger(from))registrationMoveStage(from,to);
+}
+function newProject(){registrationResetDraft();registrationEditId=null;selected=null;page='cadastro';render();window.scrollTo(0,0)}
+function editRegistration(id){if(!projects.some(p=>p.id===id))return;registrationResetDraft();registrationEditId=id;selected=null;page='cadastro';render();window.scrollTo(0,0)}
+function cancelRegistration(){registrationResetDraft();registrationEditId=null;go('projetos')}
+
 function defaultRegistrationSteps(){
- // Cada cliente recebe uma cópia de todas as subetapas do modelo do escritório.
- // Responsáveis e estados ficam independentes por projeto.
- const normalize=name=>String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
- const definitions=[
-  {name:'Levantamento',match:'levantamento',fallback:[{name:'Levantamento',days:2}]},
-  {name:'Estudo preliminar',match:'estudo preliminar',fallback:[{name:'Desenvolvimento do estudo preliminar',days:7},{name:'Revisão',days:3}]},
-  {name:'Anteprojeto',match:'anteprojeto',fallback:[{name:'Desenvolvimento do anteprojeto',days:7},{name:'Revisão',days:3}]},
-  {name:'Projeto executivo',match:'executivo',fallback:[{name:'Desenvolvimento do executivo',days:16},{name:'Compatibilização com projeto dos móveis planejados',days:4}]}
- ];
- return definitions.map(def=>{
-  const model=phases.find(p=>normalize(p.name).includes(def.match));
-  const subs=(model?.subs?.length?model.subs:def.fallback).map(sub=>({
-   name:String(sub.name||'Subetapa'),
-   days:Math.max(1,Math.floor(Number(sub.days)||1)),
-   owner:'Não definido',
-   ...(sub.reviewOptional===true?{reviewOptional:true}:{}),
-   ...(sub.compatibility===true?{compatibility:true}:{})
+ // Toda etapa do modelo entra no projeto novo, na ordem configurada no escritório.
+ // Não usar uma lista fixa que retire o Briefing ou etapas personalizadas.
+ return structuredClone(phases||[]).map(stage=>{
+  const subs=(stage.subs||[]).map(sub=>({
+   ...sub,name:String(sub.name||'Subetapa'),days:Math.max(1,Math.floor(Number(sub.days)||1)),
+   owner:'Não definido',completed:false
   }));
-  return {name:def.name,subs,clientExtraDays:0};
- })
+  return {...stage,name:String(stage.name||'Etapa'),subs,
+   owner:'Não definido',clientExtraDays:Math.max(0,Math.floor(Number(stage.clientExtraDays)||0)),
+   contractualParts:stage.contractualParts?structuredClone(stage.contractualParts):undefined,
+   completed:false};
+ });
 }
 function registrationStageLabel(step){let n=(step?.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();if(n.includes('estudo preliminar'))return 'Estudo preliminar';if(n.includes('anteprojeto'))return 'Anteprojeto';if(n.includes('executivo'))return 'Projeto executivo';return step?.name||'Etapa'}
 function registrationHasSecondary(step){let n=registrationStageLabel(step).toLowerCase();return n.includes('estudo preliminar')||n.includes('anteprojeto')||n.includes('executivo')}
 function registrationSecondaryLabel(step){let n=registrationStageLabel(step).toLowerCase();if(n.includes('estudo preliminar'))return 'Revisão do estudo preliminar';if(n.includes('anteprojeto'))return 'Revisão do anteprojeto';if(n.includes('executivo'))return 'Compatibilização com projeto dos móveis planejados';return ''}
 function registrationContractParts(step){
  if(!step)return {main:1,secondary:0};
- let old=Number(step.contractualDays)>=1?Math.floor(Number(step.contractualDays)):Math.max(1,phaseOfficeDays(step)+Math.max(0,Number(step.clientExtraDays)||0));
+ let old=Number(step.contractualDays)>=1?Math.floor(Number(step.contractualDays)):Math.max(1,(step.subs?.length?phaseOfficeDays(step):Math.max(1,Math.floor(Number(step.days)||1)))+Math.max(0,Number(step.clientExtraDays)||0));
  if(step.contractualParts&&Number(step.contractualParts.main)>=1){
    let main=Math.max(1,Math.floor(Number(step.contractualParts.main))),secondary=registrationHasSecondary(step)?Math.max(0,Math.floor(Number(step.contractualParts.secondary)||0)):0;
    return {main,secondary};
@@ -1163,7 +1237,7 @@ function registrationContractParts(step){
 function registrationIsCompatibility(step){return registrationStageLabel(step).toLowerCase().includes('executivo')}
 function registrationHasOptionalReview(step){return registrationHasSecondary(step)&&!registrationIsCompatibility(step)}
 function registrationContractDays(step){let p=registrationContractParts(step);return p.main+(registrationIsCompatibility(step)?p.secondary:0)}
-function registrationSteps(){let p=projects.find(x=>x.id===registrationEditId);return p?.steps?.length?p.steps:defaultRegistrationSteps()}
+function registrationSteps(){if(registrationStageDraft)return registrationStageDraft;let p=projects.find(x=>x.id===registrationEditId);return p?.steps?.length?p.steps:defaultRegistrationSteps()}
 function regField(key,label,value,type,wide,required){
 let kind=type||'text',attrs=(required?' required':'')+(kind==='tel'?' autocomplete="tel"':'');
 if(kind==='date')return '<label class="reg-field'+(wide?' reg-wide':'')+'"><span>'+label+(required?' <span class="reg-required">*</span>':'')+'</span><input class="br-date-input" id="reg_'+key+'" name="'+key+'" type="text" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="DD/MM/AAAA" value="'+esc(formatDateBR(value))+'" oninput="maskDateBR(this)" onblur="validateDateBRInput(this)"'+attrs+'></label>';
@@ -1175,11 +1249,24 @@ return '<label class="reg-field"><span>'+label+'</span><select id="reg_'+key+'">
 function regTextarea(key,label,value){return '<label class="reg-field reg-wide"><span>'+label+'</span><textarea id="reg_'+key+'" maxlength="1500">'+esc(value??'')+'</textarea></label>'}
 function registrationForm(){
 let p=projects.find(x=>x.id===registrationEditId),info=p?.clientRegistration||{},condo=p?.condominium||{},steps=registrationSteps();
-let stageHTML='<div class="reg-contract-table"><div class="reg-contract-header"><span>Etapa / atividade</span><span>Prazo contratual (dias úteis)</span></div>'+steps.map((stage,i)=>{
- let parts=registrationContractParts(stage),hasSecondary=registrationHasSecondary(stage);
- return '<div class="reg-contract-row"><div class="reg-contract-name">'+esc(registrationStageLabel(stage))+'</div>'+regField('contract_'+i+'_main','Dias úteis',parts.main,'number',false,true)+'</div>'
- +(hasSecondary?'<div class="reg-contract-row reg-contract-subrow"><div class="reg-contract-name">'+esc(registrationSecondaryLabel(stage))+(registrationHasOptionalReview(stage)?'<small class="reg-optional-note">Opcional: somente se o cliente solicitar alterações</small>':'')+'</div>'+regField('contract_'+i+'_secondary','Dias úteis',parts.secondary,'number')+'</div>':'')
- +(registrationIsCompatibility(stage)?'<div class="reg-contract-total" id="reg_contract_total_'+i+'">Prazo do executivo com compatibilização: <strong>'+(parts.main+parts.secondary)+' dias úteis</strong></div>':'')
+let stageHTML='<div class="reg-stage-toolbar"><strong>Etapas deste projeto</strong><button type="button" class="primary" onclick="registrationAddStage()">+ Adicionar etapa</button></div>'
+ +'<p class="reg-helper">A ficha começa com todas as etapas do modelo do escritório, incluindo Briefing. Arraste o símbolo ⠿ para reordenar, ou use as setas. As alterações só valerão para este projeto depois de salvar.</p>'
+ +'<div class="reg-contract-table"><div class="reg-contract-header"><span>Etapa / atividade</span><span>Prazo contratual (dias úteis)</span></div>'
+ +steps.map((stage,i)=>{
+  let parts=registrationContractParts(stage),hasSecondary=registrationHasSecondary(stage);
+  return '<div class="reg-stage-sortable" ondragover="registrationDragOver(event)" ondrop="registrationDropStage(event,'+i+')">'
+  +'<div class="reg-contract-row"><div class="reg-contract-name"><div class="reg-stage-actions">'
+  +'<span class="reg-drag-handle" draggable="true" title="Arraste para mudar a ordem" ondragstart="registrationDragStart(event,'+i+')" ondragend="registrationDragIndex=null" aria-label="Arrastar etapa '+esc(stage.name)+'">⠿</span>'
+  +'<strong>'+esc(registrationStageLabel(stage))+'</strong>'
+  +'<button type="button" class="secondary" title="Mover etapa para cima" onclick="registrationMoveStage('+i+','+(i-1)+')" '+(i===0?'disabled':'')+'>↑</button>'
+  +'<button type="button" class="secondary" title="Mover etapa para baixo" onclick="registrationMoveStage('+i+','+(i+1)+')" '+(i===steps.length-1?'disabled':'')+'>↓</button>'
+  +'<button type="button" class="secondary" title="Excluir esta etapa somente do projeto" onclick="registrationRemoveStage('+i+')">Excluir</button>'
+  +'</div></div>'+regField('contract_'+i+'_main','Dias úteis',parts.main,'number',false,true)+'</div>'
+  +(hasSecondary?'<div class="reg-contract-row reg-contract-subrow"><div class="reg-contract-name">'+esc(registrationSecondaryLabel(stage))
+  +(registrationHasOptionalReview(stage)?'<small class="reg-optional-note">Opcional: somente se o cliente solicitar alterações</small>':'')+'</div>'
+  +regField('contract_'+i+'_secondary','Dias úteis',parts.secondary,'number')+'</div>':'')
+  +(registrationIsCompatibility(stage)?'<div class="reg-contract-total" id="reg_contract_total_'+i+'">Prazo do executivo com compatibilização: <strong>'+(parts.main+parts.secondary)+' dias úteis</strong></div>':'')
+  +'</div>';
  }).join('')+'</div>';
 el.innerHTML='<div class="reg-intro">Preencha a ficha para cadastrar a obra. O projeto será criado somente ao selecionar <strong>Salvar e criar projeto</strong>. Não é necessário definir um nome de projeto nem um responsável geral.</div>'
 +'<form id="registrationForm" onsubmit="saveRegistration(event)">'
@@ -1253,8 +1340,14 @@ let old=projects.find(x=>x.id===registrationEditId),steps=registrationSteps().ma
  let secondary=registrationHasSecondary(step)?Math.max(0,Math.floor(Number(val('contract_'+i+'_secondary'))||0)):0;
  return {...step,contractualParts:{main,secondary},contractualDays:main+(registrationIsCompatibility(step)?secondary:0),clientExtraDays:0};
 });
-let contractChanged=!!old&&steps.some((step,i)=>{
- let previous=registrationContractParts((old.steps||[])[i]||step);
+let stageStructureChanged=!!old&&(
+ (old.steps||[]).length!==steps.length||
+ steps.some((step,i)=>String(step.name)!==String(old.steps?.[i]?.name))
+);
+let contractChanged=!!old&&steps.some(step=>{
+ const before=(old.steps||[]).find(previous=>previous.name===step.name);
+ if(!before)return true;
+ const previous=registrationContractParts(before);
  return step.contractualParts.main!==previous.main||step.contractualParts.secondary!==previous.secondary;
 });
 let keys=['cpf','rg','phone','email','birthDate','profession','spouseName','maritalStatus','residentialAddress','constructionAddress','source'];
@@ -1262,18 +1355,36 @@ let clientRegistration={name};keys.forEach(k=>clientRegistration[k]=k==='birthDa
 let condominium={};['managerName','managerContact','conciergeName','conciergeContact','hasRules','rulesNotes'].forEach(k=>condominium[k]=val(k));
 let addressTitle=clientRegistration.constructionAddress.split(',')[0].trim();
 let displayName=addressTitle?name+' · '+addressTitle:name+' · Projeto';
-let startDate=requestedStartISO,p=old||{id:Date.now(),status:'Em andamento',schedule:[],deadline:'A definir',owner:'Não definido',phase:'Levantamento'};
+let startDate=requestedStartISO,p=old||{id:Date.now(),status:'Em andamento',schedule:[],deadline:'A definir',owner:'Não definido',phase:steps[0]?.name||'A definir'};
 if(startDate&&!businessDay(startDate)){let adjusted=nextBusiness(startDate);if(!confirm('A data de início escolhida não é um dia útil. Usar '+formatDateBR(adjusted)+'?'))return;startDate=adjusted}
-let needsRecalculation=!!old&&!!startDate&&(!old.schedule?.length||old.startDate!==startDate||contractChanged||old.scheduleVersion!==3||old.holidayCalendarVersion!==SANTRELLE_HOLIDAY_CALENDAR_VERSION);
+let needsRecalculation=!!old&&!!startDate&&(!old.schedule?.length||old.startDate!==startDate||contractChanged||stageStructureChanged||old.scheduleVersion!==3||old.holidayCalendarVersion!==SANTRELLE_HOLIDAY_CALENDAR_VERSION);
 if(needsRecalculation&&old.schedule?.length&&!confirm('Recalcular o cronograma considerando os feriados nacionais, de São Paulo e Santos? Os responsáveis e as revisões já solicitadas serão preservados, mas as datas poderão mudar.'))return;
 p.name=displayName;p.client=name;p.clientRegistration=clientRegistration;p.condominium=condominium;
+if(stageStructureChanged&&old?.clientTimelineDates){
+ const oldDates=old.clientTimelineDates;
+ const migrated={};
+ for(const [key,value] of Object.entries(oldDates)){
+  if(!/^step_\d+$/.test(key))migrated[key]=value;
+ }
+ steps.forEach((step,i)=>{
+  const former=(old.steps||[]).findIndex(previous=>previous.name===step.name);
+  if(former>=0&&oldDates['step_'+former])migrated['step_'+i]=structuredClone(oldDates['step_'+former]);
+ });
+ p.clientTimelineDates=migrated;
+}
 p.steps=steps;
 if(!old){p.startDate=startDate||'';if(startDate){buildScheduleForRegistration(p,startDate);p.scheduleVersion=3}projects.push(p)}
 else if(needsRecalculation){
 buildScheduleForRegistration(p,startDate);p.scheduleVersion=3
 }else if(!startDate){p.startDate=''}
-if(old){p.registrationUpdatedAt=new Date().toISOString()}
-if(!p.manualCoverDate){let now=new Date();p.manualCoverDate=iso(now.getFullYear(),now.getMonth()+1,now.getDate())}save();registrationEditId=null;openProject(p.id);if(typeof maybeAutoGenerateManual==='function')maybeAutoGenerateManual(p.id)
+if(old){
+ p.registrationUpdatedAt=new Date().toISOString();
+ if(stageStructureChanged&&!startDate&&old.schedule?.length){
+  // Sem início válido não é seguro manter prazos indexados a etapas removidas.
+  p.schedule=[];p.officeDate='';p.clientDate='';p.deadline='A definir';
+ }
+}
+if(!p.manualCoverDate){let now=new Date();p.manualCoverDate=iso(now.getFullYear(),now.getMonth()+1,now.getDate())}save();registrationResetDraft();registrationEditId=null;openProject(p.id);if(typeof maybeAutoGenerateManual==='function')maybeAutoGenerateManual(p.id)
 }
 function openProject(id){selected=projects.find(p=>p.id===id);if(!selected)return;if(typeof projectDashboardReset==='function')projectDashboardReset();page=selected.status==='Concluído'?'concluidos':'projetos';document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));render()}
 function subownerOptions(current){
