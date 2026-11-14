@@ -73,7 +73,7 @@
     ' · '+(data.imported||0)+' eventos atualizados · '+(data.pushed||0)+' enviados';
    await loadGoogleEvents();
    await reloadEvents();
-   if(typeof render==='function'&&isAdmin())render();
+   if(typeof render==='function')render();
    if(!silent)alert('Google Agenda sincronizado com a Santrelle!\\n'+
     (data.imported||0)+' eventos importados/atualizados e '+(data.pushed||0)+' eventos enviados.');
   }catch(err){
@@ -82,7 +82,7 @@
    if(!silent)alert(state.googleStatus);
   }finally{state.syncBusy=false}
  };
- window.santrelleGoogleSyncStatus=()=>state.googleStatus||'A sincronização automática ocorre enquanto a Santrelle estiver aberta.';
+ window.santrelleGoogleSyncStatus=()=>state.googleStatus||'Sincronização periódica com o Google enquanto o aplicativo estiver aberto.';
  function clientMeetings(){
   const result=[];
   if(typeof portalPreviewData==='undefined')return result;
@@ -204,10 +204,10 @@
   if(state.poll)clearInterval(state.poll);
   state.poll=setInterval(async()=>{
    if(document.visibilityState==='hidden'||!state.user||!state.db)return;
-   const previous=JSON.stringify(state.events);
+   const previous=JSON.stringify(state.events)+JSON.stringify(state.googleEvents);
    await reloadEvents();
    await loadGoogleEvents();
-   if(JSON.stringify(state.events)!==previous&&typeof render==='function')render();
+   if(JSON.stringify(state.events)+JSON.stringify(state.googleEvents)!==previous&&typeof render==='function')render();
   },30000);
   if(state.syncPoll)clearInterval(state.syncPoll);
   state.syncPoll=setInterval(()=>{
