@@ -51,6 +51,18 @@
   const detail=e.title+'\\n'+e.event_date+(e.event_time?' às '+String(e.event_time).slice(0,5):'')+
    (e.location?'\\nLocal: '+e.location:'')+(e.description?'\\n'+e.description:'');
   if(!isAdmin()){alert(detail);return}
+  const action=prompt('Google Agenda: '+e.title+'\\nDigite EDITAR ou ATRIBUIR:','ATRIBUIR');
+  if(action===null)return;
+  if(normalize(action)==='editar'){
+   const title=prompt('Título:',e.title);if(title===null||!title.trim())return;
+   const date=prompt('Data (AAAA-MM-DD):',e.event_date);if(date===null||!validDate(date)){alert('Data inválida');return}
+   const time=prompt('Horário (HH:MM ou vazio):',String(e.event_time||'').slice(0,5));if(time===null)return;
+   if(time&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)){alert('Horário inválido');return}
+   const {data,error}=await state.db.functions.invoke('google-calendar-edit',{body:{googleId:id,title:title.trim(),date,time}});
+   if(error||data?.error||!data?.ok){alert('Não foi possível alterar o evento: '+(data?.error||error?.message||'Erro desconhecido'));return}
+   await loadGoogleEvents();render();return;
+  }
+  if(normalize(action)!=='atribuir'){alert('Digite EDITAR ou ATRIBUIR');return}
   const choices=colleagues();
   const selected=prompt(detail+'\\n\\nPara atribuir esta reunião a alguém, escreva o nome exato do funcionário.\\n'+
    'Funcionários: '+choices.join(', ')+'\\nDeixe vazio para a agenda geral.',e.assigned_owner||'');
@@ -171,11 +183,28 @@
  window.santrelleCalendarOpenEvent=async function(id){
   const ev=state.events.find(x=>x.id===id);if(!ev)return;
   const mine=ev.user_id===state.user?.id;
-  if(!mine){alert((ev.title||'Compromisso')+'\n'+ev.event_date+(ev.event_time?' às '+ev.event_time.slice(0,5):''));return}
-  if(!confirm('Compromisso: '+ev.title+'\nData: '+ev.event_date+'\n\nDeseja excluir este compromisso da agenda?'))return;
+  if(!mine){alert((ev.title||'Compromisso')+'\\n'+ev.event_date+(ev.event_time?' às '+ev.event_time.slice(0,5):''));return}
+  const action=prompt('Compromisso: '+ev.title+'\\nDigite EDITAR ou EXCLUIR:','EDITAR');
+  if(action===null)return;
+  if(normalize(action)==='editar'){
+   const title=prompt('Nome:',ev.title);if(title===null||!title.trim())return;
+   const date=prompt('Data (AAAA-MM-DD):',ev.event_date);if(date===null||!validDate(date)){alert('Data inválida');return}
+   const time=prompt('Horário (HH:MM ou vazio):',String(ev.event_time||'').slice(0,5));if(time===null)return;
+   if(time&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)){alert('Horário inválido');return}
+   const {error}=await state.db.from('santrelle_calendar_events')
+    .update({title:title.trim(),event_date:date,event_time:time||null,updated_at:new Date().toISOString()})
+    .eq('id',id).eq('user_id',state.user.id);
+   if(error){alert('Não foi possível alterar: '+error.message);return}
+   await reloadEvents();render();
+   if(!ev.private)window.santrelleGoogleSyncNow(true);
+   return;
+  }
+  if(normalize(action)!=='excluir')return;
+  if(!confirm('Excluir '+ev.title+' da Santrelle e, caso esteja sincronizado, do Google Agenda?'))return;
   const {error}=await state.db.from('santrelle_calendar_events').delete().eq('id',id).eq('user_id',state.user.id);
-  if(error)alert('Não foi possível excluir: '+error.message);
-  else{await reloadEvents();render()}
+  if(error){alert('Não foi possível excluir: '+error.message);return}
+  await reloadEvents();render();
+  if(!ev.private)window.santrelleGoogleSyncNow(true);
  };
  async function reloadEvents(){
   if(!state.db||!state.user)return;
